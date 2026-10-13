@@ -1,0 +1,15 @@
+{
+  "name": "custom-turn-chess",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/rules.test.cjs",
+    "test:browser": "node tests/browser.cjs",
+    "build": "node scripts/build.cjs"
+  },
+  "devDependencies": {
+    "chess.js": "1.4.0",
+    "esbuild": "0.25.12",
+    "playwright-core": "1.58.2"
+  }
+}
