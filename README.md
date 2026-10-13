@@ -61,7 +61,13 @@ rules as the player. Search maximizes or minimizes according to the actual next
 color, including repeated moves by either player. After completing a quick
 fallback move, deeper searches can extend up to four extra plies to finish a
 consecutive-move run at the search horizon. This helps it see multi-move attacks
-and threats from the human's next consecutive moves.
+and threats from the human's next consecutive moves. The fallback evaluation
+accounts for hanging pieces, unfavorable exchanges, development, centralization,
+rook activity, bishop pairs, and king safety. Searches first finish an affordable
+tactical baseline, then add a bounded capture/check-response search to avoid
+stopping in the middle of an exchange. The previous best move is searched first
+at the next depth. Forced wins/losses use actual move distance, including custom
+moves, to prefer faster wins and delay unavoidable losses.
 
 Use the **Engine strength** slider to select 400–2400 estimated Elo in steps of
 100. Easy, Medium, and Hard are shortcuts for 600, 1200, and 2000. Other slider

@@ -268,11 +268,12 @@ test('randomized capture-variant games preserve kings until a terminal capture a
   }
 });
 
-test('search sees a king-capture threat on the human’s second consecutive move', async () => {
+test('search recognizes a forced loss against two consecutive rook moves', async () => {
   const state=captureMode(['b','w','w'],'7k/7p/8/8/8/8/8/R6K b - - 0 1');
-  const before=state.snapshot();
-  const choice=await chooseMove(state,2,'b',{sequenceExtension:2,timeBudgetMs:10000});
-  assert.equal(choice.from,'h8');assert.equal(choice.to,'g7');assert.deepEqual(state.snapshot(),before);
+  const before=state.snapshot();let scores;
+  await chooseMove(state,2,'b',{sequenceExtension:2,timeBudgetMs:10000,onIteration: result => { if(result.depth===2)scores=result.scores; }});
+  // Kg7 is not an escape: Ra7 then Rxg7 captures it before Black moves.
+  assert.ok(scores);assert.ok(scores.every(candidate=>candidate.score<=-100000));assert.deepEqual(state.snapshot(),before);
 });
 test('AI plans two consecutive attacking moves instead of assuming an opposing reply', async () => {
   const state=captureMode(['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1');
@@ -293,4 +294,21 @@ test('Elo changes move selection while preserving legal moves and forced wins', 
   assert.notEqual(weak.lan,strong.lan);assert.ok(state.legalMoves().some(m=>m.lan===weak.lan));assert.ok(state.legalMoves().some(m=>m.lan===strong.lan));
   const win=captureMode(['w','w','b'],'R6k/7p/8/8/8/8/8/7K w - - 0 1');
   assert.equal((await chooseMoveForElo(win,400,'w',{random:()=>0})).captured,'k');
+});
+
+test('highest strength avoids a poisoned pawn instead of sacrificing its queen', async () => {
+  const {chooseMoveForElo}=require('../src/rules.cjs');
+  const state=make(['w','b'],'3q3k/3p4/8/8/8/8/8/3Q3K w - - 0 1');
+  const move=await chooseMoveForElo(state,2400,'w',{timeBudgetMs:0});
+  assert.notEqual(move.to,'d7');assert.ok(state.legalMoves().some(m=>m.lan===move.lan));
+});
+test('highest strength takes a genuinely free queen', async () => {
+  const {chooseMoveForElo}=require('../src/rules.cjs');
+  const state=make(['w','b'],'7k/3q4/8/8/8/8/8/3R3K w - - 0 1');
+  const move=await chooseMoveForElo(state,2400,'w');assert.equal(move.from,'d1');assert.equal(move.to,'d7');
+});
+test('highest strength protects against the human’s consecutive rook attack', async () => {
+  const {chooseMoveForElo}=require('../src/rules.cjs');
+  const state=captureMode(['b','w','w'],'1r5k/7p/8/8/8/8/8/R6K b - - 0 1');
+  const move=await chooseMoveForElo(state,2400,'b');assert.equal(move.from,'b8');assert.equal(move.to,'g8');
 });
