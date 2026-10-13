@@ -59,8 +59,12 @@ class CustomTurnRules {
     const position = side === this.game.turn() ? this.game : this.positionFor(side);
     // In capture mode, chess.js may generate king captures from positions
     // reached by consecutive attacking plies. Other move legality stays intact.
+    const cacheKey = position.fen();
+    const cached = this.searchMoveCache?.get(cacheKey);
+    if (cached) { this.moveCache.set(side, cached); return cached; }
     const moves = position.moves({ verbose: true }).filter(move =>
       this.allowKingCapture || (move.captured !== 'k' && position.get(move.to)?.type !== 'k'));
+    if (this.searchMoveCache && this.searchMoveCache.size < 12000) this.searchMoveCache.set(cacheKey, moves);
     this.moveCache.set(side, moves);
     return moves;
   }
@@ -113,6 +117,7 @@ class CustomTurnRules {
     const copy = Object.create(CustomTurnRules.prototype);
     copy.Chess = this.Chess;
     copy.allowKingCapture = this.allowKingCapture;
+    copy.searchMoveCache = this.searchMoveCache;
     copy.order = [...this.order];
     copy.snapshots = [];
     copy.restore(this.snapshot());
@@ -214,7 +219,21 @@ function evaluate(state, color) {
 }
 
 // Cooperatively yield so reset, undo, and order edits can cancel an active search.
-async function chooseMove(state, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random, onIteration = () => {} } = {}) {
+async function chooseMove(state, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random, onIteration = () => {}, turnBeam = 3, lineLimit = 8, captureDepth = 3 } = {}) {
+  // Search-only caches are shared by clones, never attached to the live game.
+  // Full FEN keys preserve counters/rights; scores are not reused across draw
+  // histories. Only move generation, static evaluation, and ordering are cached.
+  state = state.clone();
+  state.searchMoveCache = new Map();
+  const evaluationCache = new Map();
+  const principalMoves = new Map();
+  function scorePosition(node) {
+    const key = node.game.fen();
+    if (evaluationCache.has(key)) return evaluationCache.get(key);
+    const score = evaluate(node, color);
+    if (evaluationCache.size < 12000) evaluationCache.set(key, score);
+    return score;
+  }
   let nodes = 0;
   const cancelled = Symbol('cancelled');
   const timedOut = Symbol('timed-out');
@@ -229,6 +248,7 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     return node.result.winner === color ? 1000000 - distance : -1000000 + distance;
   }
   function orderedMoves(node, preferred) {
+    preferred ||= principalMoves.get(node.positionKey());
     const enemyKing = node.game.board().flat().find(piece => piece?.type === 'k' && piece.color !== node.side)?.square;
     const priority = move => (preferred && move.lan === preferred.lan ? 1000000 : 0)
       + (move.captured ? VALUES[move.captured] * 10 - VALUES[move.piece] : 0)
@@ -247,30 +267,30 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     let index = state.index;
     let side = state.side;
     let opponentMoved = false;
-    for (let plies = 1; plies <= 8; plies++) {
+    for (let plies = 1; plies <= lineLimit; plies++) {
       opponentMoved ||= side !== color;
       if (side === state.order[index]) index = (index + 1) % state.order.length;
       side = state.order[index];
       if (opponentMoved && side === color) return plies;
     }
-    return Math.min(8, state.order.length + 2);
+    return Math.min(lineLimit, state.order.length + 2);
   }
-  async function planTurn(node, remaining, opponentMoved, alpha, beta) {
+  async function planTurn(node, remaining, opponentMoved, alpha, beta, beamWidth) {
     await checkpoint();
     const result = terminal(node);
     if (result !== null) return result;
     // A decision covers the rest of our block AND the opponent's entire reply
     // block. In WWB, Black must see both White moves before evaluating safety.
-    if (remaining <= 0 || (opponentMoved && node.side === color)) return evaluate(node, color);
+    if (remaining <= 0 || (opponentMoved && node.side === color)) return scorePosition(node);
     const maximizing = node.side === color;
     let best = maximizing ? -Infinity : Infinity;
     // A bounded selective pass is completed before exhaustive deepening. It
     // checks every root move, retaining captures/checks and promising quiet moves.
-    const candidates = orderedMoves(node).slice(0, 3);
+    const candidates = orderedMoves(node).slice(0, beamWidth);
     for (const move of candidates) {
       const child = node.clone();
       child.play(move, false);
-      const value = await planTurn(child, remaining - 1, opponentMoved || node.side !== color, alpha, beta);
+      const value = await planTurn(child, remaining - 1, opponentMoved || node.side !== color, alpha, beta, beamWidth);
       best = maximizing ? Math.max(best, value) : Math.min(best, value);
       if (maximizing) alpha = Math.max(alpha, best);
       else beta = Math.min(beta, best);
@@ -278,14 +298,14 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     }
     return best;
   }
-  async function completeTurnPlan() {
+  async function completeTurnPlan(beamWidth) {
     let bestMove = null, bestScore = -Infinity;
     const scores = [];
     const horizon = replyHorizon();
     for (const move of orderedMoves(state, completedMove)) {
       const child = state.clone();
       child.play(move, false);
-      const value = await planTurn(child, horizon - 1, false, -Infinity, Infinity);
+      const value = await planTurn(child, horizon - 1, false, -Infinity, Infinity, beamWidth);
       // A selective search is guidance, not proof of a forced win/loss: omitted
       // defensive moves may change the outcome. Full search still verifies it.
       const score = Math.max(-90000, Math.min(90000, value));
@@ -294,15 +314,15 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     }
     completedMove = bestMove;
     completedScores = scores;
-    onIteration({ depth: 0, phase: 'custom-turn-plan', nodes, scores });
+    onIteration({ depth: 0, phase: 'custom-turn-plan', beamWidth, nodes, scores });
   }
-  async function quiescence(node, alpha, beta, remaining = 3) {
+  async function quiescence(node, alpha, beta, remaining = captureDepth) {
     await checkpoint();
     const result = terminal(node);
     if (result !== null) return result;
     const inCheck = node.inCheck(node.side);
     const maximizing = node.side === color;
-    const standPat = evaluate(node, color);
+    const standPat = scorePosition(node);
     if (remaining === 0) return standPat;
     let best = inCheck ? (maximizing ? -Infinity : Infinity) : standPat;
     if (!inCheck) {
@@ -311,7 +331,9 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
       if (beta <= alpha) return best;
     }
     // At a checked node, all evasions matter; standing still is not an option.
-    const moves = orderedMoves(node).filter(move => inCheck || move.captured || move.promotion);
+    const consecutiveAttack = node.allowKingCapture && node.order[(node.index + 1) % node.order.length] === node.side;
+    const moves = orderedMoves(node).filter(move => inCheck || move.captured || move.promotion
+      || (remaining >= 2 && consecutiveAttack && /[+#]/.test(move.san)));
     for (const move of moves) {
       const child = node.clone();
       child.play(move, false);
@@ -331,26 +353,29 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
       // Never assume alternating minimax levels. Finish an interrupted same-color
       // run when possible, including the human's consecutive attacking moves.
       // First complete a cheap one-ply fallback before spending time on extensions.
-      if (!completedMove) return evaluate(node, color);
-      if (node.side !== lastMover || extensionsLeft <= 0) return quiescenceEnabled ? quiescence(node, alpha, beta) : evaluate(node, color);
+      if (!completedMove) return scorePosition(node);
+      if (node.side !== lastMover || extensionsLeft <= 0) return quiescenceEnabled ? quiescence(node, alpha, beta) : scorePosition(node);
       remaining = 1;
       extensionsLeft--;
     }
     const maximizing = node.side === color;
     let best = maximizing ? -Infinity : Infinity;
+    let bestMove;
     for (const move of orderedMoves(node)) {
       const child = node.clone();
       child.play(move, false);
       const value = await search(child, remaining - 1, alpha, beta, node.side, extensionsLeft);
+      if (maximizing ? value > best : value < best) bestMove = move;
       best = maximizing ? Math.max(best, value) : Math.min(best, value);
       if (maximizing) alpha = Math.max(alpha, best);
       else beta = Math.min(beta, best);
       if (beta <= alpha) break;
     }
+    if (bestMove && principalMoves.size < 12000) principalMoves.set(node.positionKey(), bestMove);
     return best;
   }
   if (state.result || state.side !== color || isCancelled()) return null;
-  depth = Math.max(1, Math.min(6, Number(depth) || 1));
+  depth = Math.max(1, Math.min(8, Number(depth) || 1));
   function selectCompleted() {
     if (!completedMove || isCancelled()) return null;
     const best = Math.max(...completedScores.map(candidate => candidate.score));
@@ -364,7 +389,7 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     // A partial deeper search must not overwrite the last completed result.
     let previousDepth = 0;
     for (let iteration = 1; iteration <= depth; iteration++) {
-      const targetDepth = iteration === 1 || !customSequence ? iteration : Math.min(8, replyHorizon() + iteration - 2);
+      const targetDepth = iteration === 1 || !customSequence ? iteration : Math.min(lineLimit, replyHorizon() + iteration - 2);
       if (targetDepth === previousDepth) break;
       previousDepth = targetDepth;
       // Finish an affordable tactical baseline before adding exchange searches.
@@ -382,7 +407,10 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
       completedScores = scores;
       onIteration({ depth: targetDepth, phase: 'full-search', nodes, scores });
       if (bestScore >= 100000 || Date.now() - started >= timeBudgetMs) break;
-      if (iteration === 1 && customSequence && depth > 1) await completeTurnPlan();
+      if (iteration === 1 && customSequence && depth > 1) {
+        await completeTurnPlan(3);
+        if (turnBeam > 3) await completeTurnPlan(turnBeam);
+      }
     }
     return selectCompleted();
   } catch (error) {
@@ -395,12 +423,15 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
 // These are strength presets, not ratings measured against a rated player pool.
 function strengthForElo(value) {
   const numeric = Number(value);
-  const elo = Math.round(Math.max(400, Math.min(2400, Number.isFinite(numeric) ? numeric : 1200)) / 100) * 100;
+  const elo = Math.round(Math.max(400, Math.min(3500, Number.isFinite(numeric) ? numeric : 1200)) / 100) * 100;
   return {
     elo,
-    depth: elo < 900 ? 2 : elo < 1500 ? 3 : elo < 2000 ? 4 : 6,
-    timeBudgetMs: Math.round(250 + ((elo - 400) / 2000) ** 2 * 3750),
-    sequenceExtension: 4,
+    depth: elo < 900 ? 2 : elo < 1500 ? 3 : elo < 2000 ? 4 : elo < 2800 ? 6 : 8,
+    timeBudgetMs: Math.round(elo <= 2400 ? 250 + ((elo - 400) / 2000) ** 2 * 3750 : 4000 + ((elo - 2400) / 1100) * 8000),
+    sequenceExtension: elo >= 2800 ? 6 : 4,
+    turnBeam: elo >= 3000 ? 6 : elo >= 2500 ? 4 : 3,
+    lineLimit: elo >= 2800 ? 12 : 8,
+    captureDepth: elo >= 2800 ? 4 : 3,
     moveTolerance: Math.max(0, (1700 - elo) * 0.4),
     mistakeProbability: Math.max(0, (1800 - elo) / 2000)
   };

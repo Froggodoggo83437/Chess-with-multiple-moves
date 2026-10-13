@@ -61,8 +61,9 @@ rules as the player. Search maximizes or minimizes according to the actual next
 color, including repeated moves by either player. After completing a quick
 emergency fallback, custom-turn games get a bounded planning pass covering the
 engine's remaining consecutive moves and the human's complete reply block. It
-examines every root move and up to three candidate continuations per node, capped
-at eight plies. This selective pass is guidance, not proof of a forced win.
+examines every root move and three candidate continuations per node initially. Expert also attempts a
+broader six-candidate pass, with a planning limit of twelve plies (eight at
+lower strengths). This selective pass is guidance, not proof of a forced win.
 Exhaustive searches then start at the full reply-block horizon instead of
 replacing that plan with a shallow search of only the engine's own moves.
 Deeper searches can extend up to four extra plies to finish a consecutive-move
@@ -72,22 +73,26 @@ accounts for hanging pieces, unfavorable exchanges, development, centralization,
 rook activity, bishop pairs, and king safety. Searches first finish an affordable
 tactical baseline, then add a bounded capture/check-response search to avoid
 stopping in the middle of an exchange. The previous best move is searched first
-at the next depth. Forced wins/losses use actual move distance, including custom
+at the next depth. In king-capture mode, tactical search also considers
+checks that can be followed by a king capture on a consecutive move. Forced wins/losses use actual move distance, including custom
 moves, to prefer faster wins and delay unavoidable losses.
 
-Use the **Engine strength** slider to select 400–2400 estimated Elo in steps of
-100. Easy, Medium, and Hard are shortcuts for 600, 1200, and 2000. Other slider
+Use the **Engine strength** slider to select 400–3500 target Elo in steps of
+100. Easy, Medium, and Hard are shortcuts for 600, 1200, and 2000; Expert targets 3500. Expert is the default setting at a 3500 target; other slider
 values display as Custom Elo. Strength changes preserve the game and restart
 active computer searches without resuming a computer paused by Undo.
 
-These numbers are approximate strength labels, not ratings calibrated against
+The 3500 target is not a promise of measured 3500-Elo play. These numbers are
+approximate strength labels, not ratings calibrated against
 a rated player pool, especially in custom variants. Increasing the setting
-raises the number of deepening passes (two to six) and time budget (roughly 0.25–4
+raises the number of deepening passes (two to eight) and time budget (roughly 0.25–12
 seconds) and reduces the chance of selecting a lower-scoring legal move. Lower
 strengths can choose among moves within a score tolerance; a known forced win
 is never intentionally discarded. Iterative deepening retains the last fully
 completed result; complex or very long turn sequences can exceed the search
-horizon or time budget. The search yields regularly so controls remain usable
+horizon or time budget. Search-only caches reuse legal move generation and static evaluations across
+identical FENs; previous best moves guide ordering. Draw-dependent search scores
+are not cached across different histories. The search yields regularly so controls remain usable
 and resets, undo, sequence edits, or strength changes can cancel it.
 
 ## Development and tests

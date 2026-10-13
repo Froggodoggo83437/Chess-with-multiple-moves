@@ -284,8 +284,8 @@ test('AI plans two consecutive attacking moves instead of assuming an opposing r
 });
 test('Elo profiles clamp input and monotonically increase search effort', () => {
   const {strengthForElo}=require('../src/rules.cjs');
-  assert.equal(strengthForElo(-1).elo,400);assert.equal(strengthForElo(9999).elo,2400);assert.equal(strengthForElo('bad').elo,1200);
-  for(let elo=500;elo<=2400;elo+=100){const a=strengthForElo(elo-100),b=strengthForElo(elo);assert.ok(b.depth>=a.depth);assert.ok(b.timeBudgetMs>a.timeBudgetMs);assert.ok(b.moveTolerance<=a.moveTolerance);assert.ok(b.mistakeProbability<=a.mistakeProbability);}
+  assert.equal(strengthForElo(-1).elo,400);assert.equal(strengthForElo(9999).elo,3500);assert.equal(strengthForElo('bad').elo,1200);
+  for(let elo=500;elo<=3500;elo+=100){const a=strengthForElo(elo-100),b=strengthForElo(elo);assert.ok(b.depth>=a.depth);assert.ok(b.timeBudgetMs>a.timeBudgetMs);assert.ok(b.moveTolerance<=a.moveTolerance);assert.ok(b.mistakeProbability<=a.mistakeProbability);}
 });
 test('Elo changes move selection while preserving legal moves and forced wins', async () => {
   const {chooseMoveForElo}=require('../src/rules.cjs');const state=make();
@@ -332,4 +332,26 @@ test('two engine moves plus two human replies are searched as a four-ply block',
   assert.ok(trace.some(result=>result.phase==='custom-turn-plan'));
   assert.ok(trace.some(result=>result.phase==='full-search'&&result.depth===4));
   assert.deepEqual(state.snapshot(),before);
+});
+test('3500 target broadens and completes custom-turn defense without changing live state', async () => {
+  const {chooseMoveForElo,strengthForElo}=require('../src/rules.cjs');
+  const state=captureMode(['b','w','w'],'1r5k/7p/8/8/8/8/8/R6K b - - 0 1');
+  const before=state.snapshot();const trace=[];
+  const choice=await chooseMoveForElo(state,3500,'b',{onIteration:result=>trace.push(result)});
+  assert.equal(choice.from,'b8');assert.equal(choice.to,'g8');
+  assert.ok(trace.some(result=>result.phase==='custom-turn-plan'&&result.beamWidth===6));
+  assert.ok(trace.some(result=>result.phase==='full-search'&&result.depth>=3));
+  assert.deepEqual(state.snapshot(),before);assert.equal(state.searchMoveCache,undefined);
+  const expert=strengthForElo(3500),previous=strengthForElo(2400);
+  assert.ok(expert.depth>previous.depth);assert.ok(expert.timeBudgetMs>previous.timeBudgetMs);assert.equal(expert.mistakeProbability,0);
+});
+test('expert search cancels during wider planning and never returns a stale move', async () => {
+  const {chooseMoveForElo}=require('../src/rules.cjs');
+  const state=captureMode(['b','w','w'],'1r5k/7p/8/8/8/8/8/R6K b - - 0 1');
+  let cancelled=false;
+  const choice=await chooseMoveForElo(state,3500,'b',{
+    isCancelled:()=>cancelled,
+    onIteration:result=>{if(result.phase==='custom-turn-plan')cancelled=true;}
+  });
+  assert.equal(choice,null);assert.equal(state.history.length,0);
 });

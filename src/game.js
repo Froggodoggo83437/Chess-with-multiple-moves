@@ -192,8 +192,8 @@ function updateStrength() {
   const profile = strengthForElo($('elo').value);
   $('elo').value = profile.elo;
   $('eloValue').textContent = profile.elo;
-  $('elo').setAttribute('aria-valuetext', `${profile.elo} estimated Elo`);
-  const presets = { 600: '1', 1200: '2', 2000: '3' };
+  $('elo').setAttribute('aria-valuetext', `${profile.elo} target Elo`);
+  const presets = { 600: '1', 1200: '2', 2000: '3', 3500: '4' };
   $('depth').value = presets[profile.elo] || 'custom';
 }
 $('elo').oninput = () => {
@@ -203,7 +203,7 @@ $('elo').oninput = () => {
   queueAI();
 };
 $('depth').onchange = () => {
-  const presets = { '1': 600, '2': 1200, '3': 2000 };
+  const presets = { '1': 600, '2': 1200, '3': 2000, '4': 3500 };
   if (presets[$('depth').value]) $('elo').value = presets[$('depth').value];
   updateStrength();
   cancelAI(); renderStatus(); queueAI();
