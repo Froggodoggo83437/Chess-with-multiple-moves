@@ -59,8 +59,14 @@ continue or Undo again to return to your own earlier decision.
 The computer uses the same rules, custom sequence cursor, and check-response
 rules as the player. Search maximizes or minimizes according to the actual next
 color, including repeated moves by either player. After completing a quick
-fallback move, deeper searches can extend up to four extra plies to finish a
-consecutive-move run at the search horizon. This helps it see multi-move attacks
+emergency fallback, custom-turn games get a bounded planning pass covering the
+engine's remaining consecutive moves and the human's complete reply block. It
+examines every root move and up to three candidate continuations per node, capped
+at eight plies. This selective pass is guidance, not proof of a forced win.
+Exhaustive searches then start at the full reply-block horizon instead of
+replacing that plan with a shallow search of only the engine's own moves.
+Deeper searches can extend up to four extra plies to finish a consecutive-move
+run at the search horizon. This helps it see multi-move attacks
 and threats from the human's next consecutive moves. The fallback evaluation
 accounts for hanging pieces, unfavorable exchanges, development, centralization,
 rook activity, bishop pairs, and king safety. Searches first finish an affordable
@@ -76,7 +82,7 @@ active computer searches without resuming a computer paused by Undo.
 
 These numbers are approximate strength labels, not ratings calibrated against
 a rated player pool, especially in custom variants. Increasing the setting
-raises the depth ceiling (two to six plies) and time budget (roughly 0.25–4
+raises the number of deepening passes (two to six) and time budget (roughly 0.25–4
 seconds) and reduces the chance of selecting a lower-scoring legal move. Lower
 strengths can choose among moves within a score tolerance; a known forced win
 is never intentionally discarded. Iterative deepening retains the last fully
