@@ -20,7 +20,7 @@ function cancelAI() {
 }
 function reset() {
   cancelAI();
-  state = new CustomTurnRules(Chess, order);
+  state = new CustomTurnRules(Chess, order, undefined, { allowKingCapture: $('kingCapture').value === 'allowed' });
   selected = null;
   legal = [];
   pausedAI = false;
@@ -35,7 +35,7 @@ function modifyOrder(next) {
 function renderBoard() {
   const ranks = flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
   const files = flipped ? 'hgfedcba' : 'abcdefgh';
-  const checked = state.game.isCheck() ? state.side : null;
+  const checked = new Set(state.result ? [] : ['w', 'b'].filter(side => state.inCheck(side)));
   let visualIndex = 0;
   for (const rank of ranks) for (const file of files) {
     const square = file + rank;
@@ -54,7 +54,7 @@ function renderBoard() {
     button.classList.toggle('last', !!state.lastMove && (state.lastMove.from === square || state.lastMove.to === square));
     button.classList.toggle('legal', targetMoves.length > 0 && !targetMoves.some(move => move.captured));
     button.classList.toggle('capture', targetMoves.some(move => move.captured));
-    button.classList.toggle('in-check', piece?.type === 'k' && piece.color === checked);
+    button.classList.toggle('in-check', piece?.type === 'k' && checked.has(piece.color));
     button.setAttribute('aria-label', `${square}${piece ? ' ' + names[piece.color] + ' ' + pieceNames[piece.type] : ''}`);
     button.setAttribute('aria-pressed', String(selected === square));
     const key = piece ? piece.color + piece.type : '';
@@ -101,7 +101,7 @@ function renderTurns() {
 function renderStatus() {
   const result = state.result;
   let message;
-  if (result?.type === 'checkmate') message = `Checkmate — ${names[result.winner]} wins!`;
+  if (result?.type === 'checkmate') message = `Checkmate — ${names[result.winner]} wins!${result.reason === 'king-capture' ? ' King captured.' : ''}`;
   else if (result) {
     const draws = {
       stalemate: 'stalemate', 'insufficient-material': 'insufficient material',
@@ -110,7 +110,8 @@ function renderStatus() {
     message = `Draw — ${draws[result.type]}.`;
   } else {
     message = `${names[state.side]} ${busy ? '(computer) is thinking…' : 'to move ' + (state.side === player() ? '(you)' : '(computer)')}`;
-    if (state.game.isCheck()) message += ' — Check!';
+    const checked = ['w', 'b'].filter(side => state.inCheck(side));
+    if (checked.length) message += ` — ${names[checked[0]]} is in check!`;
     if (state.forcedSide) message += ' Immediate check response; then the sequence resumes.';
     if (pausedAI) message += ' Computer paused after undo. Press Resume computer.';
     if (aiError) message = aiError;
@@ -123,6 +124,9 @@ function render() {
   renderBoard();
   renderTurns();
   renderStatus();
+  $('ruleNote').textContent = state.allowKingCapture
+    ? 'King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Normal checkmate also ends the game. Your own king must remain safe. Undo restores captured kings; computer replies stay paused until resumed.'
+    : 'Standard rules: check requires an immediate response, even between consecutive moves. An extra response does not consume the attacker’s next tile. Checkmate ends the game immediately; kings cannot be captured. Undo pauses computer replies until resumed.';
   $('history').textContent = state.history.length ? state.history.map((move, index) =>
     `${index + 1}. ${names[move.color]} ${move.san}`).join('   ') : 'No moves yet.';
 }
@@ -173,6 +177,7 @@ function queueAI() {
 }
 $('newGame').onclick = reset;
 $('side').onchange = reset;
+$('kingCapture').onchange = reset;
 $('addWhite').onclick = () => modifyOrder([...order, 'w']);
 $('addBlack').onclick = () => modifyOrder([...order, 'b']);
 $('remove').onclick = () => { if (order.length > 1) modifyOrder(order.slice(0, -1)); };

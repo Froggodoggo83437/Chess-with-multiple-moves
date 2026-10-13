@@ -1,7 +1,7 @@
 # Custom Turn Chess
 
-Open `custom_turn_chess.html` in a modern browser. The wooden board, realistic
-piece images, rules engine, and game code are all embedded; no network connection
+Open `custom_turn_chess.html` in a modern browser. The green-and-cream board, outlined vector
+pieces, rules engine, and game code are all embedded; no network connection
 or build is needed to play. Alternatively, serve this directory with
 `python3 -m http.server 8000`.
 
@@ -9,15 +9,24 @@ or build is needed to play. Alternatively, serve this directory with
 
 - Every turn-order tile grants one legal chess move. Tiles may repeat a color;
   even a sequence containing only one color is supported.
-- **Check takes priority over the sequence.** The checked player must respond
+- **King capture is allowed by default.** Check does not interrupt the scheduled
+  sequence, so a player with consecutive moves can capture an exposed opposing
+  king. That capture ends the game immediately and is reported as checkmate.
+  Normal checkmate still ends the game immediately, and moves must keep the
+  moving player’s own king safe. Undo restores a captured king and the exact
+  pre-capture position. The AI follows the same rule and treats capture as a win.
+- Choose **Standard — no king captures** in the King capture setting to restore
+  standard king protection. Changing this setting starts a fresh game.
+- **In standard mode, check takes priority over the sequence.** The checked player must respond
   immediately. If their color is already next, the response consumes that tile.
   Otherwise they receive an extra defensive move; the pending tile is left
   untouched and the sequence resumes afterward. Counterchecks use the same rule.
 - Checkmate ends the game immediately, even when the attacker has moves left.
-  Kings are never captured. Every move must leave the moving player's king safe.
+  In standard mode kings cannot be captured. Every move must leave the moving
+  player's king safe.
 - Stalemate is a draw when the player whose move is due has no legal moves and is
   not in check. An opponent with no moves may wait while the other player still
-  has a scheduled move, unless they are checked.
+  has a scheduled move, unless standard mode grants them a check response.
 - Castling obeys standard occupancy, attack, king/rook movement, and castling-right
   rules. En passant is available only on the immediately following opposing ply;
   an intervening move of either color expires it. A check response can use en
@@ -62,11 +71,12 @@ npm run test:browser
 
 Edit `src/rules.cjs` for variant rules and AI, and `src/game.js` for controls and
 rendering. `npm run build` embeds the code and chess.js into the marked game
-script in `custom_turn_chess.html`; keep the generated HTML in sync. Styling,
-markup, and original embedded piece images live in the HTML. The pinned chess.js
+script in `custom_turn_chess.html`; keep the generated HTML in sync. Styling and markup live in the HTML. Original SVG artwork is defined in
+`src/pieces.cjs` and embedded by the build script. The pinned chess.js
 license is included in the generated script.
 
-Rules tests exercise standard and custom play, mate/check/stalemate, castling,
+Rules tests exercise standard and king-capture modes, terminal captures and
+king restoration, AI capture wins, custom play, mate/check/stalemate, castling,
 en passant, all promotions, draws, undo, AI cancellation, and deterministic
 randomized games. A differential standard game compares legal move sets and FENs
 against chess.js. Browser tests exercise the actual bundled app offline,
