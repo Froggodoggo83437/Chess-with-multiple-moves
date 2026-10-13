@@ -1,11 +1,12 @@
 // Standard piece legality comes from chess.js. This layer owns variant scheduling,
 // terminal results, and repetition history, which FEN alone cannot represent.
 class CustomTurnRules {
-  constructor(Chess, order = ['w', 'w', 'b'], fen) {
+  constructor(Chess, order = ['w', 'w', 'b'], fen, { allowKingCapture = false } = {}) {
     if (!order.length || order.some(side => !['w', 'b'].includes(side))) {
       throw new Error('Turn order must contain White or Black moves.');
     }
     this.Chess = Chess;
+    this.allowKingCapture = allowKingCapture;
     this.order = [...order];
     this.game = new Chess(fen);
     this.index = 0;
@@ -15,11 +16,11 @@ class CustomTurnRules {
     this.snapshots = [];
     this.repetitions = new Map();
     this.moveCache = new Map();
-    // Also support a checked starting position without ever giving its attacker
-    // an opportunity to capture the king.
+    // Standard mode gives a checked player priority. Capture mode deliberately
+    // follows the scheduled sequence, allowing another attacking ply.
     const checked = ['w', 'b'].filter(side => this.inCheck(side));
     if (checked.length > 1) throw new Error('Both kings cannot be in check.');
-    if (checked.length && checked[0] !== this.order[this.index]) this.forcedSide = checked[0];
+    if (!this.allowKingCapture && checked.length && checked[0] !== this.order[this.index]) this.forcedSide = checked[0];
     this.alignTurn();
     this.recordPosition();
     this.updateResult();
@@ -45,17 +46,21 @@ class CustomTurnRules {
 
   inCheck(side) {
     const king = this.game.board().flat().find(piece => piece?.type === 'k' && piece.color === side);
-    if (!king) throw new Error('A chess position must contain both kings.');
+    if (!king) {
+      if (this.result?.reason === 'king-capture') return false;
+      throw new Error('A chess position must contain both kings.');
+    }
     return this.game.isAttacked(king.square, side === 'w' ? 'b' : 'w');
   }
 
   legalMoves(side = this.side) {
+    if (this.result) return [];
     if (this.moveCache.has(side)) return this.moveCache.get(side);
     const position = side === this.game.turn() ? this.game : this.positionFor(side);
-    // chess.js assumes reachable alternating positions. Explicitly protect the
-    // opposing king even for externally supplied/custom-turn positions.
+    // In capture mode, chess.js may generate king captures from positions
+    // reached by consecutive attacking plies. Other move legality stays intact.
     const moves = position.moves({ verbose: true }).filter(move =>
-      move.captured !== 'k' && position.get(move.to)?.type !== 'k');
+      this.allowKingCapture || (move.captured !== 'k' && position.get(move.to)?.type !== 'k'));
     this.moveCache.set(side, moves);
     return moves;
   }
@@ -70,6 +75,7 @@ class CustomTurnRules {
   }
 
   updateResult() {
+    if (this.result?.reason === 'king-capture') return;
     this.result = null;
     // Checkmate is a win immediately, even if the attacker has unused slots.
     for (const side of ['w', 'b']) {
@@ -92,7 +98,9 @@ class CustomTurnRules {
   }
 
   restore(snapshot) {
-    this.game = new this.Chess(snapshot.fen);
+    // Only a terminal king-capture board may omit a king. No further moves
+    // or side changes are permitted on that board. Undo restores valid FEN.
+    this.game = new this.Chess(snapshot.fen, { skipValidation: snapshot.result?.reason === 'king-capture' });
     this.index = snapshot.index;
     this.forcedSide = snapshot.forcedSide;
     this.result = snapshot.result;
@@ -104,6 +112,7 @@ class CustomTurnRules {
   clone() {
     const copy = Object.create(CustomTurnRules.prototype);
     copy.Chess = this.Chess;
+    copy.allowKingCapture = this.allowKingCapture;
     copy.order = [...this.order];
     copy.snapshots = [];
     copy.restore(this.snapshot());
@@ -125,8 +134,13 @@ class CustomTurnRules {
     // An extra check response does not consume someone else's scheduled slot.
     if (side === this.order[this.index]) this.index = (this.index + 1) % this.order.length;
     this.forcedSide = null;
+    if (played.captured === 'k') {
+      played.san = played.san.replace(/[+#]$/, '') + '#';
+      this.result = { type: 'checkmate', winner: side, reason: 'king-capture' };
+      return played;
+    }
     const opponent = side === 'w' ? 'b' : 'w';
-    if (this.inCheck(opponent) && this.order[this.index] !== opponent) this.forcedSide = opponent;
+    if (!this.allowKingCapture && this.inCheck(opponent) && this.order[this.index] !== opponent) this.forcedSide = opponent;
     this.alignTurn();
     this.recordPosition();
     this.updateResult();
@@ -141,7 +155,7 @@ class CustomTurnRules {
   }
 }
 
-const VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+const VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 100000 };
 function evaluate(state, color) {
   let score = 0;
   const board = state.game.board();

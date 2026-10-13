@@ -222,3 +222,48 @@ test('a defensive countercheck is resolved before the sequence continues', () =>
   assert.equal(state.play({from:'a8',to:'a7'}),null);
   move(state,'h6','g5');assert.equal(state.side,'b');assert.ok(!state.inCheck('w'));kings(state);
 });
+
+const captureMode = (order, fen) => new Rules(Chess, order, fen, {allowKingCapture:true});
+test('capture variant keeps consecutive attacking turns and king capture wins immediately', () => {
+  const state=captureMode(['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1');
+  move(state,'a1','a8');assert.equal(state.side,'w');assert.equal(state.forcedSide,null);assert.ok(state.inCheck('b'));
+  assert.ok(has(state,'a8','h8'));move(state,'a8','h8');
+  assert.deepEqual(state.result,{type:'checkmate',winner:'w',reason:'king-capture'});
+  assert.equal(state.game.get('h8').type,'r');assert.equal(state.game.board().flat().filter(p=>p?.type==='k').length,1);
+  assert.ok(state.lastMove.san.endsWith('#'));assert.equal(state.play({from:'h7',to:'h6'}),null);assert.deepEqual(state.legalMoves(),[]);
+  state.updateResult();assert.equal(state.result.reason,'king-capture');assert.equal(state.clone().result.reason,'king-capture');
+  assert.ok(state.undo());assert.equal(state.game.get('h8').type,'k');assert.equal(state.side,'w');assert.equal(state.result,null);kings(state);
+});
+test('Black can capture the White king and undo restores the position', () => {
+  const state=captureMode(['b','b','w'],'r6k/8/8/8/8/8/7P/7K b - - 0 1');const before=state.game.fen();
+  move(state,'a8','a1');move(state,'a1','h1');assert.equal(state.result.winner,'b');assert.equal(state.result.reason,'king-capture');
+  state.undo();state.undo();assert.equal(state.game.fen(),before);kings(state);
+});
+test('promotion may capture an exposed king and keeps the selected promotion', () => {
+  const state=captureMode(['w','w','b'],'7k/6P1/8/8/8/8/8/K7 w - - 0 1');
+  move(state,'g7','h8','n');assert.equal(state.result.reason,'king-capture');assert.equal(state.game.get('h8').type,'n');
+  state.undo();assert.equal(state.game.get('g7').type,'p');assert.equal(state.game.get('h8').type,'k');
+});
+test('AI chooses a king capture and terminal clones require no missing-king move generation', async () => {
+  const state=captureMode(['w','w','b'],'R6k/7p/8/8/8/8/8/7K w - - 0 1');
+  const choice=await chooseMove(state,3,'w');assert.equal(choice.captured,'k');state.play(choice);assert.equal(state.result.reason,'king-capture');
+  assert.equal(await chooseMove(state.clone(),3,'b'),null);
+});
+test('capture variant still ends normal checkmate and rejects moves exposing its own king', () => {
+  const mate=captureMode(['w','w','b'],'7k/8/5KQ1/8/8/8/8/8 w - - 0 1');move(mate,'g6','g7');assert.deepEqual(mate.result,{type:'checkmate',winner:'w'});
+  const pin=captureMode(['w','w','b'],'k3r3/8/8/8/8/8/4R3/4K3 w - - 0 1');assert.equal(pin.play({from:'e2',to:'d2'}),null);
+});
+test('randomized capture-variant games preserve kings until a terminal capture and undo restores both', () => {
+  let seed=634;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed;};
+  for(const order of [['w','w','b'],['w','b','b'],['w','w','w','b'],['w','b']]) {
+    const state=captureMode(order);
+    for(let ply=0;ply<80&&!state.result;ply++) {
+      const before=state.snapshot();const options=state.legalMoves();assert.ok(options.length);
+      const chosen=options[random()%options.length];state.play(chosen);
+      const count=state.game.board().flat().filter(p=>p?.type==='k').length;
+      assert.equal(count,state.result?.reason==='king-capture'?1:2);
+      const after=state.snapshot();state.undo();assert.deepEqual(state.snapshot(),before);kings(state);
+      state.play(chosen);assert.deepEqual(state.snapshot(),after);
+    }
+  }
+});

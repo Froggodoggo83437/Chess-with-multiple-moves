@@ -8,6 +8,7 @@ const html = fs.readFileSync(path.join(root,'custom_turn_chess.html'),'utf8');
 // Fixtures exercise the actual bundled UI. Only its initial state is replaced;
 // production ships no position-loading or test-only hooks.
 const fixtures = {
+  capture: ['7k/7p/8/8/8/8/8/R6K w - - 0 1', ['w','w','b']],
   mate: ['7k/8/5KQ1/8/8/8/8/8 w - - 0 1', ['w','w','b']],
   check: ['7k/7p/8/8/8/8/8/R6K w - - 0 1', ['w','w','b']],
   promotion: ['1r5k/P7/8/8/8/8/8/7K w - - 0 1', ['w','b']],
@@ -24,7 +25,9 @@ let count=0;
     if(fixtures[name]) {
       const [fen,order]=fixtures[name];
       body=body.replace('var order = ["w", "w", "b"];',`var order = ${JSON.stringify(order)};`);
-      body=body.replace('state = new CustomTurnRules(Chess, order);',`state = new CustomTurnRules(Chess, order, ${JSON.stringify(fen||undefined)});`);
+      const source = 'state = new CustomTurnRules(Chess, order, void 0, { allowKingCapture: $("kingCapture").value === "allowed" });';
+      assert.ok(body.includes(source), 'Fixture initialization must match the actual bundle');
+      body=body.replace(source,`state = new CustomTurnRules(Chess, order, ${JSON.stringify(fen||undefined)}, { allowKingCapture: $("kingCapture").value === "allowed" });`);
     }
     res.writeHead(200,{'Content-Type':'text/html'});res.end(body);
   });
@@ -94,7 +97,7 @@ let count=0;
       await page.waitForTimeout(400);assert.equal(await text('status'),'Checkmate — White wins!');await page.click('#undo');assert.ok(!(await text('status')).includes('Checkmate'));
     });
     await check('check highlights king and grants AI defense between White slots',async()=>{
-      await goto('check');await move('a1','a8');assert.ok((await text('status')).includes('Check!'));assert.ok(await square('h8').evaluate(e=>e.classList.contains('in-check')));
+      await goto('check');await page.selectOption('#kingCapture','standard');await move('a1','a8');assert.ok((await text('status')).includes('in check!'));assert.ok(await square('h8').evaluate(e=>e.classList.contains('in-check')));
       await waitHistory(2);assert.equal(await text('status'),'White to move (you)');assert.equal(await page.locator('#board .in-check').count(),0);
     });
     await check('promotion selector supports underpromotion and updates piece sprite',async()=>{
@@ -110,6 +113,19 @@ let count=0;
       await goto('ep');await page.selectOption('#side','b');await square('d4').click();assert.ok(await square('e3').evaluate(e=>e.classList.contains('capture')));
       await square('e3').click();assert.equal(await square('e4').locator('img').count(),0);assert.ok((await square('e3').getAttribute('aria-label')).includes('Black pawn'));
       await page.click('#undo');assert.ok((await square('e4').getAttribute('aria-label')).includes('White pawn'));
+    });
+    await check('king capture wins, blocks further moves, and undo restores the king',async()=>{
+      await goto('capture');assert.equal(await page.locator('#kingCapture').inputValue(),'allowed');
+      await move('a1','a8');assert.ok((await text('status')).startsWith('White to move'));assert.ok(await square('h8').evaluate(e=>e.classList.contains('in-check')));
+      await square('a8').click();assert.ok(await square('h8').evaluate(e=>e.classList.contains('capture')));await square('h8').click();
+      assert.equal(await text('status'),'Checkmate — White wins! King captured.');assert.equal(await page.locator('#board img').count(),3);
+      await page.waitForTimeout(400);assert.equal(await text('status'),'Checkmate — White wins! King captured.');
+      await page.click('#undo');assert.ok((await square('h8').getAttribute('aria-label')).includes('Black king'));assert.ok((await text('status')).startsWith('White to move'));
+      await page.selectOption('#kingCapture','standard');assert.equal(await text('history'),'No moves yet.');
+    });
+    await check('reference board colors and vector pieces are embedded',async()=>{
+      await goto();assert.equal(await square('a8').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(238, 238, 210)');assert.equal(await square('a1').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(118, 150, 86)');
+      assert.ok(await page.locator('#board img').first().evaluate(e=>e.src.startsWith('data:image/svg+xml')));
     });
     await check('stalemate displays a persistent draw without starting AI',async()=>{
       await goto('stalemate');assert.equal(await text('status'),'Draw — stalemate.');await page.waitForTimeout(400);assert.equal(await text('history'),'No moves yet.');
