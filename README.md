@@ -56,12 +56,27 @@ rights, en passant, the sequence, repetition counts, and game results. If this
 returns the move to the computer, it stays paused; use **Resume computer** to
 continue or Undo again to return to your own earlier decision.
 
-The computer uses the same rules and results as the player. Easy, Medium, and
-Hard search up to one, two, and three plies respectively. Iterative deepening
-keeps the last completed search result within a roughly 2.5-second budget;
-complex positions may finish at a shallower depth. The search yields regularly
-so reset, undo, color/order edits, and difficulty changes can cancel it. This is
-a small playable opponent, not a tournament-strength engine.
+The computer uses the same rules, custom sequence cursor, and check-response
+rules as the player. Search maximizes or minimizes according to the actual next
+color, including repeated moves by either player. After completing a quick
+fallback move, deeper searches can extend up to four extra plies to finish a
+consecutive-move run at the search horizon. This helps it see multi-move attacks
+and threats from the human's next consecutive moves.
+
+Use the **Engine strength** slider to select 400–2400 estimated Elo in steps of
+100. Easy, Medium, and Hard are shortcuts for 600, 1200, and 2000. Other slider
+values display as Custom Elo. Strength changes preserve the game and restart
+active computer searches without resuming a computer paused by Undo.
+
+These numbers are approximate strength labels, not ratings calibrated against
+a rated player pool, especially in custom variants. Increasing the setting
+raises the depth ceiling (two to six plies) and time budget (roughly 0.25–4
+seconds) and reduces the chance of selecting a lower-scoring legal move. Lower
+strengths can choose among moves within a score tolerance; a known forced win
+is never intentionally discarded. Iterative deepening retains the last fully
+completed result; complex or very long turn sequences can exceed the search
+horizon or time budget. The search yields regularly so controls remain usable
+and resets, undo, sequence edits, or strength changes can cancel it.
 
 ## Development and tests
 

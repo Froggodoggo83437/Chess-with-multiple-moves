@@ -267,3 +267,30 @@ test('randomized capture-variant games preserve kings until a terminal capture a
     }
   }
 });
+
+test('search sees a king-capture threat on the human’s second consecutive move', async () => {
+  const state=captureMode(['b','w','w'],'7k/7p/8/8/8/8/8/R6K b - - 0 1');
+  const before=state.snapshot();
+  const choice=await chooseMove(state,2,'b',{sequenceExtension:2,timeBudgetMs:10000});
+  assert.equal(choice.from,'h8');assert.equal(choice.to,'g7');assert.deepEqual(state.snapshot(),before);
+});
+test('AI plans two consecutive attacking moves instead of assuming an opposing reply', async () => {
+  const state=captureMode(['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1');
+  const choice=await chooseMove(state,2,'w',{timeBudgetMs:10000,sequenceExtension:2});
+  state.play(choice);assert.equal(state.side,'w');
+  const next=await chooseMove(state,2,'w',{timeBudgetMs:10000});state.play(next);
+  assert.equal(state.result?.winner,'w');assert.equal(state.result?.reason,'king-capture');
+});
+test('Elo profiles clamp input and monotonically increase search effort', () => {
+  const {strengthForElo}=require('../src/rules.cjs');
+  assert.equal(strengthForElo(-1).elo,400);assert.equal(strengthForElo(9999).elo,2400);assert.equal(strengthForElo('bad').elo,1200);
+  for(let elo=500;elo<=2400;elo+=100){const a=strengthForElo(elo-100),b=strengthForElo(elo);assert.ok(b.depth>=a.depth);assert.ok(b.timeBudgetMs>a.timeBudgetMs);assert.ok(b.moveTolerance<=a.moveTolerance);assert.ok(b.mistakeProbability<=a.mistakeProbability);}
+});
+test('Elo changes move selection while preserving legal moves and forced wins', async () => {
+  const {chooseMoveForElo}=require('../src/rules.cjs');const state=make();
+  const weak=await chooseMoveForElo(state,400,'w',{timeBudgetMs:0,random:()=>0});
+  const strong=await chooseMoveForElo(state,2400,'w',{timeBudgetMs:0,random:()=>0});
+  assert.notEqual(weak.lan,strong.lan);assert.ok(state.legalMoves().some(m=>m.lan===weak.lan));assert.ok(state.legalMoves().some(m=>m.lan===strong.lan));
+  const win=captureMode(['w','w','b'],'R6k/7p/8/8/8/8/8/7K w - - 0 1');
+  assert.equal((await chooseMoveForElo(win,400,'w',{random:()=>0})).captured,'k');
+});

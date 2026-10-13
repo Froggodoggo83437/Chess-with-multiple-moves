@@ -30,6 +30,7 @@ p{color:var(--muted);margin:0}
 h2{font-size:15px;margin:0 0 13px}
 label{display:block;color:#b3c3d6;font-size:13px;margin-bottom:7px}
 select,input{width:100%;border:1px solid #3c516b;border-radius:8px;padding:10px;background:#0b1423;color:#f0f8ff;font:inherit}
+input[type="range"]{padding:0;accent-color:#95c66b;cursor:pointer}
 button{font:inherit}button:disabled{opacity:.5;cursor:default}[hidden]{display:none!important}
 button.action{cursor:pointer;padding:10px 12px;background:#263953;color:#fff;border:1px solid #45617b;border-radius:8px}
 .action.primary{background:#65cfe5;color:#07212d;border:0;font-weight:700}
@@ -61,7 +62,7 @@ button.action{cursor:pointer;padding:10px 12px;background:#263953;color:#fff;bor
 <header><h1>♞ Custom Turn Chess</h1><p>Change who moves next. Play two turns in a row, three, or any sequence you like.</p></header>
 <div class="layout"><section><div class="boardWrap"><div class="board" id="board" aria-label="Chess board"></div></div><div class="hint">Click a piece, then click its destination. Pawns promote to your selected piece (Queen by default).</div></section><aside>
 <div class="panel"><h2>Turn order</h2><p class="hint" style="margin:0">Click a tile to swap White/Black. The orange tile is the current turn.</p><div id="turns" class="turns"></div><div class="btnrow"><button class="action" id="addWhite">+ White</button><button class="action" id="addBlack">+ Black</button><button class="action" id="remove">− Last</button></div><div class="btnrow"><button class="action" id="preset1">Normal (1:1)</button><button class="action primary" id="preset2">You 2 : AI 1</button><button class="action" id="preset3">You 3 : AI 1</button></div><div class="hint">Editing the order starts a new game to keep the move history consistent.</div></div>
-<div class="panel"><h2>Game settings</h2><label for="side">Your color</label><select id="side"><option value="w">White</option><option value="b">Black</option></select><label for="depth" style="margin-top:14px">Computer strength</label><select id="depth"><option value="1">Easy (quick moves)</option><option value="2" selected>Medium</option><option value="3">Hard (may take longer)</option></select><label for="kingCapture" style="margin-top:14px">King capture</label><select id="kingCapture"><option value="allowed">Allowed — capture wins</option><option value="standard">Standard — no king captures</option></select><label for="promotion" style="margin-top:14px">Pawn promotion</label><select id="promotion"><option value="q">Queen (automatic)</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option></select><div class="btnrow"><button class="action primary" id="newGame">New game</button><button class="action" id="undo">Undo last move</button><button class="action" id="flip">Flip board</button><button class="action" id="resumeAI" hidden>Resume computer</button></div></div>
+<div class="panel"><h2>Game settings</h2><label for="side">Your color</label><select id="side"><option value="w">White</option><option value="b">Black</option></select><label for="depth" style="margin-top:14px">Computer strength</label><select id="depth"><option value="1">Easy (~600 Elo)</option><option value="2" selected>Medium (~1200 Elo)</option><option value="3">Hard (~2000 Elo)</option><option value="custom">Custom Elo</option></select><label for="elo" style="margin-top:14px">Engine strength: <output id="eloValue" for="elo">1200</output> estimated Elo</label><input id="elo" type="range" min="400" max="2400" step="100" value="1200"><p class="hint">400–2400 · Approximate strength, not a measured rating. The engine plans using your custom turn sequence.</p><label for="kingCapture" style="margin-top:14px">King capture</label><select id="kingCapture"><option value="allowed">Allowed — capture wins</option><option value="standard">Standard — no king captures</option></select><label for="promotion" style="margin-top:14px">Pawn promotion</label><select id="promotion"><option value="q">Queen (automatic)</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option></select><div class="btnrow"><button class="action primary" id="newGame">New game</button><button class="action" id="undo">Undo last move</button><button class="action" id="flip">Flip board</button><button class="action" id="resumeAI" hidden>Resume computer</button></div></div>
 <div class="panel"><h2>Game</h2><div id="status" class="status" role="status" aria-live="polite">Loading rules…</div><p class="hint" id="ruleNote">King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Normal checkmate also ends the game.</p><h2 style="margin-top:20px">Move history</h2><div id="history" class="moves">No moves yet.</div></div>
 </aside></div>
 <script>
@@ -276,12 +277,13 @@ POSSIBILITY OF SUCH DAMAGE.
         }
         return score;
       }
-      async function chooseMove2(state2, depth, color, { isCancelled = () => false, yieldEvery = 32, timeBudgetMs = 2500 } = {}) {
+      async function chooseMove(state2, depth, color, { isCancelled = () => false, yieldEvery = 32, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random } = {}) {
         let nodes = 0;
         const cancelled = Symbol("cancelled");
         const timedOut = Symbol("timed-out");
         const started = Date.now();
         let completedMove = null;
+        let completedScores = [];
         function terminal(node2, remaining) {
           if (!node2.result) return null;
           if (node2.result.type !== "checkmate") return 0;
@@ -290,19 +292,23 @@ POSSIBILITY OF SUCH DAMAGE.
         function orderedMoves(node2) {
           return node2.legalMoves().sort((a, b) => (VALUES[b.captured] || 0) + (VALUES[b.promotion] || 0) - ((VALUES[a.captured] || 0) + (VALUES[a.promotion] || 0)));
         }
-        async function search(node2, remaining, alpha, beta) {
+        async function search(node2, remaining, alpha, beta, lastMover, extensionsLeft) {
           if (++nodes % yieldEvery === 0) await new Promise((resolve) => setTimeout(resolve, 0));
           if (isCancelled()) throw cancelled;
           if (completedMove && Date.now() - started >= timeBudgetMs) throw timedOut;
           const result = terminal(node2, remaining);
           if (result !== null) return result;
-          if (remaining === 0) return evaluate(node2, color);
+          if (remaining <= 0) {
+            if (!completedMove || node2.side !== lastMover || extensionsLeft <= 0) return evaluate(node2, color);
+            remaining = 1;
+            extensionsLeft--;
+          }
           const maximizing = node2.side === color;
           let best = maximizing ? -Infinity : Infinity;
           for (const move of orderedMoves(node2)) {
             const child = node2.clone();
             child.play(move, false);
-            const value = await search(child, remaining - 1, alpha, beta);
+            const value = await search(child, remaining - 1, alpha, beta, node2.side, extensionsLeft);
             best = maximizing ? Math.max(best, value) : Math.min(best, value);
             if (maximizing) alpha = Math.max(alpha, best);
             else beta = Math.min(beta, best);
@@ -311,30 +317,56 @@ POSSIBILITY OF SUCH DAMAGE.
           return best;
         }
         if (state2.result || state2.side !== color || isCancelled()) return null;
-        depth = Math.max(1, Math.min(3, Number(depth) || 1));
+        depth = Math.max(1, Math.min(6, Number(depth) || 1));
+        function selectCompleted() {
+          if (!completedMove || isCancelled()) return null;
+          const best = Math.max(...completedScores.map((candidate) => candidate.score));
+          if (best >= 1e5 || moveTolerance <= 0 || random() >= mistakeProbability) return completedMove;
+          const candidates = completedScores.filter((candidate) => candidate.score >= best - moveTolerance && candidate.score > -1e5);
+          return candidates.length ? candidates[Math.min(candidates.length - 1, Math.floor(random() * candidates.length))].move : completedMove;
+        }
         try {
           for (let iteration = 1; iteration <= depth; iteration++) {
             let bestMove = null, bestScore = -Infinity;
+            const scores = [];
             for (const move of orderedMoves(state2)) {
               const child = state2.clone();
               child.play(move, false);
-              const score = await search(child, iteration - 1, bestScore, Infinity);
+              const score = await search(child, iteration - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state2.side, sequenceExtension);
+              scores.push({ move, score });
               if (score > bestScore) {
                 bestScore = score;
                 bestMove = move;
               }
             }
             completedMove = bestMove;
+            completedScores = scores;
             if (bestScore >= 1e5 || Date.now() - started >= timeBudgetMs) break;
           }
-          return isCancelled() ? null : completedMove;
+          return selectCompleted();
         } catch (error) {
           if (error === cancelled) return null;
-          if (error === timedOut) return isCancelled() ? null : completedMove;
+          if (error === timedOut) return selectCompleted();
           throw error;
         }
       }
-      module.exports = { CustomTurnRules: CustomTurnRules2, chooseMove: chooseMove2 };
+      function strengthForElo2(value) {
+        const numeric = Number(value);
+        const elo = Math.round(Math.max(400, Math.min(2400, Number.isFinite(numeric) ? numeric : 1200)) / 100) * 100;
+        return {
+          elo,
+          depth: elo < 900 ? 2 : elo < 1500 ? 3 : elo < 2e3 ? 4 : 6,
+          timeBudgetMs: Math.round(250 + ((elo - 400) / 2e3) ** 2 * 3750),
+          sequenceExtension: 4,
+          moveTolerance: Math.max(0, (1700 - elo) * 0.4),
+          mistakeProbability: Math.max(0, (1800 - elo) / 2e3)
+        };
+      }
+      function chooseMoveForElo2(state2, elo, color, options = {}) {
+        const profile = strengthForElo2(elo);
+        return chooseMove(state2, profile.depth, color, { ...profile, ...options });
+      }
+      module.exports = { CustomTurnRules: CustomTurnRules2, chooseMove, chooseMoveForElo: chooseMoveForElo2, strengthForElo: strengthForElo2 };
     }
   });
 
@@ -3887,7 +3919,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
   // src/game.js
   var import_rules = __toESM(require_rules());
-  var { CustomTurnRules, chooseMove } = import_rules.default;
+  var { CustomTurnRules, chooseMoveForElo, strengthForElo } = import_rules.default;
   var names = { w: "White", b: "Black" };
   var pieceNames = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
   var $ = (id) => document.getElementById(id);
@@ -4057,11 +4089,11 @@ POSSIBILITY OF SUCH DAMAGE.
     renderStatus();
     const token = generation;
     const aiColor = engine();
-    const depth = Number($("depth").value);
+    const elo = Number($("elo").value);
     aiTimer = setTimeout(async () => {
       aiTimer = null;
       try {
-        const move = await chooseMove(state.clone(), depth, aiColor, { isCancelled: () => token !== generation });
+        const move = await chooseMoveForElo(state.clone(), elo, aiColor, { isCancelled: () => token !== generation });
         if (token !== generation) return;
         busy = false;
         if (move) apply(move);
@@ -4095,7 +4127,24 @@ POSSIBILITY OF SUCH DAMAGE.
     flipped = !flipped;
     renderBoard();
   };
+  function updateStrength() {
+    const profile = strengthForElo($("elo").value);
+    $("elo").value = profile.elo;
+    $("eloValue").textContent = profile.elo;
+    $("elo").setAttribute("aria-valuetext", `${profile.elo} estimated Elo`);
+    const presets = { 600: "1", 1200: "2", 2e3: "3" };
+    $("depth").value = presets[profile.elo] || "custom";
+  }
+  $("elo").oninput = () => {
+    updateStrength();
+    cancelAI();
+    renderStatus();
+    queueAI();
+  };
   $("depth").onchange = () => {
+    const presets = { "1": 600, "2": 1200, "3": 2e3 };
+    if (presets[$("depth").value]) $("elo").value = presets[$("depth").value];
+    updateStrength();
     cancelAI();
     renderStatus();
     queueAI();
@@ -4114,6 +4163,7 @@ POSSIBILITY OF SUCH DAMAGE.
     pausedAI = false;
     queueAI();
   };
+  updateStrength();
   reset();
 })();
 
