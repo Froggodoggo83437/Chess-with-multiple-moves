@@ -173,12 +173,13 @@ function evaluate(state, color) {
 }
 
 // Cooperatively yield so reset, undo, and order edits can cancel an active search.
-async function chooseMove(state, depth, color, { isCancelled = () => false, yieldEvery = 32, timeBudgetMs = 2500 } = {}) {
+async function chooseMove(state, depth, color, { isCancelled = () => false, yieldEvery = 32, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random } = {}) {
   let nodes = 0;
   const cancelled = Symbol('cancelled');
   const timedOut = Symbol('timed-out');
   const started = Date.now();
   let completedMove = null;
+  let completedScores = [];
   function terminal(node, remaining) {
     if (!node.result) return null;
     if (node.result.type !== 'checkmate') return 0;
@@ -189,19 +190,26 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
       ((VALUES[b.captured] || 0) + (VALUES[b.promotion] || 0)) -
       ((VALUES[a.captured] || 0) + (VALUES[a.promotion] || 0)));
   }
-  async function search(node, remaining, alpha, beta) {
+  async function search(node, remaining, alpha, beta, lastMover, extensionsLeft) {
     if (++nodes % yieldEvery === 0) await new Promise(resolve => setTimeout(resolve, 0));
     if (isCancelled()) throw cancelled;
     if (completedMove && Date.now() - started >= timeBudgetMs) throw timedOut;
     const result = terminal(node, remaining);
     if (result !== null) return result;
-    if (remaining === 0) return evaluate(node, color);
+    if (remaining <= 0) {
+      // Never assume alternating minimax levels. Finish an interrupted same-color
+      // run when possible, including the human's consecutive attacking moves.
+      // First complete a cheap one-ply fallback before spending time on extensions.
+      if (!completedMove || node.side !== lastMover || extensionsLeft <= 0) return evaluate(node, color);
+      remaining = 1;
+      extensionsLeft--;
+    }
     const maximizing = node.side === color;
     let best = maximizing ? -Infinity : Infinity;
     for (const move of orderedMoves(node)) {
       const child = node.clone();
       child.play(move, false);
-      const value = await search(child, remaining - 1, alpha, beta);
+      const value = await search(child, remaining - 1, alpha, beta, node.side, extensionsLeft);
       best = maximizing ? Math.max(best, value) : Math.min(best, value);
       if (maximizing) alpha = Math.max(alpha, best);
       else beta = Math.min(beta, best);
@@ -210,27 +218,55 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     return best;
   }
   if (state.result || state.side !== color || isCancelled()) return null;
-  depth = Math.max(1, Math.min(3, Number(depth) || 1));
+  depth = Math.max(1, Math.min(6, Number(depth) || 1));
+  function selectCompleted() {
+    if (!completedMove || isCancelled()) return null;
+    const best = Math.max(...completedScores.map(candidate => candidate.score));
+    // Do not discard a known forced win just to simulate a lower rating.
+    if (best >= 100000 || moveTolerance <= 0 || random() >= mistakeProbability) return completedMove;
+    const candidates = completedScores.filter(candidate => candidate.score >= best - moveTolerance && candidate.score > -100000);
+    return candidates.length ? candidates[Math.min(candidates.length - 1, Math.floor(random() * candidates.length))].move : completedMove;
+  }
   try {
     // Always finish a legal one-ply choice, then deepen within a bounded budget.
     // A partial deeper search must not overwrite the last completed result.
     for (let iteration = 1; iteration <= depth; iteration++) {
       let bestMove = null, bestScore = -Infinity;
+      const scores = [];
       for (const move of orderedMoves(state)) {
         const child = state.clone();
         child.play(move, false);
-        const score = await search(child, iteration - 1, bestScore, Infinity);
+        const score = await search(child, iteration - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state.side, sequenceExtension);
+        scores.push({ move, score });
         if (score > bestScore) { bestScore = score; bestMove = move; }
       }
       completedMove = bestMove;
+      completedScores = scores;
       if (bestScore >= 100000 || Date.now() - started >= timeBudgetMs) break;
     }
-    return isCancelled() ? null : completedMove;
+    return selectCompleted();
   } catch (error) {
     if (error === cancelled) return null;
-    if (error === timedOut) return isCancelled() ? null : completedMove;
+    if (error === timedOut) return selectCompleted();
     throw error;
   }
 }
 
-module.exports = { CustomTurnRules, chooseMove };
+// These are strength presets, not ratings measured against a rated player pool.
+function strengthForElo(value) {
+  const numeric = Number(value);
+  const elo = Math.round(Math.max(400, Math.min(2400, Number.isFinite(numeric) ? numeric : 1200)) / 100) * 100;
+  return {
+    elo,
+    depth: elo < 900 ? 2 : elo < 1500 ? 3 : elo < 2000 ? 4 : 6,
+    timeBudgetMs: Math.round(250 + ((elo - 400) / 2000) ** 2 * 3750),
+    sequenceExtension: 4,
+    moveTolerance: Math.max(0, (1700 - elo) * 0.4),
+    mistakeProbability: Math.max(0, (1800 - elo) / 2000)
+  };
+}
+function chooseMoveForElo(state, elo, color, options = {}) {
+  const profile = strengthForElo(elo);
+  return chooseMove(state, profile.depth, color, { ...profile, ...options });
+}
+module.exports = { CustomTurnRules, chooseMove, chooseMoveForElo, strengthForElo };

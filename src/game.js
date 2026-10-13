@@ -1,7 +1,7 @@
 import { Chess } from 'chess.js';
 import { createCelebration } from './celebration.js';
 import rules from './rules.cjs';
-const { CustomTurnRules, chooseMove } = rules;
+const { CustomTurnRules, chooseMoveForElo, strengthForElo } = rules;
 const names = { w: 'White', b: 'Black' };
 const pieceNames = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king' };
 const $ = id => document.getElementById(id);
@@ -158,11 +158,11 @@ function queueAI() {
   renderStatus();
   const token = generation;
   const aiColor = engine();
-  const depth = Number($('depth').value);
+  const elo = Number($('elo').value);
   aiTimer = setTimeout(async () => {
     aiTimer = null;
     try {
-      const move = await chooseMove(state.clone(), depth, aiColor, { isCancelled: () => token !== generation });
+      const move = await chooseMoveForElo(state.clone(), elo, aiColor, { isCancelled: () => token !== generation });
       if (token !== generation) return;
       busy = false;
       if (move) apply(move);
@@ -188,7 +188,26 @@ $('preset1').onclick = () => modifyOrder(['w', 'b']);
 $('preset2').onclick = () => modifyOrder([player(), player(), engine()]);
 $('preset3').onclick = () => modifyOrder([player(), player(), player(), engine()]);
 $('flip').onclick = () => { flipped = !flipped; renderBoard(); };
-$('depth').onchange = () => { cancelAI(); renderStatus(); queueAI(); };
+function updateStrength() {
+  const profile = strengthForElo($('elo').value);
+  $('elo').value = profile.elo;
+  $('eloValue').textContent = profile.elo;
+  $('elo').setAttribute('aria-valuetext', `${profile.elo} estimated Elo`);
+  const presets = { 600: '1', 1200: '2', 2000: '3' };
+  $('depth').value = presets[profile.elo] || 'custom';
+}
+$('elo').oninput = () => {
+  updateStrength();
+  cancelAI();
+  renderStatus();
+  queueAI();
+};
+$('depth').onchange = () => {
+  const presets = { '1': 600, '2': 1200, '3': 2000 };
+  if (presets[$('depth').value]) $('elo').value = presets[$('depth').value];
+  updateStrength();
+  cancelAI(); renderStatus(); queueAI();
+};
 $('undo').onclick = () => {
   if (!state.snapshots.length) return;
   cancelAI();
@@ -200,4 +219,5 @@ $('undo').onclick = () => {
   render();
 };
 $('resumeAI').onclick = () => { cancelAI(); pausedAI = false; queueAI(); };
+updateStrength();
 reset();

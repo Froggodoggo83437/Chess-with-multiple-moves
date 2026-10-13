@@ -131,6 +131,17 @@ let count=0;
     await check('stalemate displays a persistent draw without starting AI',async()=>{
       await goto('stalemate');assert.equal(await text('status'),'Draw — stalemate.');await page.waitForTimeout(400);assert.equal(await text('history'),'No moves yet.');
     });
+    await check('Elo slider and presets stay synchronized and preserve the current game',async()=>{
+      await goto();await move('e2','e4');const history=await text('history');
+      await page.locator('#elo').fill('1700');assert.equal(await text('eloValue'),'1700');assert.equal(await page.locator('#depth').inputValue(),'custom');
+      assert.equal(await text('history'),history);assert.equal(await page.locator('#elo').getAttribute('aria-valuetext'),'1700 estimated Elo');
+      await page.selectOption('#depth','3');assert.equal(await page.locator('#elo').inputValue(),'2000');
+      await page.selectOption('#depth','1');assert.equal(await page.locator('#elo').inputValue(),'600');
+      await page.locator('#elo').fill('2400');assert.equal(await text('eloValue'),'2400');assert.equal(await text('history'),history);
+      await page.selectOption('#depth','1');await move('d2','d4');await page.locator('#elo').fill('400');await waitHistory(3);
+      assert.equal(await page.locator('#elo').inputValue(),'400');await page.click('#undo');assert.ok((await text('status')).includes('paused'));
+      await page.locator('#elo').fill('1200');await page.waitForTimeout(400);assert.ok(!(await text('history')).includes('3.'));
+    });
     await check('checkmate celebration displays winner, preserves controls, and plays once',async()=>{
       await goto('mate');await move('g6','g7');
       assert.equal(await page.locator('.victory-title').innerText(),'CHECKMATE');
