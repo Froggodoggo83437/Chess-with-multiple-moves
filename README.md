@@ -82,18 +82,38 @@ Use the **Engine strength** slider to select 400–3500 target Elo in steps of
 values display as Custom Elo. Strength changes preserve the game and restart
 active computer searches without resuming a computer paused by Undo.
 
-The 3500 target is not a promise of measured 3500-Elo play. These numbers are
+The 3500 target is not a promise of measured 3500-Elo play or the objectively
+best move in every position. These numbers are
 approximate strength labels, not ratings calibrated against
 a rated player pool, especially in custom variants. Increasing the setting
 raises the number of deepening passes (two to eight) and time budget (roughly 0.25–12
-seconds) and reduces the chance of selecting a lower-scoring legal move. Lower
-strengths can choose among moves within a score tolerance; a known forced win
-is never intentionally discarded. Iterative deepening retains the last fully
+seconds) and reduces the chance of selecting a lower-scoring legal move. At 400, the engine makes a deliberate quality mistake on about 90% of choices
+when a sufficiently worse legal candidate is available. Increasing strength
+reduces that probability and the permitted score loss; equally good alternatives
+are not counted as mistakes. At 3500, deliberate errors are disabled and it
+always picks the highest-scoring move from its completed search. A known forced win is never intentionally discarded. Iterative deepening retains the last fully
 completed result; complex or very long turn sequences can exceed the search
 horizon or time budget. Search-only caches reuse legal move generation and static evaluations across
 identical FENs; previous best moves guide ordering. Draw-dependent search scores
 are not cached across different histories. The search yields regularly so controls remain usable
 and resets, undo, sequence edits, or strength changes can cancel it.
+
+Every 100-point slider step interpolates between the following behavioral
+anchors. Error frequency applies only when a genuinely worse legal candidate
+is available, and known forced wins are preserved. These are tuning targets,
+not measured ratings.
+
+| Strength target | Deliberate error chance | Thinking budget |
+| --- | --- | --- |
+| 400 | 90% | 0.25 s |
+| 800 | 78% | 0.5 s |
+| 1200 | 55% | 1 s |
+| 1600 | 35% | 1.8 s |
+| 2000 | 18% | 3 s |
+| 2400 | 8% | 4 s |
+| 2800 | 3% | 6.5 s |
+| 3200 | 0.8% | 9 s |
+| 3500 | 0% | 12 s |
 
 ## Development and tests
 
