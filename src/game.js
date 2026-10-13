@@ -1,7 +1,8 @@
 import { Chess } from 'chess.js';
+import { createEngineClient } from './engine-client.js';
 import { createCelebration } from './celebration.js';
 import rules from './rules.cjs';
-const { CustomTurnRules, chooseMoveForElo, strengthForElo } = rules;
+const { CustomTurnRules, strengthForElo } = rules;
 const names = { w: 'White', b: 'Black' };
 const pieceNames = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king' };
 const $ = id => document.getElementById(id);
@@ -10,11 +11,14 @@ let state, selected = null, legal = [], flipped = false, busy = false;
 let generation = 0, aiTimer = null, pausedAI = false, aiError = '';
 const squares = new Map();
 const celebrate = createCelebration(document.querySelector('.boardWrap'), window.CHESS_PIECES);
-const player = () => $('side').value;
+const engineClient = createEngineClient();
+const pvp = () => $('mode').value === 'pvp';
+const player = () => pvp() ? 'w' : $('side').value;
 const engine = () => player() === 'w' ? 'b' : 'w';
 
 function cancelAI() {
   generation++;
+  engineClient.cancel();
   clearTimeout(aiTimer);
   aiTimer = null;
   busy = false;
@@ -72,11 +76,16 @@ function renderBoard() {
         button.append(image);
       }
     }
-    let coordinate = button.querySelector('.coord');
+    let coordinate = button.querySelector('.file-coord');
     if (rank === ranks.at(-1)) {
-      if (!coordinate) { coordinate = document.createElement('span'); coordinate.className = 'coord'; button.append(coordinate); }
+      if (!coordinate) { coordinate = document.createElement('span'); coordinate.className = 'coord file-coord'; coordinate.setAttribute('aria-hidden', 'true'); button.append(coordinate); }
       coordinate.textContent = file;
     } else coordinate?.remove();
+    let rankCoordinate = button.querySelector('.rank-coord');
+    if (file === files[0]) {
+      if (!rankCoordinate) { rankCoordinate = document.createElement('span'); rankCoordinate.className = 'coord rank-coord'; rankCoordinate.setAttribute('aria-hidden', 'true'); button.append(rankCoordinate); }
+      rankCoordinate.textContent = rank;
+    } else rankCoordinate?.remove();
     const board = $('board');
     if (board.children[visualIndex] !== button) board.insertBefore(button, board.children[visualIndex] || null);
     visualIndex++;
@@ -84,6 +93,9 @@ function renderBoard() {
 }
 function renderTurns() {
   $('turns').replaceChildren();
+  $('computerSettings').hidden = pvp();
+  $('preset2').textContent = pvp() ? 'White 2 : Black 1' : 'You 2 : AI 1';
+  $('preset3').textContent = pvp() ? 'White 3 : Black 1' : 'You 3 : AI 1';
   $('remove').disabled = order.length === 1;
   const presets = [['w', 'b'], [player(), player(), engine()], [player(), player(), player(), engine()]];
   presets.forEach((preset, index) => $('preset' + (index + 1)).classList.toggle('primary', preset.join('') === order.join('')));
@@ -111,7 +123,7 @@ function renderStatus() {
     };
     message = `Draw — ${draws[result.type]}.`;
   } else {
-    message = `${names[state.side]} ${busy ? '(computer) is thinking…' : 'to move ' + (state.side === player() ? '(you)' : '(computer)')}`;
+    message = `${names[state.side]} ${busy ? '(computer) is thinking…' : 'to move ' + (pvp() ? '(Player ' + (state.side === 'w' ? '1' : '2') + ')' : state.side === player() ? '(you)' : '(computer)')}`;
     const checked = ['w', 'b'].filter(side => state.inCheck(side));
     if (checked.length) message += ` — ${names[checked[0]]} is in check!`;
     if (state.forcedSide) message += ' Immediate check response; then the sequence resumes.';
@@ -120,7 +132,7 @@ function renderStatus() {
   }
   $('status').textContent = message;
   $('undo').disabled = !state.snapshots.length;
-  $('resumeAI').hidden = !pausedAI || !!result || state.side !== engine();
+  $('resumeAI').hidden = pvp() || !pausedAI || !!result || state.side !== engine();
 }
 function render() {
   renderBoard();
@@ -129,6 +141,7 @@ function render() {
   $('ruleNote').textContent = state.allowKingCapture
     ? 'King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Normal checkmate also ends the game. Your own king must remain safe. Undo restores captured kings; computer replies stay paused until resumed.'
     : 'Standard rules: check requires an immediate response, even between consecutive moves. An extra response does not consume the attacker’s next tile. Checkmate ends the game immediately; kings cannot be captured. Undo pauses computer replies until resumed.';
+  if (pvp()) $('ruleNote').textContent = $('ruleNote').textContent.replace('computer replies stay paused until resumed.', 'each player moves when their color is due.').replace('Undo pauses computer replies until resumed.', 'Undo takes back one move for either player.');
   $('history').textContent = state.history.length ? state.history.map((move, index) =>
     `${index + 1}. ${names[move.color]} ${move.san}`).join('   ') : 'No moves yet.';
   celebrate(state.result);
@@ -142,27 +155,26 @@ function apply(move) {
   return true;
 }
 function clickSquare(square) {
-  if (state.result || busy || state.side !== player()) return;
+  if (state.result || busy || (!pvp() && state.side !== player())) return;
   if (selected && legal.some(move => move.to === square)) {
     if (apply({ from: selected, to: square, promotion: $('promotion').value })) queueAI();
     return;
   }
   const piece = state.game.get(square);
-  selected = piece?.color === player() ? square : null;
+  selected = piece?.color === state.side ? square : null;
   legal = selected ? state.legalMoves().filter(move => move.from === selected) : [];
   renderBoard();
 }
 function queueAI() {
-  if (state.result || state.side !== engine() || busy || pausedAI) return;
+  if (pvp() || state.result || state.side !== engine() || busy || pausedAI) return;
   busy = true;
   renderStatus();
   const token = generation;
-  const aiColor = engine();
   const elo = Number($('elo').value);
   aiTimer = setTimeout(async () => {
     aiTimer = null;
     try {
-      const move = await chooseMoveForElo(state.clone(), elo, aiColor, { isCancelled: () => token !== generation });
+      const move = await engineClient.choose(state, elo);
       if (token !== generation) return;
       busy = false;
       if (move) apply(move);
@@ -176,10 +188,11 @@ function queueAI() {
       aiError = 'The computer could not finish its move. Press Resume computer to retry, or undo.';
       renderStatus();
     }
-  }, 180);
+  }, 30);
 }
 $('newGame').onclick = reset;
 $('side').onchange = reset;
+$('mode').onchange = reset;
 $('kingCapture').onchange = reset;
 $('addWhite').onclick = () => modifyOrder([...order, 'w']);
 $('addBlack').onclick = () => modifyOrder([...order, 'b']);
@@ -215,7 +228,7 @@ $('undo').onclick = () => {
   selected = null;
   legal = [];
   // Undo really undoes one ply. Do not silently replay it if it was an AI move.
-  pausedAI = state.side === engine();
+  pausedAI = !pvp() && state.side === engine();
   render();
 };
 $('resumeAI').onclick = () => { cancelAI(); pausedAI = false; queueAI(); };

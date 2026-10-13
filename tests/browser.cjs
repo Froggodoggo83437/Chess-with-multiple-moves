@@ -35,8 +35,9 @@ let count=0;
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
   const page=await browser.newPage();const errors=[];const remote=[];
+  let workers=0;page.on('worker',()=>workers++);
   page.on('pageerror',e=>errors.push(e.message));
-  page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1')&&!r.url().startsWith('data:'))remote.push(r.url());});
+  page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1')&&!r.url().startsWith('data:')&&!r.url().startsWith('blob:'))remote.push(r.url());});
   const goto=async(name='')=>{await page.goto(`http://127.0.0.1:${server.address().port}/${name}`);await page.waitForFunction(()=>document.querySelectorAll('#board button').length===64);await page.selectOption('#depth','1');};
   const square=s=>page.locator(`[data-square="${s}"]`);
   const move=async(from,to)=>{await square(from).click();await square(to).click();};
@@ -131,6 +132,58 @@ let count=0;
     await check('stalemate displays a persistent draw without starting AI',async()=>{
       await goto('stalemate');assert.equal(await text('status'),'Draw — stalemate.');await page.waitForTimeout(400);assert.equal(await text('history'),'No moves yet.');
     });
+    await check('rank and file labels follow board orientation',async()=>{
+      await goto();assert.equal(await page.locator('.rank-coord').allTextContents().then(a=>a.join('')),'87654321');
+      assert.equal(await page.locator('.file-coord').allTextContents().then(a=>a.join('')),'abcdefgh');
+      await page.click('#flip');assert.equal(await page.locator('.rank-coord').allTextContents().then(a=>a.join('')),'12345678');
+      assert.equal(await page.locator('.file-coord').allTextContents().then(a=>a.join('')),'hgfedcba');
+      assert.equal(await square('h1').locator('.rank-coord').innerText(),'1');
+    });
+    await check('local PvP plays both colors in the custom sequence without AI',async()=>{
+      await goto();const count=workers;await page.selectOption('#mode','pvp');assert.ok(await page.locator('#computerSettings').isHidden());
+      await move('e2','e4');await move('d2','d4');assert.ok((await text('status')).includes('Black to move (Player 2)'));
+      await move('e7','e5');assert.ok((await text('status')).includes('White to move (Player 1)'));
+      await page.waitForTimeout(300);assert.equal(workers,count);assert.ok(!(await text('history')).includes('4.'));
+      await page.click('#undo');assert.ok((await text('status')).includes('Black to move'));assert.ok(await page.locator('#resumeAI').isHidden());
+      await move('c7','c5');await page.click('#preset1');assert.equal(await text('history'),'No moves yet.');
+      await move('e2','e4');await move('e7','e5');assert.ok((await text('history')).includes('2. Black'));
+    });
+    await check('switching to PvP terminates queued or running worker search',async()=>{
+      await goto();await page.selectOption('#depth','4');await move('e2','e4');await move('d2','d4');
+      await page.waitForTimeout(100);await page.selectOption('#mode','pvp');await page.waitForTimeout(400);
+      assert.equal(await text('history'),'No moves yet.');assert.equal(await page.locator('#board img').count(),32);
+      await page.selectOption('#mode','computer');assert.ok(await page.locator('#computerSettings').isVisible());
+    });
+    await check('PvP king capture celebrates and undo restores the king',async()=>{
+      await goto('capture');await page.selectOption('#mode','pvp');await move('a1','a8');await move('a8','h8');
+      assert.equal(await text('status'),'Checkmate — White wins! King captured.');await page.click('#undo');
+      assert.ok((await square('h8').getAttribute('aria-label')).includes('Black king'));
+    });
+    await check('embedded engine worker calculates offline after the page loads',async()=>{
+      const local=await browser.newPage();const context=local.context();
+      let localWorker=false;local.on('worker',()=>localWorker=true);local.on('pageerror',error=>errors.push(error.message));
+      try {
+        await local.goto(`http://127.0.0.1:${server.address().port}/`);
+        await context.setOffline(true);
+        await local.waitForFunction(()=>document.querySelectorAll('#board button').length===64);
+        await local.selectOption('#depth','1');
+        for(const [from,to] of [['e2','e4'],['d2','d4']]){await local.locator(`[data-square="${from}"]`).click();await local.locator(`[data-square="${to}"]`).click();}
+        await local.waitForFunction(()=>document.querySelector('#history').textContent.includes('3. Black'));
+        assert.ok(localWorker);assert.equal(await local.locator('.rank-coord').count(),8);
+      } finally {await context.close();}
+    });
+    await check('worker-unavailable fallback still plays legal computer moves',async()=>{
+      const local=await browser.newPage();local.on('pageerror',error=>errors.push(error.message));
+      try {
+        await local.addInitScript(()=>{window.Worker=undefined;});
+        await local.goto(`http://127.0.0.1:${server.address().port}/`);
+        await local.selectOption('#depth','1');
+        for(const [from,to] of [['e2','e4'],['d2','d4']]){await local.locator(`[data-square="${from}"]`).click();await local.locator(`[data-square="${to}"]`).click();}
+        await local.waitForFunction(()=>document.querySelector('#history').textContent.includes('3. Black'));
+        assert.equal(await local.locator('#board button').count(),64);
+      } finally {await local.context().close();}
+    });
+    assert.ok(workers>0,'Computer moves should use an embedded worker');
     await check('Expert 3500 target is the default strength',async()=>{
       await page.goto(`http://127.0.0.1:${server.address().port}/`);
       await page.waitForFunction(()=>document.querySelectorAll('#board button').length===64);

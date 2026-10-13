@@ -390,6 +390,8 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     return best;
   }
   if (state.result || state.side !== color || isCancelled()) return null;
+  const available = state.legalMoves();
+  if (available.length === 1) return available[0];
   depth = Math.max(1, Math.min(8, Number(depth) || 1));
   function selectCompleted() {
     if (!completedMove || isCancelled()) return null;
@@ -410,6 +412,9 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
       for (const move of orderedMoves(state, completedMove)) {
         const child = state.clone();
         child.play(move, false);
+        // Mate or king capture in one is already an optimal win; no need to
+        // score the other choices or spend the whole thinking allowance.
+        if (child.result?.type === 'checkmate' && child.result.winner === color) return move;
         const score = await search(child, targetDepth - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state.side, sequenceExtension);
         scores.push({ move, score });
         if (score > bestScore) { bestScore = score; bestMove = move; }

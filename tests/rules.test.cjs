@@ -390,3 +390,14 @@ test('every intermediate 100-point setting reduces errors and increases thinking
   assert.ok(Math.abs(between.mistakeProbability-.265)<1e-9);
   assert.equal(between.moveTolerance,160);assert.equal(between.timeBudgetMs,2400);
 });
+test('forced moves return immediately at Expert without spending the search allowance', async () => {
+  const {chooseMoveForElo}=require('../src/rules.cjs');
+  const state=captureMode(['b','w','w'],'6Rk/5K2/8/8/8/8/8/8 b - - 0 1');
+  assert.equal(state.legalMoves().length,1);const start=Date.now();
+  const choice=await chooseMoveForElo(state,3500,'b');assert.equal(choice.to,'h7');assert.ok(Date.now()-start<1000);
+});
+test('an immediate king capture returns quickly even with Expert enabled', async () => {
+  const {chooseMoveForElo}=require('../src/rules.cjs');
+  const state=captureMode(['w','w','b'],'R6k/7p/8/8/8/8/8/7K w - - 0 1');const start=Date.now();
+  const choice=await chooseMoveForElo(state,3500,'w');assert.equal(choice.captured,'k');assert.ok(Date.now()-start<1000);
+});

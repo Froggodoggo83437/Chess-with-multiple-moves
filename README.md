@@ -40,6 +40,13 @@ or build is needed to play. Alternatively, serve this directory with
 
 ## Controls and computer
 
+The board displays file letters along the bottom and rank numbers down the left
+edge, with both sets following Flip Board. Choose **Player vs Player (same
+device)** to play both colors locally, including consecutive custom turns.
+Mode changes start a fresh game and cancel computer work. Computer-only settings
+are hidden in local PvP; promotion, both rules modes, turn editing, Undo, and
+victory celebrations remain available. White is Player 1 and Black is Player 2.
+
 Checkmate and king captures trigger a four-second celebration on the board,
 with a glowing king badge, expanding ring, confetti, and the winning color.
 King captures have a distinct caption. The overlay leaves controls usable,
@@ -95,8 +102,13 @@ always picks the highest-scoring move from its completed search. A known forced 
 completed result; complex or very long turn sequences can exceed the search
 horizon or time budget. Search-only caches reuse legal move generation and static evaluations across
 identical FENs; previous best moves guide ordering. Draw-dependent search scores
-are not cached across different histories. The search yields regularly so controls remain usable
-and resets, undo, sequence edits, or strength changes can cancel it.
+are not cached across different histories. In supported browsers the engine runs in an embedded background worker, removing
+UI-thread calculation and timer-yield overhead while keeping search budgets and
+strength intact. Reset, Undo, strength changes, and mode changes terminate stale
+worker jobs immediately. Browsers unable to create workers use the cooperative
+main-thread fallback. Forced moves and immediate mating/king-capture moves return
+early instead of using the full allowance. The engine starts promptly after a
+human move; complex positions may still use the entire thinking budget.
 
 Every 100-point slider step interpolates between the following behavioral
 anchors. Error frequency applies only when a genuinely worse legal candidate
@@ -130,7 +142,8 @@ npm run test:browser
 Edit `src/rules.cjs` for variant rules and AI, and `src/game.js` for controls and
 rendering. `npm run build` embeds the code and chess.js into the marked game
 script in `custom_turn_chess.html`; keep the generated HTML in sync. Styling and markup live in the HTML. Original SVG artwork is defined in
-`src/pieces.cjs` and embedded by the build script. The pinned chess.js
+`src/pieces.cjs` and embedded by the build script. `src/engine-worker.js` is
+also bundled into the HTML so offline/file play needs no separate worker fetch. The pinned chess.js
 license is included in the generated script.
 
 Rules tests exercise standard and king-capture modes, terminal captures and
@@ -143,6 +156,8 @@ controls and AI cancellation, terminal messages, special-move rendering, all
 fixtures only through the test server; there are no production test hooks.
 Screenshots go to ignored `test-results/`.
 
-Browser validation uses headless Chromium. Other browsers and physical touch
+Browser validation uses headless Chromium. Cloud browser policy blocks direct
+`file://` navigation, so direct file launch is unverified here; offline worker
+calculation is tested after loading the page through the local server. Other browsers and physical touch
 devices require manual testing; automated coverage cannot prove every possible
 chess position or assess playing strength exhaustively.
