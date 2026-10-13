@@ -131,13 +131,21 @@ let count=0;
     await check('stalemate displays a persistent draw without starting AI',async()=>{
       await goto('stalemate');assert.equal(await text('status'),'Draw — stalemate.');await page.waitForTimeout(400);assert.equal(await text('history'),'No moves yet.');
     });
+    await check('Expert 3500 target is the default strength',async()=>{
+      await page.goto(`http://127.0.0.1:${server.address().port}/`);
+      await page.waitForFunction(()=>document.querySelectorAll('#board button').length===64);
+      assert.equal(await page.locator('#elo').inputValue(),'3500');
+      assert.equal(await page.locator('#depth').inputValue(),'4');
+      assert.equal(await text('eloValue'),'3500');
+      assert.equal(await page.locator('#elo').getAttribute('max'),'3500');
+    });
     await check('Elo slider and presets stay synchronized and preserve the current game',async()=>{
       await goto();await move('e2','e4');const history=await text('history');
       await page.locator('#elo').fill('1700');assert.equal(await text('eloValue'),'1700');assert.equal(await page.locator('#depth').inputValue(),'custom');
-      assert.equal(await text('history'),history);assert.equal(await page.locator('#elo').getAttribute('aria-valuetext'),'1700 estimated Elo');
+      assert.equal(await text('history'),history);assert.equal(await page.locator('#elo').getAttribute('aria-valuetext'),'1700 target Elo');
       await page.selectOption('#depth','3');assert.equal(await page.locator('#elo').inputValue(),'2000');
       await page.selectOption('#depth','1');assert.equal(await page.locator('#elo').inputValue(),'600');
-      await page.locator('#elo').fill('2400');assert.equal(await text('eloValue'),'2400');assert.equal(await text('history'),history);
+      await page.selectOption('#depth','4');assert.equal(await text('eloValue'),'3500');assert.equal(await page.locator('#elo').inputValue(),'3500');assert.equal(await text('history'),history);
       await page.selectOption('#depth','1');await move('d2','d4');await page.locator('#elo').fill('400');await waitHistory(3);
       assert.equal(await page.locator('#elo').inputValue(),'400');await page.click('#undo');assert.ok((await text('status')).includes('paused'));
       await page.locator('#elo').fill('1200');await page.waitForTimeout(400);assert.ok(!(await text('history')).includes('3.'));

@@ -62,7 +62,7 @@ button.action{cursor:pointer;padding:10px 12px;background:#263953;color:#fff;bor
 <header><h1>♞ Custom Turn Chess</h1><p>Change who moves next. Play two turns in a row, three, or any sequence you like.</p></header>
 <div class="layout"><section><div class="boardWrap"><div class="board" id="board" aria-label="Chess board"></div></div><div class="hint">Click a piece, then click its destination. Pawns promote to your selected piece (Queen by default).</div></section><aside>
 <div class="panel"><h2>Turn order</h2><p class="hint" style="margin:0">Click a tile to swap White/Black. The orange tile is the current turn.</p><div id="turns" class="turns"></div><div class="btnrow"><button class="action" id="addWhite">+ White</button><button class="action" id="addBlack">+ Black</button><button class="action" id="remove">− Last</button></div><div class="btnrow"><button class="action" id="preset1">Normal (1:1)</button><button class="action primary" id="preset2">You 2 : AI 1</button><button class="action" id="preset3">You 3 : AI 1</button></div><div class="hint">Editing the order starts a new game to keep the move history consistent.</div></div>
-<div class="panel"><h2>Game settings</h2><label for="side">Your color</label><select id="side"><option value="w">White</option><option value="b">Black</option></select><label for="depth" style="margin-top:14px">Computer strength</label><select id="depth"><option value="1">Easy (~600 Elo)</option><option value="2" selected>Medium (~1200 Elo)</option><option value="3">Hard (~2000 Elo)</option><option value="custom">Custom Elo</option></select><label for="elo" style="margin-top:14px">Engine strength: <output id="eloValue" for="elo">1200</output> estimated Elo</label><input id="elo" type="range" min="400" max="2400" step="100" value="1200"><p class="hint">400–2400 · Approximate strength, not a measured rating. The engine plans using your custom turn sequence.</p><label for="kingCapture" style="margin-top:14px">King capture</label><select id="kingCapture"><option value="allowed">Allowed — capture wins</option><option value="standard">Standard — no king captures</option></select><label for="promotion" style="margin-top:14px">Pawn promotion</label><select id="promotion"><option value="q">Queen (automatic)</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option></select><div class="btnrow"><button class="action primary" id="newGame">New game</button><button class="action" id="undo">Undo last move</button><button class="action" id="flip">Flip board</button><button class="action" id="resumeAI" hidden>Resume computer</button></div></div>
+<div class="panel"><h2>Game settings</h2><label for="side">Your color</label><select id="side"><option value="w">White</option><option value="b">Black</option></select><label for="depth" style="margin-top:14px">Computer strength</label><select id="depth"><option value="1">Easy (~600 Elo)</option><option value="2">Medium (~1200 Elo)</option><option value="3">Hard (~2000 Elo)</option><option value="4" selected>Expert (3500 target)</option><option value="custom">Custom Elo</option></select><label for="elo" style="margin-top:14px">Engine strength: <output id="eloValue" for="elo">3500</output> target Elo</label><input id="elo" type="range" min="400" max="3500" step="100" value="3500"><p class="hint">400–3500 · Strength targets, not measured ratings. Expert can think for up to 12 seconds per move and plans around your custom sequence.</p><label for="kingCapture" style="margin-top:14px">King capture</label><select id="kingCapture"><option value="allowed">Allowed — capture wins</option><option value="standard">Standard — no king captures</option></select><label for="promotion" style="margin-top:14px">Pawn promotion</label><select id="promotion"><option value="q">Queen (automatic)</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option></select><div class="btnrow"><button class="action primary" id="newGame">New game</button><button class="action" id="undo">Undo last move</button><button class="action" id="flip">Flip board</button><button class="action" id="resumeAI" hidden>Resume computer</button></div></div>
 <div class="panel"><h2>Game</h2><div id="status" class="status" role="status" aria-live="polite">Loading rules…</div><p class="hint" id="ruleNote">King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Normal checkmate also ends the game.</p><h2 style="margin-top:20px">Move history</h2><div id="history" class="moves">No moves yet.</div></div>
 </aside></div>
 <script>
@@ -177,7 +177,14 @@ POSSIBILITY OF SUCH DAMAGE.
           if (this.result) return [];
           if (this.moveCache.has(side)) return this.moveCache.get(side);
           const position = side === this.game.turn() ? this.game : this.positionFor(side);
+          const cacheKey = position.fen();
+          const cached = this.searchMoveCache?.get(cacheKey);
+          if (cached) {
+            this.moveCache.set(side, cached);
+            return cached;
+          }
           const moves = position.moves({ verbose: true }).filter((move) => this.allowKingCapture || move.captured !== "k" && position.get(move.to)?.type !== "k");
+          if (this.searchMoveCache && this.searchMoveCache.size < 12e3) this.searchMoveCache.set(cacheKey, moves);
           this.moveCache.set(side, moves);
           return moves;
         }
@@ -225,6 +232,7 @@ POSSIBILITY OF SUCH DAMAGE.
           const copy = Object.create(_CustomTurnRules.prototype);
           copy.Chess = this.Chess;
           copy.allowKingCapture = this.allowKingCapture;
+          copy.searchMoveCache = this.searchMoveCache;
           copy.order = [...this.order];
           copy.snapshots = [];
           copy.restore(this.snapshot());
@@ -316,7 +324,18 @@ POSSIBILITY OF SUCH DAMAGE.
         return score;
       }
       async function chooseMove(state2, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random, onIteration = () => {
-      } } = {}) {
+      }, turnBeam = 3, lineLimit = 8, captureDepth = 3 } = {}) {
+        state2 = state2.clone();
+        state2.searchMoveCache = /* @__PURE__ */ new Map();
+        const evaluationCache = /* @__PURE__ */ new Map();
+        const principalMoves = /* @__PURE__ */ new Map();
+        function scorePosition(node2) {
+          const key = node2.game.fen();
+          if (evaluationCache.has(key)) return evaluationCache.get(key);
+          const score = evaluate(node2, color);
+          if (evaluationCache.size < 12e3) evaluationCache.set(key, score);
+          return score;
+        }
         let nodes = 0;
         const cancelled = Symbol("cancelled");
         const timedOut = Symbol("timed-out");
@@ -331,6 +350,7 @@ POSSIBILITY OF SUCH DAMAGE.
           return node2.result.winner === color ? 1e6 - distance : -1e6 + distance;
         }
         function orderedMoves(node2, preferred) {
+          preferred ||= principalMoves.get(node2.positionKey());
           const enemyKing = node2.game.board().flat().find((piece) => piece?.type === "k" && piece.color !== node2.side)?.square;
           const priority = (move) => (preferred && move.lan === preferred.lan ? 1e6 : 0) + (move.captured ? VALUES[move.captured] * 10 - VALUES[move.piece] : 0) + (VALUES[move.promotion] || 0) + (/[+#]/.test(move.san) ? 200 : 0) + (enemyKing && ["r", "q"].includes(move.piece) && (move.to[0] === enemyKing[0] || move.to[1] === enemyKing[1]) ? 80 : 0) + (["n", "b"].includes(move.piece) ? (7 - Math.abs(3.5 - (move.to.charCodeAt(0) - 97)) - Math.abs(3.5 - (Number(move.to[1]) - 1))) * 5 : 0);
           return [...node2.legalMoves()].sort((a, b) => priority(b) - priority(a));
@@ -345,26 +365,26 @@ POSSIBILITY OF SUCH DAMAGE.
           let index = state2.index;
           let side = state2.side;
           let opponentMoved = false;
-          for (let plies = 1; plies <= 8; plies++) {
+          for (let plies = 1; plies <= lineLimit; plies++) {
             opponentMoved ||= side !== color;
             if (side === state2.order[index]) index = (index + 1) % state2.order.length;
             side = state2.order[index];
             if (opponentMoved && side === color) return plies;
           }
-          return Math.min(8, state2.order.length + 2);
+          return Math.min(lineLimit, state2.order.length + 2);
         }
-        async function planTurn(node2, remaining, opponentMoved, alpha, beta) {
+        async function planTurn(node2, remaining, opponentMoved, alpha, beta, beamWidth) {
           await checkpoint();
           const result = terminal(node2);
           if (result !== null) return result;
-          if (remaining <= 0 || opponentMoved && node2.side === color) return evaluate(node2, color);
+          if (remaining <= 0 || opponentMoved && node2.side === color) return scorePosition(node2);
           const maximizing = node2.side === color;
           let best = maximizing ? -Infinity : Infinity;
-          const candidates = orderedMoves(node2).slice(0, 3);
+          const candidates = orderedMoves(node2).slice(0, beamWidth);
           for (const move of candidates) {
             const child = node2.clone();
             child.play(move, false);
-            const value = await planTurn(child, remaining - 1, opponentMoved || node2.side !== color, alpha, beta);
+            const value = await planTurn(child, remaining - 1, opponentMoved || node2.side !== color, alpha, beta, beamWidth);
             best = maximizing ? Math.max(best, value) : Math.min(best, value);
             if (maximizing) alpha = Math.max(alpha, best);
             else beta = Math.min(beta, best);
@@ -372,14 +392,14 @@ POSSIBILITY OF SUCH DAMAGE.
           }
           return best;
         }
-        async function completeTurnPlan() {
+        async function completeTurnPlan(beamWidth) {
           let bestMove = null, bestScore = -Infinity;
           const scores = [];
           const horizon = replyHorizon();
           for (const move of orderedMoves(state2, completedMove)) {
             const child = state2.clone();
             child.play(move, false);
-            const value = await planTurn(child, horizon - 1, false, -Infinity, Infinity);
+            const value = await planTurn(child, horizon - 1, false, -Infinity, Infinity, beamWidth);
             const score = Math.max(-9e4, Math.min(9e4, value));
             scores.push({ move, score });
             if (score > bestScore) {
@@ -389,15 +409,15 @@ POSSIBILITY OF SUCH DAMAGE.
           }
           completedMove = bestMove;
           completedScores = scores;
-          onIteration({ depth: 0, phase: "custom-turn-plan", nodes, scores });
+          onIteration({ depth: 0, phase: "custom-turn-plan", beamWidth, nodes, scores });
         }
-        async function quiescence(node2, alpha, beta, remaining = 3) {
+        async function quiescence(node2, alpha, beta, remaining = captureDepth) {
           await checkpoint();
           const result = terminal(node2);
           if (result !== null) return result;
           const inCheck = node2.inCheck(node2.side);
           const maximizing = node2.side === color;
-          const standPat = evaluate(node2, color);
+          const standPat = scorePosition(node2);
           if (remaining === 0) return standPat;
           let best = inCheck ? maximizing ? -Infinity : Infinity : standPat;
           if (!inCheck) {
@@ -405,7 +425,8 @@ POSSIBILITY OF SUCH DAMAGE.
             else beta = Math.min(beta, best);
             if (beta <= alpha) return best;
           }
-          const moves = orderedMoves(node2).filter((move) => inCheck || move.captured || move.promotion);
+          const consecutiveAttack = node2.allowKingCapture && node2.order[(node2.index + 1) % node2.order.length] === node2.side;
+          const moves = orderedMoves(node2).filter((move) => inCheck || move.captured || move.promotion || remaining >= 2 && consecutiveAttack && /[+#]/.test(move.san));
           for (const move of moves) {
             const child = node2.clone();
             child.play(move, false);
@@ -422,26 +443,29 @@ POSSIBILITY OF SUCH DAMAGE.
           const result = terminal(node2);
           if (result !== null) return result;
           if (remaining <= 0) {
-            if (!completedMove) return evaluate(node2, color);
-            if (node2.side !== lastMover || extensionsLeft <= 0) return quiescenceEnabled ? quiescence(node2, alpha, beta) : evaluate(node2, color);
+            if (!completedMove) return scorePosition(node2);
+            if (node2.side !== lastMover || extensionsLeft <= 0) return quiescenceEnabled ? quiescence(node2, alpha, beta) : scorePosition(node2);
             remaining = 1;
             extensionsLeft--;
           }
           const maximizing = node2.side === color;
           let best = maximizing ? -Infinity : Infinity;
+          let bestMove;
           for (const move of orderedMoves(node2)) {
             const child = node2.clone();
             child.play(move, false);
             const value = await search(child, remaining - 1, alpha, beta, node2.side, extensionsLeft);
+            if (maximizing ? value > best : value < best) bestMove = move;
             best = maximizing ? Math.max(best, value) : Math.min(best, value);
             if (maximizing) alpha = Math.max(alpha, best);
             else beta = Math.min(beta, best);
             if (beta <= alpha) break;
           }
+          if (bestMove && principalMoves.size < 12e3) principalMoves.set(node2.positionKey(), bestMove);
           return best;
         }
         if (state2.result || state2.side !== color || isCancelled()) return null;
-        depth = Math.max(1, Math.min(6, Number(depth) || 1));
+        depth = Math.max(1, Math.min(8, Number(depth) || 1));
         function selectCompleted() {
           if (!completedMove || isCancelled()) return null;
           const best = Math.max(...completedScores.map((candidate) => candidate.score));
@@ -452,7 +476,7 @@ POSSIBILITY OF SUCH DAMAGE.
         try {
           let previousDepth = 0;
           for (let iteration = 1; iteration <= depth; iteration++) {
-            const targetDepth = iteration === 1 || !customSequence ? iteration : Math.min(8, replyHorizon() + iteration - 2);
+            const targetDepth = iteration === 1 || !customSequence ? iteration : Math.min(lineLimit, replyHorizon() + iteration - 2);
             if (targetDepth === previousDepth) break;
             previousDepth = targetDepth;
             quiescenceEnabled = iteration >= 3;
@@ -472,7 +496,10 @@ POSSIBILITY OF SUCH DAMAGE.
             completedScores = scores;
             onIteration({ depth: targetDepth, phase: "full-search", nodes, scores });
             if (bestScore >= 1e5 || Date.now() - started >= timeBudgetMs) break;
-            if (iteration === 1 && customSequence && depth > 1) await completeTurnPlan();
+            if (iteration === 1 && customSequence && depth > 1) {
+              await completeTurnPlan(3);
+              if (turnBeam > 3) await completeTurnPlan(turnBeam);
+            }
           }
           return selectCompleted();
         } catch (error) {
@@ -483,12 +510,15 @@ POSSIBILITY OF SUCH DAMAGE.
       }
       function strengthForElo2(value) {
         const numeric = Number(value);
-        const elo = Math.round(Math.max(400, Math.min(2400, Number.isFinite(numeric) ? numeric : 1200)) / 100) * 100;
+        const elo = Math.round(Math.max(400, Math.min(3500, Number.isFinite(numeric) ? numeric : 1200)) / 100) * 100;
         return {
           elo,
-          depth: elo < 900 ? 2 : elo < 1500 ? 3 : elo < 2e3 ? 4 : 6,
-          timeBudgetMs: Math.round(250 + ((elo - 400) / 2e3) ** 2 * 3750),
-          sequenceExtension: 4,
+          depth: elo < 900 ? 2 : elo < 1500 ? 3 : elo < 2e3 ? 4 : elo < 2800 ? 6 : 8,
+          timeBudgetMs: Math.round(elo <= 2400 ? 250 + ((elo - 400) / 2e3) ** 2 * 3750 : 4e3 + (elo - 2400) / 1100 * 8e3),
+          sequenceExtension: elo >= 2800 ? 6 : 4,
+          turnBeam: elo >= 3e3 ? 6 : elo >= 2500 ? 4 : 3,
+          lineLimit: elo >= 2800 ? 12 : 8,
+          captureDepth: elo >= 2800 ? 4 : 3,
           moveTolerance: Math.max(0, (1700 - elo) * 0.4),
           mistakeProbability: Math.max(0, (1800 - elo) / 2e3)
         };
@@ -4262,8 +4292,8 @@ POSSIBILITY OF SUCH DAMAGE.
     const profile = strengthForElo($("elo").value);
     $("elo").value = profile.elo;
     $("eloValue").textContent = profile.elo;
-    $("elo").setAttribute("aria-valuetext", `${profile.elo} estimated Elo`);
-    const presets = { 600: "1", 1200: "2", 2e3: "3" };
+    $("elo").setAttribute("aria-valuetext", `${profile.elo} target Elo`);
+    const presets = { 600: "1", 1200: "2", 2e3: "3", 3500: "4" };
     $("depth").value = presets[profile.elo] || "custom";
   }
   $("elo").oninput = () => {
@@ -4273,7 +4303,7 @@ POSSIBILITY OF SUCH DAMAGE.
     queueAI();
   };
   $("depth").onchange = () => {
-    const presets = { "1": 600, "2": 1200, "3": 2e3 };
+    const presets = { "1": 600, "2": 1200, "3": 2e3, "4": 3500 };
     if (presets[$("depth").value]) $("elo").value = presets[$("depth").value];
     updateStrength();
     cancelAI();
