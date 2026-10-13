@@ -229,15 +229,72 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     return node.result.winner === color ? 1000000 - distance : -1000000 + distance;
   }
   function orderedMoves(node, preferred) {
+    const enemyKing = node.game.board().flat().find(piece => piece?.type === 'k' && piece.color !== node.side)?.square;
     const priority = move => (preferred && move.lan === preferred.lan ? 1000000 : 0)
       + (move.captured ? VALUES[move.captured] * 10 - VALUES[move.piece] : 0)
-      + (VALUES[move.promotion] || 0) + (/[+#]/.test(move.san) ? 60 : 0);
+      + (VALUES[move.promotion] || 0) + (/[+#]/.test(move.san) ? 200 : 0)
+      + (enemyKing && ['r', 'q'].includes(move.piece) && (move.to[0] === enemyKing[0] || move.to[1] === enemyKing[1]) ? 80 : 0)
+      + (['n', 'b'].includes(move.piece) ? (7 - Math.abs(3.5 - (move.to.charCodeAt(0) - 97)) - Math.abs(3.5 - (Number(move.to[1]) - 1))) * 5 : 0);
     return [...node.legalMoves()].sort((a, b) => priority(b) - priority(a));
   }
   async function checkpoint() {
     if (++nodes % yieldEvery === 0) await new Promise(resolve => setTimeout(resolve, 0));
     if (isCancelled()) throw cancelled;
     if (completedMove && Date.now() - started >= timeBudgetMs) throw timedOut;
+  }
+  const customSequence = state.order.some((side, index) => side === state.order[(index + 1) % state.order.length]);
+  function replyHorizon() {
+    let index = state.index;
+    let side = state.side;
+    let opponentMoved = false;
+    for (let plies = 1; plies <= 8; plies++) {
+      opponentMoved ||= side !== color;
+      if (side === state.order[index]) index = (index + 1) % state.order.length;
+      side = state.order[index];
+      if (opponentMoved && side === color) return plies;
+    }
+    return Math.min(8, state.order.length + 2);
+  }
+  async function planTurn(node, remaining, opponentMoved, alpha, beta) {
+    await checkpoint();
+    const result = terminal(node);
+    if (result !== null) return result;
+    // A decision covers the rest of our block AND the opponent's entire reply
+    // block. In WWB, Black must see both White moves before evaluating safety.
+    if (remaining <= 0 || (opponentMoved && node.side === color)) return evaluate(node, color);
+    const maximizing = node.side === color;
+    let best = maximizing ? -Infinity : Infinity;
+    // A bounded selective pass is completed before exhaustive deepening. It
+    // checks every root move, retaining captures/checks and promising quiet moves.
+    const candidates = orderedMoves(node).slice(0, 3);
+    for (const move of candidates) {
+      const child = node.clone();
+      child.play(move, false);
+      const value = await planTurn(child, remaining - 1, opponentMoved || node.side !== color, alpha, beta);
+      best = maximizing ? Math.max(best, value) : Math.min(best, value);
+      if (maximizing) alpha = Math.max(alpha, best);
+      else beta = Math.min(beta, best);
+      if (beta <= alpha) break;
+    }
+    return best;
+  }
+  async function completeTurnPlan() {
+    let bestMove = null, bestScore = -Infinity;
+    const scores = [];
+    const horizon = replyHorizon();
+    for (const move of orderedMoves(state, completedMove)) {
+      const child = state.clone();
+      child.play(move, false);
+      const value = await planTurn(child, horizon - 1, false, -Infinity, Infinity);
+      // A selective search is guidance, not proof of a forced win/loss: omitted
+      // defensive moves may change the outcome. Full search still verifies it.
+      const score = Math.max(-90000, Math.min(90000, value));
+      scores.push({ move, score });
+      if (score > bestScore) { bestScore = score; bestMove = move; }
+    }
+    completedMove = bestMove;
+    completedScores = scores;
+    onIteration({ depth: 0, phase: 'custom-turn-plan', nodes, scores });
   }
   async function quiescence(node, alpha, beta, remaining = 3) {
     await checkpoint();
@@ -305,7 +362,11 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
   try {
     // Always finish a legal one-ply choice, then deepen within a bounded budget.
     // A partial deeper search must not overwrite the last completed result.
+    let previousDepth = 0;
     for (let iteration = 1; iteration <= depth; iteration++) {
+      const targetDepth = iteration === 1 || !customSequence ? iteration : Math.min(8, replyHorizon() + iteration - 2);
+      if (targetDepth === previousDepth) break;
+      previousDepth = targetDepth;
       // Finish an affordable tactical baseline before adding exchange searches.
       quiescenceEnabled = iteration >= 3;
       let bestMove = null, bestScore = -Infinity;
@@ -313,14 +374,15 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
       for (const move of orderedMoves(state, completedMove)) {
         const child = state.clone();
         child.play(move, false);
-        const score = await search(child, iteration - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state.side, sequenceExtension);
+        const score = await search(child, targetDepth - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state.side, sequenceExtension);
         scores.push({ move, score });
         if (score > bestScore) { bestScore = score; bestMove = move; }
       }
       completedMove = bestMove;
       completedScores = scores;
-      onIteration({ depth: iteration, nodes, scores });
+      onIteration({ depth: targetDepth, phase: 'full-search', nodes, scores });
       if (bestScore >= 100000 || Date.now() - started >= timeBudgetMs) break;
+      if (iteration === 1 && customSequence && depth > 1) await completeTurnPlan();
     }
     return selectCompleted();
   } catch (error) {

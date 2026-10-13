@@ -331,13 +331,65 @@ POSSIBILITY OF SUCH DAMAGE.
           return node2.result.winner === color ? 1e6 - distance : -1e6 + distance;
         }
         function orderedMoves(node2, preferred) {
-          const priority = (move) => (preferred && move.lan === preferred.lan ? 1e6 : 0) + (move.captured ? VALUES[move.captured] * 10 - VALUES[move.piece] : 0) + (VALUES[move.promotion] || 0) + (/[+#]/.test(move.san) ? 60 : 0);
+          const enemyKing = node2.game.board().flat().find((piece) => piece?.type === "k" && piece.color !== node2.side)?.square;
+          const priority = (move) => (preferred && move.lan === preferred.lan ? 1e6 : 0) + (move.captured ? VALUES[move.captured] * 10 - VALUES[move.piece] : 0) + (VALUES[move.promotion] || 0) + (/[+#]/.test(move.san) ? 200 : 0) + (enemyKing && ["r", "q"].includes(move.piece) && (move.to[0] === enemyKing[0] || move.to[1] === enemyKing[1]) ? 80 : 0) + (["n", "b"].includes(move.piece) ? (7 - Math.abs(3.5 - (move.to.charCodeAt(0) - 97)) - Math.abs(3.5 - (Number(move.to[1]) - 1))) * 5 : 0);
           return [...node2.legalMoves()].sort((a, b) => priority(b) - priority(a));
         }
         async function checkpoint() {
           if (++nodes % yieldEvery === 0) await new Promise((resolve) => setTimeout(resolve, 0));
           if (isCancelled()) throw cancelled;
           if (completedMove && Date.now() - started >= timeBudgetMs) throw timedOut;
+        }
+        const customSequence = state2.order.some((side, index) => side === state2.order[(index + 1) % state2.order.length]);
+        function replyHorizon() {
+          let index = state2.index;
+          let side = state2.side;
+          let opponentMoved = false;
+          for (let plies = 1; plies <= 8; plies++) {
+            opponentMoved ||= side !== color;
+            if (side === state2.order[index]) index = (index + 1) % state2.order.length;
+            side = state2.order[index];
+            if (opponentMoved && side === color) return plies;
+          }
+          return Math.min(8, state2.order.length + 2);
+        }
+        async function planTurn(node2, remaining, opponentMoved, alpha, beta) {
+          await checkpoint();
+          const result = terminal(node2);
+          if (result !== null) return result;
+          if (remaining <= 0 || opponentMoved && node2.side === color) return evaluate(node2, color);
+          const maximizing = node2.side === color;
+          let best = maximizing ? -Infinity : Infinity;
+          const candidates = orderedMoves(node2).slice(0, 3);
+          for (const move of candidates) {
+            const child = node2.clone();
+            child.play(move, false);
+            const value = await planTurn(child, remaining - 1, opponentMoved || node2.side !== color, alpha, beta);
+            best = maximizing ? Math.max(best, value) : Math.min(best, value);
+            if (maximizing) alpha = Math.max(alpha, best);
+            else beta = Math.min(beta, best);
+            if (beta <= alpha) break;
+          }
+          return best;
+        }
+        async function completeTurnPlan() {
+          let bestMove = null, bestScore = -Infinity;
+          const scores = [];
+          const horizon = replyHorizon();
+          for (const move of orderedMoves(state2, completedMove)) {
+            const child = state2.clone();
+            child.play(move, false);
+            const value = await planTurn(child, horizon - 1, false, -Infinity, Infinity);
+            const score = Math.max(-9e4, Math.min(9e4, value));
+            scores.push({ move, score });
+            if (score > bestScore) {
+              bestScore = score;
+              bestMove = move;
+            }
+          }
+          completedMove = bestMove;
+          completedScores = scores;
+          onIteration({ depth: 0, phase: "custom-turn-plan", nodes, scores });
         }
         async function quiescence(node2, alpha, beta, remaining = 3) {
           await checkpoint();
@@ -398,14 +450,18 @@ POSSIBILITY OF SUCH DAMAGE.
           return candidates.length ? candidates[Math.min(candidates.length - 1, Math.floor(random() * candidates.length))].move : completedMove;
         }
         try {
+          let previousDepth = 0;
           for (let iteration = 1; iteration <= depth; iteration++) {
+            const targetDepth = iteration === 1 || !customSequence ? iteration : Math.min(8, replyHorizon() + iteration - 2);
+            if (targetDepth === previousDepth) break;
+            previousDepth = targetDepth;
             quiescenceEnabled = iteration >= 3;
             let bestMove = null, bestScore = -Infinity;
             const scores = [];
             for (const move of orderedMoves(state2, completedMove)) {
               const child = state2.clone();
               child.play(move, false);
-              const score = await search(child, iteration - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state2.side, sequenceExtension);
+              const score = await search(child, targetDepth - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state2.side, sequenceExtension);
               scores.push({ move, score });
               if (score > bestScore) {
                 bestScore = score;
@@ -414,8 +470,9 @@ POSSIBILITY OF SUCH DAMAGE.
             }
             completedMove = bestMove;
             completedScores = scores;
-            onIteration({ depth: iteration, nodes, scores });
+            onIteration({ depth: targetDepth, phase: "full-search", nodes, scores });
             if (bestScore >= 1e5 || Date.now() - started >= timeBudgetMs) break;
+            if (iteration === 1 && customSequence && depth > 1) await completeTurnPlan();
           }
           return selectCompleted();
         } catch (error) {

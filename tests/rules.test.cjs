@@ -271,7 +271,7 @@ test('randomized capture-variant games preserve kings until a terminal capture a
 test('search recognizes a forced loss against two consecutive rook moves', async () => {
   const state=captureMode(['b','w','w'],'7k/7p/8/8/8/8/8/R6K b - - 0 1');
   const before=state.snapshot();let scores;
-  await chooseMove(state,2,'b',{sequenceExtension:2,timeBudgetMs:10000,onIteration: result => { if(result.depth===2)scores=result.scores; }});
+  await chooseMove(state,2,'b',{sequenceExtension:2,timeBudgetMs:10000,onIteration: result => { if(result.phase==='full-search' && result.depth>=3)scores=result.scores; }});
   // Kg7 is not an escape: Ra7 then Rxg7 captures it before Black moves.
   assert.ok(scores);assert.ok(scores.every(candidate=>candidate.score<=-100000));assert.deepEqual(state.snapshot(),before);
 });
@@ -289,7 +289,7 @@ test('Elo profiles clamp input and monotonically increase search effort', () => 
 });
 test('Elo changes move selection while preserving legal moves and forced wins', async () => {
   const {chooseMoveForElo}=require('../src/rules.cjs');const state=make();
-  const weak=await chooseMoveForElo(state,400,'w',{timeBudgetMs:0,random:()=>0});
+  let sample=0;const weak=await chooseMoveForElo(state,400,'w',{timeBudgetMs:0,random:()=>sample++===0?0:.99});
   const strong=await chooseMoveForElo(state,2400,'w',{timeBudgetMs:0,random:()=>0});
   assert.notEqual(weak.lan,strong.lan);assert.ok(state.legalMoves().some(m=>m.lan===weak.lan));assert.ok(state.legalMoves().some(m=>m.lan===strong.lan));
   const win=captureMode(['w','w','b'],'R6k/7p/8/8/8/8/8/7K w - - 0 1');
@@ -311,4 +311,25 @@ test('highest strength protects against the human’s consecutive rook attack', 
   const {chooseMoveForElo}=require('../src/rules.cjs');
   const state=captureMode(['b','w','w'],'1r5k/7p/8/8/8/8/8/R6K b - - 0 1');
   const move=await chooseMoveForElo(state,2400,'b');assert.equal(move.from,'b8');assert.equal(move.to,'g8');
+});
+test('the same position produces different decisions for one reply versus two replies', async () => {
+  const fen='1r5k/7p/8/8/8/8/8/R6K b - - 0 1';
+  const normal=captureMode(['b','w'],fen);
+  const custom=captureMode(['b','w','w'],fen);
+  const trace=[];
+  const single=await chooseMove(normal,2,'b',{timeBudgetMs:3000});
+  const double=await chooseMove(custom,2,'b',{timeBudgetMs:3000,onIteration: result => trace.push(result)});
+  assert.notEqual(single.lan,double.lan);
+  assert.equal(double.from,'b8');assert.equal(double.to,'g8');
+  assert.ok(trace.some(result=>result.phase==='custom-turn-plan'));
+  assert.ok(trace.filter(result=>result.phase==='full-search'&&result.depth>1).every(result=>result.depth>=3));
+});
+test('two engine moves plus two human replies are searched as a four-ply block', async () => {
+  const state=captureMode(['w','w','b','b'],'7k/7p/8/8/8/8/P7/R6K w - - 0 1');
+  const trace=[];const before=state.snapshot();
+  const move=await chooseMove(state,2,'w',{timeBudgetMs:10000,onIteration: result=>trace.push(result)});
+  assert.ok(state.legalMoves().some(candidate=>candidate.lan===move.lan));
+  assert.ok(trace.some(result=>result.phase==='custom-turn-plan'));
+  assert.ok(trace.some(result=>result.phase==='full-search'&&result.depth===4));
+  assert.deepEqual(state.snapshot(),before);
 });
