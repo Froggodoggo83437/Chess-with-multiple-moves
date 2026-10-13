@@ -62,7 +62,7 @@ button.action{cursor:pointer;padding:10px 12px;background:#263953;color:#fff;bor
 <header><h1>♞ Custom Turn Chess</h1><p>Change who moves next. Play two turns in a row, three, or any sequence you like.</p></header>
 <div class="layout"><section><div class="boardWrap"><div class="board" id="board" aria-label="Chess board"></div></div><div class="hint">Click a piece, then click its destination. Pawns promote to your selected piece (Queen by default).</div></section><aside>
 <div class="panel"><h2>Turn order</h2><p class="hint" style="margin:0">Click a tile to swap White/Black. The orange tile is the current turn.</p><div id="turns" class="turns"></div><div class="btnrow"><button class="action" id="addWhite">+ White</button><button class="action" id="addBlack">+ Black</button><button class="action" id="remove">− Last</button></div><div class="btnrow"><button class="action" id="preset1">Normal (1:1)</button><button class="action primary" id="preset2">You 2 : AI 1</button><button class="action" id="preset3">You 3 : AI 1</button></div><div class="hint">Editing the order starts a new game to keep the move history consistent.</div></div>
-<div class="panel"><h2>Game settings</h2><label for="side">Your color</label><select id="side"><option value="w">White</option><option value="b">Black</option></select><label for="depth" style="margin-top:14px">Computer strength</label><select id="depth"><option value="1">Easy (~600 Elo)</option><option value="2">Medium (~1200 Elo)</option><option value="3">Hard (~2000 Elo)</option><option value="4" selected>Expert (3500 target)</option><option value="custom">Custom Elo</option></select><label for="elo" style="margin-top:14px">Engine strength: <output id="eloValue" for="elo">3500</output> target Elo</label><input id="elo" type="range" min="400" max="3500" step="100" value="3500"><p class="hint">400–3500 · Strength targets, not measured ratings. Expert can think for up to 12 seconds per move and plans around your custom sequence.</p><label for="kingCapture" style="margin-top:14px">King capture</label><select id="kingCapture"><option value="allowed">Allowed — capture wins</option><option value="standard">Standard — no king captures</option></select><label for="promotion" style="margin-top:14px">Pawn promotion</label><select id="promotion"><option value="q">Queen (automatic)</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option></select><div class="btnrow"><button class="action primary" id="newGame">New game</button><button class="action" id="undo">Undo last move</button><button class="action" id="flip">Flip board</button><button class="action" id="resumeAI" hidden>Resume computer</button></div></div>
+<div class="panel"><h2>Game settings</h2><label for="side">Your color</label><select id="side"><option value="w">White</option><option value="b">Black</option></select><label for="depth" style="margin-top:14px">Computer strength</label><select id="depth"><option value="1">Easy (~600 Elo)</option><option value="2">Medium (~1200 Elo)</option><option value="3">Hard (~2000 Elo)</option><option value="4" selected>Expert (3500 target)</option><option value="custom">Custom Elo</option></select><label for="elo" style="margin-top:14px">Engine strength: <output id="eloValue" for="elo">3500</output> target Elo</label><input id="elo" type="range" min="400" max="3500" step="100" value="3500"><p class="hint">400: frequent mistakes · 3500: best calculated move, no deliberate errors. Targets are not measured Elo. Expert can think for up to 12 seconds per move.</p><label for="kingCapture" style="margin-top:14px">King capture</label><select id="kingCapture"><option value="allowed">Allowed — capture wins</option><option value="standard">Standard — no king captures</option></select><label for="promotion" style="margin-top:14px">Pawn promotion</label><select id="promotion"><option value="q">Queen (automatic)</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option></select><div class="btnrow"><button class="action primary" id="newGame">New game</button><button class="action" id="undo">Undo last move</button><button class="action" id="flip">Flip board</button><button class="action" id="resumeAI" hidden>Resume computer</button></div></div>
 <div class="panel"><h2>Game</h2><div id="status" class="status" role="status" aria-live="polite">Loading rules…</div><p class="hint" id="ruleNote">King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Normal checkmate also ends the game.</p><h2 style="margin-top:20px">Move history</h2><div id="history" class="moves">No moves yet.</div></div>
 </aside></div>
 <script>
@@ -323,7 +323,16 @@ POSSIBILITY OF SUCH DAMAGE.
         }
         return score;
       }
-      async function chooseMove(state2, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random, onIteration = () => {
+      function pickStrengthMove(scores, { moveTolerance = 0, mistakeProbability = 0, minimumMistake = 1, random = Math.random } = {}) {
+        if (!scores.length) return null;
+        const ranked = [...scores].sort((a, b) => b.score - a.score);
+        const best = ranked[0];
+        if (best.score >= 1e5 || moveTolerance <= 0 || mistakeProbability <= 0 || random() >= mistakeProbability) return best.move;
+        const mistakes = ranked.filter((candidate) => candidate.score <= best.score - minimumMistake && candidate.score >= best.score - moveTolerance && candidate.score > -1e5);
+        if (!mistakes.length) return best.move;
+        return mistakes[Math.min(mistakes.length - 1, Math.floor(random() * mistakes.length))].move;
+      }
+      async function chooseMove(state2, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, minimumMistake = 1, random = Math.random, onIteration = () => {
       }, turnBeam = 3, lineLimit = 8, captureDepth = 3 } = {}) {
         state2 = state2.clone();
         state2.searchMoveCache = /* @__PURE__ */ new Map();
@@ -468,10 +477,7 @@ POSSIBILITY OF SUCH DAMAGE.
         depth = Math.max(1, Math.min(8, Number(depth) || 1));
         function selectCompleted() {
           if (!completedMove || isCancelled()) return null;
-          const best = Math.max(...completedScores.map((candidate) => candidate.score));
-          if (best >= 1e5 || moveTolerance <= 0 || random() >= mistakeProbability) return completedMove;
-          const candidates = completedScores.filter((candidate) => candidate.score >= best - moveTolerance && candidate.score > -1e5);
-          return candidates.length ? candidates[Math.min(candidates.length - 1, Math.floor(random() * candidates.length))].move : completedMove;
+          return pickStrengthMove(completedScores, { moveTolerance, mistakeProbability, minimumMistake, random });
         }
         try {
           let previousDepth = 0;
@@ -508,26 +514,43 @@ POSSIBILITY OF SUCH DAMAGE.
           throw error;
         }
       }
+      var STRENGTH_ANCHORS = [
+        { elo: 400, errors: 0.9, loss: 1200, time: 250 },
+        { elo: 800, errors: 0.78, loss: 700, time: 500 },
+        { elo: 1200, errors: 0.55, loss: 400, time: 1e3 },
+        { elo: 1600, errors: 0.35, loss: 220, time: 1800 },
+        { elo: 2e3, errors: 0.18, loss: 100, time: 3e3 },
+        { elo: 2400, errors: 0.08, loss: 50, time: 4e3 },
+        { elo: 2800, errors: 0.03, loss: 25, time: 6500 },
+        { elo: 3200, errors: 8e-3, loss: 8, time: 9e3 },
+        { elo: 3500, errors: 0, loss: 0, time: 12e3 }
+      ];
       function strengthForElo2(value) {
         const numeric = Number(value);
         const elo = Math.round(Math.max(400, Math.min(3500, Number.isFinite(numeric) ? numeric : 1200)) / 100) * 100;
+        const upper = STRENGTH_ANCHORS.findIndex((anchor) => anchor.elo >= elo);
+        const high = STRENGTH_ANCHORS[upper];
+        const low = STRENGTH_ANCHORS[Math.max(0, upper - 1)];
+        const fraction = high.elo === low.elo ? 0 : (elo - low.elo) / (high.elo - low.elo);
+        const interpolate = (key) => low[key] + (high[key] - low[key]) * fraction;
         return {
           elo,
           depth: elo < 900 ? 2 : elo < 1500 ? 3 : elo < 2e3 ? 4 : elo < 2800 ? 6 : 8,
-          timeBudgetMs: Math.round(elo <= 2400 ? 250 + ((elo - 400) / 2e3) ** 2 * 3750 : 4e3 + (elo - 2400) / 1100 * 8e3),
+          timeBudgetMs: Math.round(interpolate("time")),
           sequenceExtension: elo >= 2800 ? 6 : 4,
           turnBeam: elo >= 3e3 ? 6 : elo >= 2500 ? 4 : 3,
           lineLimit: elo >= 2800 ? 12 : 8,
           captureDepth: elo >= 2800 ? 4 : 3,
-          moveTolerance: Math.max(0, (1700 - elo) * 0.4),
-          mistakeProbability: Math.max(0, (1800 - elo) / 2e3)
+          moveTolerance: Math.round(interpolate("loss")),
+          mistakeProbability: interpolate("errors"),
+          minimumMistake: Math.max(1, Math.round((1800 - elo) / 70))
         };
       }
       function chooseMoveForElo2(state2, elo, color, options = {}) {
         const profile = strengthForElo2(elo);
         return chooseMove(state2, profile.depth, color, { ...profile, ...options });
       }
-      module.exports = { CustomTurnRules: CustomTurnRules2, chooseMove, chooseMoveForElo: chooseMoveForElo2, strengthForElo: strengthForElo2 };
+      module.exports = { CustomTurnRules: CustomTurnRules2, chooseMove, chooseMoveForElo: chooseMoveForElo2, strengthForElo: strengthForElo2, pickStrengthMove };
     }
   });
 

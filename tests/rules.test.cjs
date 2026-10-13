@@ -355,3 +355,38 @@ test('expert search cancels during wider planning and never returns a stale move
   });
   assert.equal(choice,null);assert.equal(state.history.length,0);
 });
+test('3500 always selects the highest calculated score regardless of random seed', () => {
+  const {pickStrengthMove,strengthForElo}=require('../src/rules.cjs');
+  const scores=[{move:{lan:'a2a3'},score:-500},{move:{lan:'b1c3'},score:30},{move:{lan:'g1f3'},score:12}];
+  for(const sample of [0,.1,.5,.99]) assert.equal(pickStrengthMove(scores,{...strengthForElo(3500),random:()=>sample}).lan,'b1c3');
+});
+test('400 usually makes a genuine quality mistake while higher settings reduce errors', () => {
+  const {pickStrengthMove,strengthForElo}=require('../src/rules.cjs');
+  const scores=[{move:{lan:'best'},score:100},{move:{lan:'small'},score:90},{move:{lan:'bad'},score:-200},{move:{lan:'blunder'},score:-800}];
+  const rates=[];
+  for(const elo of [400,1200,2400,3500]) {
+    let seed=872;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+    let errors=0;
+    for(let trial=0;trial<1000;trial++)if(pickStrengthMove(scores,{...strengthForElo(elo),random}).lan!=='best')errors++;
+    rates.push(errors);
+  }
+  assert.ok(rates[0]>800);assert.ok(rates[0]>rates[1]);assert.ok(rates[1]>rates[2]);assert.equal(rates[3],0);
+});
+test('strength-driven mistakes stay legal and cannot bypass a forced move', () => {
+  const {pickStrengthMove,strengthForElo}=require('../src/rules.cjs');
+  const forced={lan:'h8g7'};
+  assert.equal(pickStrengthMove([{move:forced,score:-500}],{...strengthForElo(400),random:()=>0}),forced);
+  assert.equal(pickStrengthMove([],{...strengthForElo(400)}),null);
+});
+test('every intermediate 100-point setting reduces errors and increases thinking time', () => {
+  const {strengthForElo}=require('../src/rules.cjs');
+  for(let elo=500;elo<=3500;elo+=100){
+    const lower=strengthForElo(elo-100),higher=strengthForElo(elo);
+    assert.ok(higher.mistakeProbability<lower.mistakeProbability,`errors at ${elo}`);
+    assert.ok(higher.moveTolerance<lower.moveTolerance,`loss tolerance at ${elo}`);
+    assert.ok(higher.timeBudgetMs>lower.timeBudgetMs,`time at ${elo}`);
+  }
+  const between=strengthForElo(1800);
+  assert.ok(Math.abs(between.mistakeProbability-.265)<1e-9);
+  assert.equal(between.moveTolerance,160);assert.equal(between.timeBudgetMs,2400);
+});

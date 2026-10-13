@@ -218,8 +218,23 @@ function evaluate(state, color) {
   return score;
 }
 
+// Pick by calculated quality, with deliberate errors only at lower strengths.
+// Exclude equally good moves from the mistake pool so Beginner doesn't merely
+// randomize between the engine's best choices.
+function pickStrengthMove(scores, { moveTolerance = 0, mistakeProbability = 0, minimumMistake = 1, random = Math.random } = {}) {
+  if (!scores.length) return null;
+  const ranked = [...scores].sort((a, b) => b.score - a.score);
+  const best = ranked[0];
+  if (best.score >= 100000 || moveTolerance <= 0 || mistakeProbability <= 0 || random() >= mistakeProbability) return best.move;
+  const mistakes = ranked.filter(candidate =>
+    candidate.score <= best.score - minimumMistake &&
+    candidate.score >= best.score - moveTolerance && candidate.score > -100000);
+  if (!mistakes.length) return best.move;
+  return mistakes[Math.min(mistakes.length - 1, Math.floor(random() * mistakes.length))].move;
+}
+
 // Cooperatively yield so reset, undo, and order edits can cancel an active search.
-async function chooseMove(state, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random, onIteration = () => {}, turnBeam = 3, lineLimit = 8, captureDepth = 3 } = {}) {
+async function chooseMove(state, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, minimumMistake = 1, random = Math.random, onIteration = () => {}, turnBeam = 3, lineLimit = 8, captureDepth = 3 } = {}) {
   // Search-only caches are shared by clones, never attached to the live game.
   // Full FEN keys preserve counters/rights; scores are not reused across draw
   // histories. Only move generation, static evaluation, and ordering are cached.
@@ -378,11 +393,7 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
   depth = Math.max(1, Math.min(8, Number(depth) || 1));
   function selectCompleted() {
     if (!completedMove || isCancelled()) return null;
-    const best = Math.max(...completedScores.map(candidate => candidate.score));
-    // Do not discard a known forced win just to simulate a lower rating.
-    if (best >= 100000 || moveTolerance <= 0 || random() >= mistakeProbability) return completedMove;
-    const candidates = completedScores.filter(candidate => candidate.score >= best - moveTolerance && candidate.score > -100000);
-    return candidates.length ? candidates[Math.min(candidates.length - 1, Math.floor(random() * candidates.length))].move : completedMove;
+    return pickStrengthMove(completedScores, { moveTolerance, mistakeProbability, minimumMistake, random });
   }
   try {
     // Always finish a legal one-ply choice, then deepen within a bounded budget.
@@ -420,24 +431,41 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
   }
 }
 
-// These are strength presets, not ratings measured against a rated player pool.
+// Behavioral strength anchors; these have not been calibrated as real Elo.
+const STRENGTH_ANCHORS = [
+  { elo: 400, errors: .90, loss: 1200, time: 250 },
+  { elo: 800, errors: .78, loss: 700, time: 500 },
+  { elo: 1200, errors: .55, loss: 400, time: 1000 },
+  { elo: 1600, errors: .35, loss: 220, time: 1800 },
+  { elo: 2000, errors: .18, loss: 100, time: 3000 },
+  { elo: 2400, errors: .08, loss: 50, time: 4000 },
+  { elo: 2800, errors: .03, loss: 25, time: 6500 },
+  { elo: 3200, errors: .008, loss: 8, time: 9000 },
+  { elo: 3500, errors: 0, loss: 0, time: 12000 }
+];
 function strengthForElo(value) {
   const numeric = Number(value);
   const elo = Math.round(Math.max(400, Math.min(3500, Number.isFinite(numeric) ? numeric : 1200)) / 100) * 100;
+  const upper = STRENGTH_ANCHORS.findIndex(anchor => anchor.elo >= elo);
+  const high = STRENGTH_ANCHORS[upper];
+  const low = STRENGTH_ANCHORS[Math.max(0, upper - 1)];
+  const fraction = high.elo === low.elo ? 0 : (elo - low.elo) / (high.elo - low.elo);
+  const interpolate = key => low[key] + (high[key] - low[key]) * fraction;
   return {
     elo,
     depth: elo < 900 ? 2 : elo < 1500 ? 3 : elo < 2000 ? 4 : elo < 2800 ? 6 : 8,
-    timeBudgetMs: Math.round(elo <= 2400 ? 250 + ((elo - 400) / 2000) ** 2 * 3750 : 4000 + ((elo - 2400) / 1100) * 8000),
+    timeBudgetMs: Math.round(interpolate('time')),
     sequenceExtension: elo >= 2800 ? 6 : 4,
     turnBeam: elo >= 3000 ? 6 : elo >= 2500 ? 4 : 3,
     lineLimit: elo >= 2800 ? 12 : 8,
     captureDepth: elo >= 2800 ? 4 : 3,
-    moveTolerance: Math.max(0, (1700 - elo) * 0.4),
-    mistakeProbability: Math.max(0, (1800 - elo) / 2000)
+    moveTolerance: Math.round(interpolate('loss')),
+    mistakeProbability: interpolate('errors'),
+    minimumMistake: Math.max(1, Math.round((1800 - elo) / 70))
   };
 }
 function chooseMoveForElo(state, elo, color, options = {}) {
   const profile = strengthForElo(elo);
   return chooseMove(state, profile.depth, color, { ...profile, ...options });
 }
-module.exports = { CustomTurnRules, chooseMove, chooseMoveForElo, strengthForElo };
+module.exports = { CustomTurnRules, chooseMove, chooseMoveForElo, strengthForElo, pickStrengthMove };
