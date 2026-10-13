@@ -8,6 +8,7 @@ const html = fs.readFileSync(path.join(root,'custom_turn_chess.html'),'utf8');
 // Fixtures exercise the actual bundled UI. Only its initial state is replaced;
 // production ships no position-loading or test-only hooks.
 const fixtures = {
+  blackmate: ['8/8/8/8/8/5kq1/8/7K b - - 0 1', ['b','b','w']],
   capture: ['7k/7p/8/8/8/8/8/R6K w - - 0 1', ['w','w','b']],
   mate: ['7k/8/5KQ1/8/8/8/8/8 w - - 0 1', ['w','w','b']],
   check: ['7k/7p/8/8/8/8/8/R6K w - - 0 1', ['w','w','b']],
@@ -129,6 +130,37 @@ let count=0;
     });
     await check('stalemate displays a persistent draw without starting AI',async()=>{
       await goto('stalemate');assert.equal(await text('status'),'Draw — stalemate.');await page.waitForTimeout(400);assert.equal(await text('history'),'No moves yet.');
+    });
+    await check('checkmate celebration displays winner, preserves controls, and plays once',async()=>{
+      await goto('mate');await move('g6','g7');
+      assert.equal(await page.locator('.victory-title').innerText(),'CHECKMATE');
+      assert.equal(await page.locator('.victory-winner').innerText(),'White wins');
+      assert.equal(await page.locator('.victory-detail').innerText(),'THE KING HAS NO ESCAPE');
+      assert.equal(await page.locator('.victory-confetti').count(),36);
+      await page.evaluate(()=>window.testCelebration=document.querySelector('.victory-layer'));
+      await page.click('#flip');assert.ok(await page.evaluate(()=>window.testCelebration===document.querySelector('.victory-layer')));
+      await page.waitForTimeout(650);fs.mkdirSync(path.join(root,'test-results'),{recursive:true});
+      await page.screenshot({path:path.join(root,'test-results/checkmate.png'),fullPage:true});
+      await page.waitForFunction(()=>!document.querySelector('.victory-layer'));
+      await page.click('#flip');assert.equal(await page.locator('.victory-layer').count(),0);
+      assert.equal(await text('status'),'Checkmate — White wins!');
+      await page.click('#undo');assert.equal(await page.locator('.victory-layer').count(),0);
+      await move('g6','g7');assert.equal(await page.locator('.victory-layer').count(),1);
+      await page.click('#newGame');assert.equal(await page.locator('.victory-layer').count(),0);
+    });
+    await check('computer checkmate celebrates the Black winner',async()=>{
+      await goto('blackmate');await page.waitForSelector('.victory-layer');
+      assert.equal(await page.locator('.victory-winner').innerText(),'Black wins');
+      await page.click('#undo');assert.equal(await page.locator('.victory-layer').count(),0);
+    });
+    await check('king capture celebrates with reduced motion and undo clears it',async()=>{
+      await page.emulateMedia({reducedMotion:'reduce'});await goto('capture');await move('a1','a8');await move('a8','h8');
+      assert.equal(await page.locator('.victory-detail').innerText(),'KING CAPTURED · GAME OVER');
+      assert.equal(await page.locator('.victory-confetti').count(),0);
+      assert.equal(await page.locator('.victory-card').evaluate(e=>getComputedStyle(e).animationName),'none');
+      await page.click('#undo');assert.equal(await page.locator('.victory-layer').count(),0);
+      await page.emulateMedia({reducedMotion:'no-preference'});
+      await goto('stalemate');assert.equal(await page.locator('.victory-layer').count(),0);
     });
     assert.deepEqual(errors,[]);assert.deepEqual(remote,[]);
     fs.mkdirSync(path.join(root,'test-results'),{recursive:true});await goto();await page.screenshot({path:path.join(root,'test-results/board.png'),fullPage:true});

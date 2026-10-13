@@ -1,4 +1,5 @@
 import { Chess } from 'chess.js';
+import { createCelebration } from './celebration.js';
 import rules from './rules.cjs';
 const { CustomTurnRules, chooseMove } = rules;
 const names = { w: 'White', b: 'Black' };
@@ -8,6 +9,7 @@ let order = ['w', 'w', 'b'];
 let state, selected = null, legal = [], flipped = false, busy = false;
 let generation = 0, aiTimer = null, pausedAI = false, aiError = '';
 const squares = new Map();
+const celebrate = createCelebration(document.querySelector('.boardWrap'), window.CHESS_PIECES);
 const player = () => $('side').value;
 const engine = () => player() === 'w' ? 'b' : 'w';
 
@@ -129,6 +131,7 @@ function render() {
     : 'Standard rules: check requires an immediate response, even between consecutive moves. An extra response does not consume the attacker’s next tile. Checkmate ends the game immediately; kings cannot be captured. Undo pauses computer replies until resumed.';
   $('history').textContent = state.history.length ? state.history.map((move, index) =>
     `${index + 1}. ${names[move.color]} ${move.san}`).join('   ') : 'No moves yet.';
+  celebrate(state.result);
 }
 function apply(move) {
   const played = state.play(move);
