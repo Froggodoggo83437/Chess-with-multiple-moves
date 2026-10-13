@@ -148,6 +148,17 @@ let count=0;
       await move('c7','c5');await page.click('#preset1');assert.equal(await text('history'),'No moves yet.');
       await move('e2','e4');await move('e7','e5');assert.ok((await text('history')).includes('2. Black'));
     });
+    await check('PvP auto-flips only when the moving color changes and follows undo',async()=>{
+      await goto();await page.selectOption('#mode','pvp');
+      const first=()=>page.locator('#board button').first().getAttribute('data-square');
+      assert.equal(await first(),'a8');await move('e2','e4');assert.equal(await first(),'a8');
+      await move('d2','d4');assert.equal(await first(),'h1');
+      assert.equal(await page.locator('.rank-coord').allTextContents().then(a=>a.join('')),'12345678');
+      await move('e7','e5');assert.equal(await first(),'a8');
+      await page.click('#undo');assert.equal(await first(),'h1');
+      await page.click('#undo');assert.equal(await first(),'a8');
+      await page.click('#newGame');assert.equal(await first(),'a8');
+    });
     await check('switching to PvP terminates queued or running worker search',async()=>{
       await goto();await page.selectOption('#depth','4');await move('e2','e4');await move('d2','d4');
       await page.waitForTimeout(100);await page.selectOption('#mode','pvp');await page.waitForTimeout(400);
@@ -156,7 +167,7 @@ let count=0;
     });
     await check('PvP king capture celebrates and undo restores the king',async()=>{
       await goto('capture');await page.selectOption('#mode','pvp');await move('a1','a8');await move('a8','h8');
-      assert.equal(await text('status'),'Checkmate — White wins! King captured.');await page.click('#undo');
+      assert.equal(await text('status'),'Checkmate — White wins! King captured.');assert.equal(await page.locator('#board button').first().getAttribute('data-square'),'a8');await page.click('#undo');
       assert.ok((await square('h8').getAttribute('aria-label')).includes('Black king'));
     });
     await check('embedded engine worker calculates offline after the page loads',async()=>{

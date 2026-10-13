@@ -135,6 +135,9 @@ function renderStatus() {
   $('resumeAI').hidden = pvp() || !pausedAI || !!result || state.side !== engine();
 }
 function render() {
+  // In local PvP, orient the view toward the player whose move is due.
+  // Consecutive same-color turns retain their orientation.
+  if (pvp() && !state.result) flipped = state.side === 'b';
   renderBoard();
   renderTurns();
   renderStatus();
