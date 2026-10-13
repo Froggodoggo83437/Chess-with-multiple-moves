@@ -265,41 +265,113 @@ POSSIBILITY OF SUCH DAMAGE.
       function evaluate(state2, color) {
         let score = 0;
         const board = state2.game.board();
-        for (let row = 0; row < 8; row++) {
-          for (let col = 0; col < 8; col++) {
-            const piece = board[row][col];
-            if (!piece) continue;
-            let value = VALUES[piece.type];
-            if (piece.type === "p") value += (piece.color === "w" ? 6 - row : row - 1) * 6;
-            if (piece.type === "n" || piece.type === "b") value += (7 - Math.abs(3.5 - row) - Math.abs(3.5 - col)) * 4;
-            score += piece.color === color ? value : -value;
+        const pieces = board.flat().filter(Boolean);
+        const material = pieces.reduce((sum, piece) => sum + (piece.type === "k" ? 0 : VALUES[piece.type]), 0);
+        const endgame = material < 2600;
+        const bishops = { w: 0, b: 0 };
+        for (let row = 0; row < 8; row++) for (let col = 0; col < 8; col++) {
+          const piece = board[row][col];
+          if (!piece) continue;
+          const enemy = piece.color === "w" ? "b" : "w";
+          const advance = piece.color === "w" ? 6 - row : row - 1;
+          const center = 7 - Math.abs(3.5 - row) - Math.abs(3.5 - col);
+          let value = piece.type === "k" ? 0 : VALUES[piece.type];
+          if (piece.type === "p") value += advance * (endgame ? 12 : 3) + center * 3;
+          if (piece.type === "n" || piece.type === "b") {
+            value += center * 10;
+            if (row === (piece.color === "w" ? 7 : 0)) value -= 20;
+            if (piece.type === "b") bishops[piece.color]++;
           }
+          if (piece.type === "r") {
+            const ownPawn = pieces.some((p) => p.type === "p" && p.color === piece.color && p.square[0] === piece.square[0]);
+            if (!ownPawn) value += 18;
+            if (advance === 5) value += 20;
+          }
+          if (piece.type === "k") {
+            if (endgame) value += center * 10;
+            else {
+              value -= center * 12;
+              if (row === (piece.color === "w" ? 7 : 0) && [1, 2, 6].includes(col)) value += 35;
+              const shieldRow = row + (piece.color === "w" ? -1 : 1);
+              for (const file2 of [col - 1, col, col + 1]) if (board[shieldRow]?.[file2]?.color === piece.color && board[shieldRow][file2].type === "p") value += 12;
+            }
+          } else {
+            const attackers = state2.game.attackers(piece.square, enemy);
+            if (attackers.length) {
+              const cheapest = Math.min(...attackers.map((square) => VALUES[state2.game.get(square).type]));
+              const defended = state2.game.isAttacked(piece.square, piece.color);
+              const risk = defended ? Math.max(0, VALUES[piece.type] - cheapest) : VALUES[piece.type];
+              value -= risk * (state2.side === enemy ? 0.85 : 0.25);
+            }
+          }
+          score += piece.color === color ? value : -value;
+        }
+        for (const side of ["w", "b"]) {
+          let bonus = bishops[side] >= 2 ? 30 : 0;
+          if (state2.inCheck(side)) {
+            bonus -= state2.allowKingCapture && state2.side !== side ? 5e4 : 55;
+          }
+          score += side === color ? bonus : -bonus;
         }
         return score;
       }
-      async function chooseMove(state2, depth, color, { isCancelled = () => false, yieldEvery = 32, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random } = {}) {
+      async function chooseMove(state2, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random, onIteration = () => {
+      } } = {}) {
         let nodes = 0;
         const cancelled = Symbol("cancelled");
         const timedOut = Symbol("timed-out");
         const started = Date.now();
         let completedMove = null;
         let completedScores = [];
-        function terminal(node2, remaining) {
+        let quiescenceEnabled = false;
+        function terminal(node2) {
           if (!node2.result) return null;
           if (node2.result.type !== "checkmate") return 0;
-          return node2.result.winner === color ? 1e5 + remaining : -1e5 - remaining;
+          const distance = node2.history.length - state2.history.length;
+          return node2.result.winner === color ? 1e6 - distance : -1e6 + distance;
         }
-        function orderedMoves(node2) {
-          return node2.legalMoves().sort((a, b) => (VALUES[b.captured] || 0) + (VALUES[b.promotion] || 0) - ((VALUES[a.captured] || 0) + (VALUES[a.promotion] || 0)));
+        function orderedMoves(node2, preferred) {
+          const priority = (move) => (preferred && move.lan === preferred.lan ? 1e6 : 0) + (move.captured ? VALUES[move.captured] * 10 - VALUES[move.piece] : 0) + (VALUES[move.promotion] || 0) + (/[+#]/.test(move.san) ? 60 : 0);
+          return [...node2.legalMoves()].sort((a, b) => priority(b) - priority(a));
         }
-        async function search(node2, remaining, alpha, beta, lastMover, extensionsLeft) {
+        async function checkpoint() {
           if (++nodes % yieldEvery === 0) await new Promise((resolve) => setTimeout(resolve, 0));
           if (isCancelled()) throw cancelled;
           if (completedMove && Date.now() - started >= timeBudgetMs) throw timedOut;
-          const result = terminal(node2, remaining);
+        }
+        async function quiescence(node2, alpha, beta, remaining = 3) {
+          await checkpoint();
+          const result = terminal(node2);
+          if (result !== null) return result;
+          const inCheck = node2.inCheck(node2.side);
+          const maximizing = node2.side === color;
+          const standPat = evaluate(node2, color);
+          if (remaining === 0) return standPat;
+          let best = inCheck ? maximizing ? -Infinity : Infinity : standPat;
+          if (!inCheck) {
+            if (maximizing) alpha = Math.max(alpha, best);
+            else beta = Math.min(beta, best);
+            if (beta <= alpha) return best;
+          }
+          const moves = orderedMoves(node2).filter((move) => inCheck || move.captured || move.promotion);
+          for (const move of moves) {
+            const child = node2.clone();
+            child.play(move, false);
+            const value = await quiescence(child, alpha, beta, remaining - 1);
+            best = maximizing ? Math.max(best, value) : Math.min(best, value);
+            if (maximizing) alpha = Math.max(alpha, best);
+            else beta = Math.min(beta, best);
+            if (beta <= alpha) break;
+          }
+          return best;
+        }
+        async function search(node2, remaining, alpha, beta, lastMover, extensionsLeft) {
+          await checkpoint();
+          const result = terminal(node2);
           if (result !== null) return result;
           if (remaining <= 0) {
-            if (!completedMove || node2.side !== lastMover || extensionsLeft <= 0) return evaluate(node2, color);
+            if (!completedMove) return evaluate(node2, color);
+            if (node2.side !== lastMover || extensionsLeft <= 0) return quiescenceEnabled ? quiescence(node2, alpha, beta) : evaluate(node2, color);
             remaining = 1;
             extensionsLeft--;
           }
@@ -327,9 +399,10 @@ POSSIBILITY OF SUCH DAMAGE.
         }
         try {
           for (let iteration = 1; iteration <= depth; iteration++) {
+            quiescenceEnabled = iteration >= 3;
             let bestMove = null, bestScore = -Infinity;
             const scores = [];
-            for (const move of orderedMoves(state2)) {
+            for (const move of orderedMoves(state2, completedMove)) {
               const child = state2.clone();
               child.play(move, false);
               const score = await search(child, iteration - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state2.side, sequenceExtension);
@@ -341,6 +414,7 @@ POSSIBILITY OF SUCH DAMAGE.
             }
             completedMove = bestMove;
             completedScores = scores;
+            onIteration({ depth: iteration, nodes, scores });
             if (bestScore >= 1e5 || Date.now() - started >= timeBudgetMs) break;
           }
           return selectCompleted();

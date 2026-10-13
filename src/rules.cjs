@@ -159,48 +159,123 @@ const VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 100000 };
 function evaluate(state, color) {
   let score = 0;
   const board = state.game.board();
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      const piece = board[row][col];
-      if (!piece) continue;
-      let value = VALUES[piece.type];
-      if (piece.type === 'p') value += (piece.color === 'w' ? 6 - row : row - 1) * 6;
-      if (piece.type === 'n' || piece.type === 'b') value += (7 - Math.abs(3.5 - row) - Math.abs(3.5 - col)) * 4;
-      score += piece.color === color ? value : -value;
+  const pieces = board.flat().filter(Boolean);
+  const material = pieces.reduce((sum, piece) => sum + (piece.type === 'k' ? 0 : VALUES[piece.type]), 0);
+  const endgame = material < 2600;
+  const bishops = { w: 0, b: 0 };
+  for (let row = 0; row < 8; row++) for (let col = 0; col < 8; col++) {
+    const piece = board[row][col];
+    if (!piece) continue;
+    const enemy = piece.color === 'w' ? 'b' : 'w';
+    const advance = piece.color === 'w' ? 6 - row : row - 1;
+    const center = 7 - Math.abs(3.5 - row) - Math.abs(3.5 - col);
+    let value = piece.type === 'k' ? 0 : VALUES[piece.type];
+    if (piece.type === 'p') value += advance * (endgame ? 12 : 3) + center * 3;
+    if (piece.type === 'n' || piece.type === 'b') {
+      value += center * 10;
+      if (row === (piece.color === 'w' ? 7 : 0)) value -= 20;
+      if (piece.type === 'b') bishops[piece.color]++;
     }
+    if (piece.type === 'r') {
+      const ownPawn = pieces.some(p => p.type === 'p' && p.color === piece.color && p.square[0] === piece.square[0]);
+      if (!ownPawn) value += 18;
+      if (advance === 5) value += 20;
+    }
+    if (piece.type === 'k') {
+      if (endgame) value += center * 10;
+      else {
+        value -= center * 12;
+        if (row === (piece.color === 'w' ? 7 : 0) && [1, 2, 6].includes(col)) value += 35;
+        const shieldRow = row + (piece.color === 'w' ? -1 : 1);
+        for (const file of [col - 1, col, col + 1]) if (board[shieldRow]?.[file]?.color === piece.color && board[shieldRow][file].type === 'p') value += 12;
+      }
+    } else {
+      // The fallback must recognize hanging pieces and bad exchanges even when
+      // the time limit prevents the next full depth from completing.
+      const attackers = state.game.attackers(piece.square, enemy);
+      if (attackers.length) {
+        const cheapest = Math.min(...attackers.map(square => VALUES[state.game.get(square).type]));
+        const defended = state.game.isAttacked(piece.square, piece.color);
+        const risk = defended ? Math.max(0, VALUES[piece.type] - cheapest) : VALUES[piece.type];
+        value -= risk * (state.side === enemy ? 0.85 : 0.25);
+      }
+    }
+    score += piece.color === color ? value : -value;
+  }
+  for (const side of ['w', 'b']) {
+    let bonus = bishops[side] >= 2 ? 30 : 0;
+    if (state.inCheck(side)) {
+      // In capture mode an attacker with another scheduled move can win now.
+      bonus -= state.allowKingCapture && state.side !== side ? 50000 : 55;
+    }
+    score += side === color ? bonus : -bonus;
   }
   return score;
 }
 
 // Cooperatively yield so reset, undo, and order edits can cancel an active search.
-async function chooseMove(state, depth, color, { isCancelled = () => false, yieldEvery = 32, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random } = {}) {
+async function chooseMove(state, depth, color, { isCancelled = () => false, yieldEvery = 64, timeBudgetMs = 2500, sequenceExtension = 4, moveTolerance = 0, mistakeProbability = 0, random = Math.random, onIteration = () => {} } = {}) {
   let nodes = 0;
   const cancelled = Symbol('cancelled');
   const timedOut = Symbol('timed-out');
   const started = Date.now();
   let completedMove = null;
   let completedScores = [];
-  function terminal(node, remaining) {
+  let quiescenceEnabled = false;
+  function terminal(node) {
     if (!node.result) return null;
     if (node.result.type !== 'checkmate') return 0;
-    return node.result.winner === color ? 100000 + remaining : -100000 - remaining;
+    const distance = node.history.length - state.history.length;
+    return node.result.winner === color ? 1000000 - distance : -1000000 + distance;
   }
-  function orderedMoves(node) {
-    return node.legalMoves().sort((a, b) =>
-      ((VALUES[b.captured] || 0) + (VALUES[b.promotion] || 0)) -
-      ((VALUES[a.captured] || 0) + (VALUES[a.promotion] || 0)));
+  function orderedMoves(node, preferred) {
+    const priority = move => (preferred && move.lan === preferred.lan ? 1000000 : 0)
+      + (move.captured ? VALUES[move.captured] * 10 - VALUES[move.piece] : 0)
+      + (VALUES[move.promotion] || 0) + (/[+#]/.test(move.san) ? 60 : 0);
+    return [...node.legalMoves()].sort((a, b) => priority(b) - priority(a));
   }
-  async function search(node, remaining, alpha, beta, lastMover, extensionsLeft) {
+  async function checkpoint() {
     if (++nodes % yieldEvery === 0) await new Promise(resolve => setTimeout(resolve, 0));
     if (isCancelled()) throw cancelled;
     if (completedMove && Date.now() - started >= timeBudgetMs) throw timedOut;
-    const result = terminal(node, remaining);
+  }
+  async function quiescence(node, alpha, beta, remaining = 3) {
+    await checkpoint();
+    const result = terminal(node);
+    if (result !== null) return result;
+    const inCheck = node.inCheck(node.side);
+    const maximizing = node.side === color;
+    const standPat = evaluate(node, color);
+    if (remaining === 0) return standPat;
+    let best = inCheck ? (maximizing ? -Infinity : Infinity) : standPat;
+    if (!inCheck) {
+      if (maximizing) alpha = Math.max(alpha, best);
+      else beta = Math.min(beta, best);
+      if (beta <= alpha) return best;
+    }
+    // At a checked node, all evasions matter; standing still is not an option.
+    const moves = orderedMoves(node).filter(move => inCheck || move.captured || move.promotion);
+    for (const move of moves) {
+      const child = node.clone();
+      child.play(move, false);
+      const value = await quiescence(child, alpha, beta, remaining - 1);
+      best = maximizing ? Math.max(best, value) : Math.min(best, value);
+      if (maximizing) alpha = Math.max(alpha, best);
+      else beta = Math.min(beta, best);
+      if (beta <= alpha) break;
+    }
+    return best;
+  }
+  async function search(node, remaining, alpha, beta, lastMover, extensionsLeft) {
+    await checkpoint();
+    const result = terminal(node);
     if (result !== null) return result;
     if (remaining <= 0) {
       // Never assume alternating minimax levels. Finish an interrupted same-color
       // run when possible, including the human's consecutive attacking moves.
       // First complete a cheap one-ply fallback before spending time on extensions.
-      if (!completedMove || node.side !== lastMover || extensionsLeft <= 0) return evaluate(node, color);
+      if (!completedMove) return evaluate(node, color);
+      if (node.side !== lastMover || extensionsLeft <= 0) return quiescenceEnabled ? quiescence(node, alpha, beta) : evaluate(node, color);
       remaining = 1;
       extensionsLeft--;
     }
@@ -231,9 +306,11 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     // Always finish a legal one-ply choice, then deepen within a bounded budget.
     // A partial deeper search must not overwrite the last completed result.
     for (let iteration = 1; iteration <= depth; iteration++) {
+      // Finish an affordable tactical baseline before adding exchange searches.
+      quiescenceEnabled = iteration >= 3;
       let bestMove = null, bestScore = -Infinity;
       const scores = [];
-      for (const move of orderedMoves(state)) {
+      for (const move of orderedMoves(state, completedMove)) {
         const child = state.clone();
         child.play(move, false);
         const score = await search(child, iteration - 1, moveTolerance > 0 ? -Infinity : bestScore, Infinity, state.side, sequenceExtension);
@@ -242,6 +319,7 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
       }
       completedMove = bestMove;
       completedScores = scores;
+      onIteration({ depth: iteration, nodes, scores });
       if (bestScore >= 100000 || Date.now() - started >= timeBudgetMs) break;
     }
     return selectCompleted();
