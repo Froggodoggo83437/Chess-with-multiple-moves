@@ -40,6 +40,12 @@ or build is needed to play. Alternatively, serve this directory with
 
 ## Controls and computer
 
+Checkmate and king captures trigger a four-second celebration on the board,
+with a glowing king badge, expanding ring, confetti, and the winning color.
+King captures have a distinct caption. The overlay leaves controls usable,
+clears immediately on undo/reset, and does not replay when flipping the board.
+Reduced-motion preferences show a static victory badge without moving effects.
+
 New Game and edits to the turn sequence start a fresh game and cancel pending
 computer work. Changing your color also starts a fresh game. Flip Board changes
 only the view and preserves the game and selected move. Difficulty changes

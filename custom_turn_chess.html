@@ -42,7 +42,22 @@ button.action{cursor:pointer;padding:10px 12px;background:#263953;color:#fff;bor
 .row{display:flex;justify-content:space-between;gap:9px;align-items:center}
 .moves{max-height:190px;overflow:auto;color:#cbd8ea;line-height:1.7;word-break:break-word}
 .error{color:#ffb1a5}.loading{max-width:700px;margin:auto;text-align:center;padding:20px}
-@media(max-width:820px){.layout{grid-template-columns:1fr;padding:12px;gap:15px}header{padding:18px 14px 0}.square{font-size:clamp(28px,9vw,60px)}.boardWrap{padding:0}}</style></head><body>
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding:12px;gap:15px}header{padding:18px 14px 0}.square{font-size:clamp(28px,9vw,60px)}.boardWrap{padding:0}}
+.victory-layer{position:absolute;inset:0;z-index:5;display:grid;place-items:center;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at center,#0a181dd9,#0a181d55 65%,transparent);animation:victory-veil 3.9s ease both}
+.victory-card{position:relative;text-align:center;padding:22px 12px;color:#fff9df;text-shadow:0 2px 12px #0008;animation:victory-arrive 750ms cubic-bezier(.16,1,.3,1) both}
+.victory-emblem{width:clamp(56px,14vw,110px);height:clamp(56px,14vw,110px);margin:0 auto 12px;display:grid;place-items:center;border-radius:50%;border:2px solid #ffe08a;background:radial-gradient(circle,#ffdc8b55,#ffe08a11);box-shadow:0 0 35px #ffda8b66,inset 0 0 20px #ffe08a22}
+.victory-emblem img{width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 2px 3px #0008)}
+.victory-title{font:900 clamp(23px,5.2vw,52px) system-ui;letter-spacing:.09em;line-height:1.1;color:#ffe08a}
+.victory-winner{font:700 clamp(20px,3.2vw,32px) system-ui;margin-top:10px}
+.victory-detail{font:600 clamp(9px,1.4vw,12px) system-ui;letter-spacing:.14em;margin-top:12px;color:#e8eed8}
+.victory-ring{position:absolute;width:70%;aspect-ratio:1;border-radius:50%;border:2px solid #ffe08a;box-shadow:0 0 30px #ffe08a55;animation:victory-ripple 1.4s ease-out both}
+.victory-confetti{position:absolute;top:50%;left:50%;width:7px;height:12px;border-radius:2px;animation:victory-burst 1.8s cubic-bezier(.15,.65,.35,1) var(--delay) both}
+@keyframes victory-arrive{0%{opacity:0;transform:translateY(25px) scale(.65)}65%{opacity:1;transform:translateY(-4px) scale(1.04)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes victory-ripple{0%{opacity:.9;transform:scale(.25)}100%{opacity:0;transform:scale(1.6)}}
+@keyframes victory-burst{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}12%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--spin)) scale(.6)}}
+@keyframes victory-veil{0%{opacity:0}12%,82%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.victory-layer,.victory-card,.victory-ring,.victory-confetti{animation:none}.victory-ring,.victory-confetti{display:none}}
+</style></head><body>
 <header><h1>♞ Custom Turn Chess</h1><p>Change who moves next. Play two turns in a row, three, or any sequence you like.</p></header>
 <div class="layout"><section><div class="boardWrap"><div class="board" id="board" aria-label="Chess board"></div></div><div class="hint">Click a piece, then click its destination. Pawns promote to your selected piece (Queen by default).</div></section><aside>
 <div class="panel"><h2>Turn order</h2><p class="hint" style="margin:0">Click a tile to swap White/Black. The orange tile is the current turn.</p><div id="turns" class="turns"></div><div class="btnrow"><button class="action" id="addWhite">+ White</button><button class="action" id="addBlack">+ Black</button><button class="action" id="remove">− Last</button></div><div class="btnrow"><button class="action" id="preset1">Normal (1:1)</button><button class="action primary" id="preset2">You 2 : AI 1</button><button class="action" id="preset3">You 3 : AI 1</button></div><div class="hint">Editing the order starts a new game to keep the move history consistent.</div></div>
@@ -3805,6 +3820,71 @@ POSSIBILITY OF SUCH DAMAGE.
     }
   };
 
+  // src/celebration.js
+  function createCelebration(container, pieces) {
+    let celebratedResult = null;
+    let layer = null;
+    let timer = null;
+    function clear() {
+      clearTimeout(timer);
+      timer = null;
+      layer?.remove();
+      layer = null;
+    }
+    return function sync(result) {
+      if (result?.type !== "checkmate") {
+        clear();
+        celebratedResult = null;
+        return;
+      }
+      if (result === celebratedResult) return;
+      clear();
+      celebratedResult = result;
+      layer = document.createElement("div");
+      layer.className = "victory-layer";
+      layer.setAttribute("aria-hidden", "true");
+      const ring = document.createElement("div");
+      ring.className = "victory-ring";
+      layer.append(ring);
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const colors = ["#ffe08a", "#f8f5d7", "#95c66b", "#65cfe5"];
+        for (let index = 0; index < 36; index++) {
+          const particle = document.createElement("i");
+          particle.className = "victory-confetti";
+          const angle = index * Math.PI * 2 / 36;
+          const distance = 100 + Math.random() * 140;
+          particle.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
+          particle.style.setProperty("--dy", `${Math.sin(angle) * distance}px`);
+          particle.style.setProperty("--spin", `${180 + Math.random() * 540}deg`);
+          particle.style.setProperty("--delay", `${Math.random() * 120}ms`);
+          particle.style.backgroundColor = colors[index % colors.length];
+          layer.append(particle);
+        }
+      }
+      const card = document.createElement("div");
+      card.className = "victory-card";
+      const emblem = document.createElement("div");
+      emblem.className = "victory-emblem";
+      const king = document.createElement("img");
+      king.src = pieces[result.winner + "k"];
+      king.alt = "";
+      emblem.append(king);
+      const title = document.createElement("div");
+      title.className = "victory-title";
+      title.textContent = "CHECKMATE";
+      const winner = document.createElement("div");
+      winner.className = "victory-winner";
+      winner.textContent = `${result.winner === "w" ? "White" : "Black"} wins`;
+      const detail = document.createElement("div");
+      detail.className = "victory-detail";
+      detail.textContent = result.reason === "king-capture" ? "KING CAPTURED \xB7 GAME OVER" : "THE KING HAS NO ESCAPE";
+      card.append(emblem, title, winner, detail);
+      layer.append(card);
+      container.append(layer);
+      timer = setTimeout(clear, 4e3);
+    };
+  }
+
   // src/game.js
   var import_rules = __toESM(require_rules());
   var { CustomTurnRules, chooseMove } = import_rules.default;
@@ -3822,6 +3902,7 @@ POSSIBILITY OF SUCH DAMAGE.
   var pausedAI = false;
   var aiError = "";
   var squares = /* @__PURE__ */ new Map();
+  var celebrate = createCelebration(document.querySelector(".boardWrap"), window.CHESS_PIECES);
   var player = () => $("side").value;
   var engine = () => player() === "w" ? "b" : "w";
   function cancelAI() {
@@ -3949,6 +4030,7 @@ POSSIBILITY OF SUCH DAMAGE.
     renderStatus();
     $("ruleNote").textContent = state.allowKingCapture ? "King capture variant: check does not interrupt the turn sequence. Capture the opponent\u2019s king to win immediately (counted as checkmate). Normal checkmate also ends the game. Your own king must remain safe. Undo restores captured kings; computer replies stay paused until resumed." : "Standard rules: check requires an immediate response, even between consecutive moves. An extra response does not consume the attacker\u2019s next tile. Checkmate ends the game immediately; kings cannot be captured. Undo pauses computer replies until resumed.";
     $("history").textContent = state.history.length ? state.history.map((move, index) => `${index + 1}. ${names[move.color]} ${move.san}`).join("   ") : "No moves yet.";
+    celebrate(state.result);
   }
   function apply(move) {
     const played = state.play(move);
