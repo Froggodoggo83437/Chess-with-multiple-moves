@@ -4315,6 +4315,7 @@ POSSIBILITY OF SUCH DAMAGE.
     $("resumeAI").hidden = pvp() || !pausedAI || !!result || state.side !== engine();
   }
   function render() {
+    if (pvp() && !state.result) flipped = state.side === "b";
     renderBoard();
     renderTurns();
     renderStatus();

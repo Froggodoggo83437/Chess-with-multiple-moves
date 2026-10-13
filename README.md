@@ -43,6 +43,9 @@ or build is needed to play. Alternatively, serve this directory with
 The board displays file letters along the bottom and rank numbers down the left
 edge, with both sets following Flip Board. Choose **Player vs Player (same
 device)** to play both colors locally, including consecutive custom turns.
+In local PvP the board automatically faces the player whose move is due.
+Consecutive same-color moves keep the view; Undo follows the restored turn.
+Flip Board remains available for a temporary manual view until the next move.
 Mode changes start a fresh game and cancel computer work. Computer-only settings
 are hidden in local PvP; promotion, both rules modes, turn editing, Undo, and
 victory celebrations remain available. White is Player 1 and Black is Player 2.
