@@ -322,6 +322,19 @@ function renderReview(){
   const view=displayState(),last=view.lastMove;
   $('reviewPosition').textContent=(review.index===0?'Starting position':`After move ${review.index}: ${names[last.color]} ${last.san}`)+(view.result?' — final position':` — ${names[view.side]} to move${view.forcedSide?' (check response)':''}`);
   $('analysisProgress').textContent=review.error|| (review.complete?'Analysis ready — evaluations and move grades are estimates.':`Analyzing position ${review.progress} of ${count+1}… You can browse while analysis runs.`);
+  $('analysisEngine').textContent=review.engineStatus||'Preparing analysis…';
+  const chosen=review.moves[review.index-1];
+  let detail='';
+  if(chosen){
+    const position=review.positions[review.index-1].clone(), line=[];
+    for(const key of chosen.pv||[]){
+      const move=position.play({from:key.slice(0,2),to:key.slice(2,4),...(key.length>4?{promotion:key[4]}:{})},false);
+      if(!move)break;line.push(`${names[move.color]} ${move.san}`);if(line.length>=6)break;
+    }
+    detail=`${qualityName(chosen.type)} — ${chosen.confidence||'estimate'}; depth ${chosen.depth}.`;
+    if(line.length)detail+=' Suggested line: '+line.join(' → ')+'.';
+  }
+  $('analysisDetail').textContent=detail;
   const list=$('analysisMoves');
   if(list.children.length!==count){
     list.replaceChildren();
@@ -340,10 +353,11 @@ function renderReview(){
 async function openAnalysis(){
   if(state.result?.type!=='checkmate')return;
   celebrate.dismiss();selected=null;legal=[];
-  const payload={order:[...state.order],allowKingCapture:state.allowKingCapture,snapshots:[...state.snapshots,state.snapshot()]};
+  const quality=$('analysisQuality').value;
+  const payload={quality,order:[...state.order],allowKingCapture:state.allowKingCapture,snapshots:[...state.snapshots,state.snapshot()]};
   const positions=analysis.restorePositions(Chess,payload);
-  const cached=analysisCache?.sourceResult===state.result?analysisCache:null;
-  const session=review={positions,index:positions.length-1,evaluations:cached?.evaluations||[],moves:cached?.moves||[],complete:!!cached,progress:0,error:''};
+  const cached=analysisCache?.sourceResult===state.result&&analysisCache.quality===quality?analysisCache:null;
+  const session=review={positions,index:positions.length-1,evaluations:cached?.evaluations||[],moves:cached?.moves||[],complete:!!cached,progress:0,error:'',engineStatus:cached?.engineStatus||''};
   session.evaluations[positions.length-1]={whiteScore:analysis.terminalScore(state),depth:0};
   $('analysisPanel').hidden=false;$('evaluationBar').hidden=false;$('boardSection').classList.add('reviewing');
   render();renderReview();
@@ -354,19 +368,20 @@ async function openAnalysis(){
       session.evaluations[progress.index]=progress.evaluation;
       if(progress.move)session.moves[progress.index]=progress.move;
       session.progress=progress.index+1;renderBoard();renderReview();
-    });
+    },status=>{if(review===session){session.engineStatus=status;renderReview();}});
     if(review!==session||!result)return;
     session.evaluations=result.evaluations;session.moves=result.moves;session.complete=true;
-    analysisCache={...result,sourceResult:state.result};renderBoard();renderReview();
+    analysisCache={...result,quality,engineStatus:session.engineStatus,sourceResult:state.result};renderBoard();renderReview();
   }catch(error){if(review!==session)return;session.error='Analysis could not finish. Close and reopen analysis to retry.';renderReview();}
 }
 $('analyzeGame').onclick=openAnalysis;
+$('analysisQuality').onchange=()=>{if(review){closeAnalysis(true);openAnalysis();}};
 $('closeAnalysis').onclick=()=>{closeAnalysis();render();};
 $('reviewStart').onclick=()=>selectReview(0);
 $('reviewPrev').onclick=()=>selectReview(review.index-1);
 $('reviewNext').onclick=()=>selectReview(review.index+1);
 $('reviewEnd').onclick=()=>selectReview(review.positions.length-1);
-for(const type of ['book','great','excellent','best','inaccuracy','mistake','blunder']){
+for(const type of ['book','great','excellent','best','inaccuracy','mistake','blunder','unrated']){
   const item=document.createElement('span');item.append(moveIcon(type),document.createTextNode(qualityName(type)));$('analysisLegend').append(item);
 }
 document.addEventListener('keydown',event=>{

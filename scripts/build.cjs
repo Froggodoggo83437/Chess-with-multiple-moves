@@ -2,6 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const esbuild = require('esbuild');
 const root = path.resolve(__dirname, '..');
+const stockfish = require('./prepare-stockfish.cjs');
+const stockfishWorker = fs.readFileSync(path.join(root,'src/stockfish-worker.js'),'utf8').replace('/* STOCKFISH_FACTORY */',stockfish.source);
 const rulesHash = require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(root, 'src/rules.cjs'))).digest('hex');
 const result = esbuild.buildSync({
   entryPoints: [path.join(root, 'src/game.js')], bundle: true,
@@ -12,6 +14,6 @@ const analysisWorker = esbuild.buildSync({ entryPoints: [path.join(root, 'src/an
 const license = fs.readFileSync(path.join(root, 'node_modules/chess.js/LICENSE'), 'utf8');
 const script = `<!-- GAME_SCRIPT_START -->\n<script>\n/* chess.js 1.4.0\n${license}*/\n${result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script')}\n</script>\n<!-- GAME_SCRIPT_END -->`;
 const htmlPath = path.join(root, 'custom_turn_chess.html');
-const html = fs.readFileSync(htmlPath, 'utf8').replace(/<script>\s*window\.CHESS_PIECES=[\s\S]*?<\/script>/, () => '<script>\nwindow.CHESS_PIECES=' + JSON.stringify(require('../src/pieces.cjs')) + ';\nwindow.CHESS_RULES_SHA256=' + JSON.stringify(rulesHash) + ';\nwindow.CHESS_WORKER_SOURCE=' + JSON.stringify(worker.outputFiles[0].text).replace(/<\/script/gi, '<\\/script') + ';\nwindow.CHESS_ANALYSIS_WORKER_SOURCE=' + JSON.stringify(analysisWorker.outputFiles[0].text).replace(/<\/script/gi, '<\\/script') + ';\n</script>');
+const html = fs.readFileSync(htmlPath, 'utf8').replace(/<script>\s*window\.CHESS_PIECES=[\s\S]*?<\/script>/, () => '<script>\nwindow.CHESS_PIECES=' + JSON.stringify(require('../src/pieces.cjs')) + ';\nwindow.CHESS_RULES_SHA256=' + JSON.stringify(rulesHash) + ';\nwindow.CHESS_WORKER_SOURCE=' + JSON.stringify(worker.outputFiles[0].text).replace(/<\/script/gi, '<\\/script') + ';\nwindow.CHESS_ANALYSIS_WORKER_SOURCE=' + JSON.stringify(analysisWorker.outputFiles[0].text).replace(/<\/script/gi, '<\\/script') + ';\nwindow.CHESS_STOCKFISH_ASSET=' + JSON.stringify(stockfish.asset) + ';\nwindow.CHESS_STOCKFISH_WORKER_SOURCE=' + JSON.stringify(stockfishWorker).replace(/<\/script/gi, '<\\/script') + ';\n</script>');
 if (!html.includes('<!-- GAME_SCRIPT_START -->')) throw Error('Missing game script markers');
 fs.writeFileSync(htmlPath, html.replace(/<!-- GAME_SCRIPT_START -->[\s\S]*?<!-- GAME_SCRIPT_END -->/, () => script));
