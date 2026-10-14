@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "node --test tests/rules.test.cjs tests/ratings.test.cjs tests/material.test.cjs",
+    "test": "node --test tests/rules.test.cjs tests/ratings.test.cjs tests/material.test.cjs tests/analysis.test.cjs",
     "test:browser": "node tests/browser.cjs",
     "build": "node scripts/build.cjs",
     "benchmark": "node benchmarks/run.cjs",

@@ -18,6 +18,7 @@ const fixtures = {
   standard: [null, ['w','b']],
   stalemate: ['7k/5K2/6Q1/8/8/8/8/8 b - - 0 1', ['b','w']]
 };
+fs.mkdirSync(path.join(root,'test-results'),{recursive:true});
 let count=0;
 (async()=>{
   const server=http.createServer((req,res)=>{
@@ -253,6 +254,42 @@ let count=0;
       await page.click('#undo');assert.equal(await white.locator('.material-lead').innerText(),'+1');
       await page.click('#flip');assert.equal(await white.locator('img').count(),1);assert.equal(await page.locator('#playerBottom').getAttribute('data-color'),'w');
       await page.click('#newGame');assert.equal(await page.locator('.captured-pieces img').count(),0);assert.equal(await page.locator('.material-lead').count(),0);
+    });
+    await check('postgame analysis replays king capture with icons and evaluation without modifying the game',async()=>{
+      await goto();assert.ok(await page.locator('#analyzeGame').isHidden());
+      await goto('capture');await move('a1','a8');await move('a8','h8');
+      const history=await text('history'),status=await text('status');assert.ok(await page.locator('#analyzeGame').isVisible());
+      await page.click('#analyzeGame');assert.equal(await page.locator('.victory-layer').count(),0);
+      assert.ok(await page.locator('#evaluationBar').isVisible());
+      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
+      assert.equal(await page.locator('#analysisMoves button').count(),2);assert.equal(await page.locator('#analysisMoves .move-icon').count(),2);
+      assert.equal(await text('evalLabel'),'M');assert.equal(await page.locator('#evalDark').evaluate(e=>parseFloat(e.style.height)),0);
+      assert.equal(await square('h8').locator('.board-move-icon').count(),1);
+      await page.click('#reviewStart');assert.equal(await square('a1').locator('img').getAttribute('alt'),'White rook');assert.equal(await square('h8').locator('img').getAttribute('alt'),'Black king');
+      await page.click('#reviewNext');assert.equal(await square('a8').locator('.board-move-icon').count(),1);assert.equal(await page.locator('#analysisMoves button[aria-current="step"]').count(),1);
+      const beforeFlip=await page.locator('#evalDark').evaluate(e=>e.style.top);await page.click('#flip');assert.notEqual(await page.locator('#evalDark').evaluate(e=>e.style.top),beforeFlip);
+      await page.keyboard.press('End');assert.equal(await text('evalLabel'),'M');assert.equal(await text('history'),history);
+      await page.screenshot({path:path.join(root,'test-results/analysis.png'),fullPage:true});
+      await page.click('#closeAnalysis');assert.ok(await page.locator('#evaluationBar').isHidden());assert.equal(await text('status'),status);assert.equal(await text('history'),history);assert.equal(await page.locator('.victory-layer').count(),0);
+      await page.click('#analyzeGame');await page.click('#reviewStart');await page.click('#undo');assert.ok(await page.locator('#analysisPanel').isHidden());assert.equal(await square('h8').locator('img').getAttribute('alt'),'Black king');assert.ok(await page.locator('#analyzeGame').isHidden());
+    });
+    await check('standard checkmate analysis grades recognized opening moves and runs offline',async()=>{
+      await goto();await page.selectOption('#mode','pvp');await page.click('#preset1');await page.selectOption('#kingCapture','standard');
+      for(const [from,to] of [['e2','e4'],['e7','e5'],['f1','c4'],['b8','c6'],['d1','h5'],['g8','f6'],['h5','f7']])await move(from,to);
+      assert.ok((await text('status')).includes('White wins'));await page.click('#analyzeGame');
+      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
+      assert.equal(await page.locator('#analysisMoves button').count(),7);assert.equal(await page.locator('#analysisMoves button').first().getAttribute('data-quality'),'book');
+      assert.equal(await text('evalLabel'),'M');await page.click('#reviewStart');assert.equal(await page.locator('#board img').count(),32);
+      await page.keyboard.press('ArrowRight');assert.ok((await text('reviewPosition')).includes('White e4'));
+      await page.click('#closeAnalysis');assert.ok((await text('status')).includes('White wins'));
+    });
+    await check('Black checkmate analysis and reset cancel review without stale output',async()=>{
+      await goto('blackmate');await page.waitForSelector('#analyzeGame:not([hidden])');await page.click('#analyzeGame');
+      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
+      assert.equal(await text('evalLabel'),'−M');assert.equal(await page.locator('#evalDark').evaluate(e=>parseFloat(e.style.height)),100);
+      await page.click('#newGame');assert.ok(await page.locator('#analysisPanel').isHidden());
+      await goto('capture');await move('a1','a8');await move('a8','h8');await page.click('#analyzeGame');await page.click('#newGame');
+      await page.waitForTimeout(600);assert.ok(await page.locator('#evaluationBar').isHidden());assert.equal(await text('history'),'No moves yet.');
     });
     await check('checkmate celebration displays winner, preserves controls, and plays once',async()=>{
       await goto('mate');await move('g6','g7');

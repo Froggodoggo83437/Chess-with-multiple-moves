@@ -9,7 +9,7 @@ export function createCelebration(container, pieces) {
     layer?.remove();
     layer = null;
   }
-  return function sync(result) {
+  function sync(result) {
     if (result?.type !== 'checkmate') {
       clear();
       celebratedResult = null;
@@ -61,5 +61,7 @@ export function createCelebration(container, pieces) {
     layer.append(card);
     container.append(layer);
     timer = setTimeout(clear, 4000);
-  };
+  }
+  sync.dismiss = clear;
+  return sync;
 }
