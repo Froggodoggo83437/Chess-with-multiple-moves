@@ -1,0 +1,187 @@
+[
+  {
+    "id": "white-mate",
+    "fen": "7k/8/5KQ1/8/8/8/8/8 w - - 0 1",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "goal": "mate"
+  },
+  {
+    "id": "black-mate",
+    "fen": "8/8/8/8/8/5kq1/8/7K b - - 0 1",
+    "order": [
+      "b",
+      "w"
+    ],
+    "capture": false,
+    "goal": "mate"
+  },
+  {
+    "id": "free-queen",
+    "fen": "7k/3q4/8/8/8/8/8/3R3K w - - 0 1",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "expected": [
+      "d1d7"
+    ]
+  },
+  {
+    "id": "poisoned-pawn",
+    "fen": "3q3k/3p4/8/8/8/8/8/3Q3K w - - 0 1",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "forbidden": [
+      "d1d7"
+    ]
+  },
+  {
+    "id": "promotion",
+    "fen": "7k/P7/8/8/8/8/8/7K w - - 0 1",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "expected": [
+      "a7a8q"
+    ]
+  },
+  {
+    "id": "knight-fork",
+    "fen": "6k1/3q4/8/3N4/8/8/8/7K w - - 0 1",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "expected": [
+      "d5f6"
+    ]
+  },
+  {
+    "id": "queen-for-rook",
+    "fen": "3r3k/3q4/8/8/8/8/8/3R3K w - - 0 1",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "expected": [
+      "d1d7"
+    ]
+  },
+  {
+    "id": "white-two-move-attack",
+    "fen": "7k/7p/8/8/8/8/8/R6K w - - 0 1",
+    "order": [
+      "w",
+      "w",
+      "b"
+    ],
+    "capture": true,
+    "expected": [
+      "a1a8"
+    ]
+  },
+  {
+    "id": "black-two-move-attack",
+    "fen": "r6k/8/8/8/8/8/7P/7K b - - 0 1",
+    "order": [
+      "b",
+      "b",
+      "w"
+    ],
+    "capture": true,
+    "expected": [
+      "a8a1"
+    ]
+  },
+  {
+    "id": "defend-two-move-rook-attack",
+    "fen": "1r5k/7p/8/8/8/8/8/R6K b - - 0 1",
+    "order": [
+      "b",
+      "w",
+      "w"
+    ],
+    "capture": true,
+    "expected": [
+      "b8g8"
+    ]
+  },
+  {
+    "id": "reference-ruy-lopez",
+    "fen": "r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQ1RK1 b kq - 3 5",
+    "order": [
+      "b",
+      "w"
+    ],
+    "capture": false,
+    "referenceOnly": true,
+    "setup": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O"
+  },
+  {
+    "id": "reference-queens-gambit",
+    "fen": "rnbq1rk1/ppp1bpp1/4pn1p/3p2B1/2PP4/2N1PN2/PP3PPP/R2QKB1R w KQ - 0 7",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "referenceOnly": true,
+    "setup": "d4 d5 c4 e6 Nc3 Nf6 Bg5 Be7 e3 O-O Nf3 h6"
+  },
+  {
+    "id": "reference-sicilian",
+    "fen": "rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "referenceOnly": true,
+    "setup": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6"
+  },
+  {
+    "id": "reference-french",
+    "fen": "rnbqk1nr/pp3ppp/4p3/2ppP3/3P4/P1P5/2P2PPP/R1BQKBNR b KQkq - 0 6",
+    "order": [
+      "b",
+      "w"
+    ],
+    "capture": false,
+    "referenceOnly": true,
+    "setup": "e4 e6 d4 d5 Nc3 Bb4 e5 c5 a3 Bxc3+ bxc3"
+  },
+  {
+    "id": "reference-kings-indian",
+    "fen": "rnbq1rk1/ppp2pbp/3p1np1/4p3/2PPP3/2N2N2/PP2BPPP/R1BQ1RK1 b - - 1 7",
+    "order": [
+      "b",
+      "w"
+    ],
+    "capture": false,
+    "referenceOnly": true,
+    "setup": "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O Be2 e5 O-O"
+  },
+  {
+    "id": "reference-italian-center",
+    "fen": "r1bqk2r/pppp1ppp/2n5/8/1bBPn3/2N2N2/PP3PPP/R1BQK2R w KQkq - 0 8",
+    "order": [
+      "w",
+      "b"
+    ],
+    "capture": false,
+    "referenceOnly": true,
+    "setup": "e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 cxd4 Bb4+ Nc3 Nxe4"
+  }
+]

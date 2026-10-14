@@ -1,0 +1,1795 @@
+{
+  "schema": 1,
+  "status": "completed",
+  "startedAtUTC": "2026-10-13T23:43:49.499Z",
+  "rulesSha256": "f2468326f57cb8f92f390552e6d50616951c78e6c98f45c0b4afe8dae1a1f03d",
+  "environment": {
+    "node": "v24.19.0",
+    "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz"
+  },
+  "protocol": {
+    "targets": "Every 100-point setting from 400 through 3500",
+    "budget": "Actual profile budget, no cap",
+    "seed": 872,
+    "referenceNodes": 150000,
+    "childReferenceNodes": 50000,
+    "limitations": "Two positions per setting are a functionality/quality audit, not Elo calibration. Custom case overlaps regression tests. No calibrated player pool, rating estimate, or confidence interval is established."
+  },
+  "rows": [
+    {
+      "target": 400,
+      "profile": {
+        "elo": 400,
+        "depth": 2,
+        "timeBudgetMs": 250,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 1200,
+        "mistakeProbability": 0.9,
+        "minimumMistake": 20
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "d1e2",
+          "elapsedMs": 252,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 161
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 123
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8f8",
+          "elapsedMs": 250,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 17
+          },
+          "goalPassed": false
+        }
+      ]
+    },
+    {
+      "target": 500,
+      "profile": {
+        "elo": 500,
+        "depth": 2,
+        "timeBudgetMs": 313,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 1075,
+        "mistakeProbability": 0.87,
+        "minimumMistake": 19
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "d1e2",
+          "elapsedMs": 318,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 161
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 123
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8f8",
+          "elapsedMs": 314,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 17
+          },
+          "goalPassed": false
+        }
+      ]
+    },
+    {
+      "target": 600,
+      "profile": {
+        "elo": 600,
+        "depth": 2,
+        "timeBudgetMs": 375,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 950,
+        "mistakeProbability": 0.8400000000000001,
+        "minimumMistake": 17
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "d1e2",
+          "elapsedMs": 375,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 161
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 123
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8b1",
+          "elapsedMs": 376,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": false
+        }
+      ]
+    },
+    {
+      "target": 700,
+      "profile": {
+        "elo": 700,
+        "depth": 2,
+        "timeBudgetMs": 438,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 825,
+        "mistakeProbability": 0.81,
+        "minimumMistake": 16
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "d1e2",
+          "elapsedMs": 438,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 161
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 123
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8b1",
+          "elapsedMs": 438,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": false
+        }
+      ]
+    },
+    {
+      "target": 800,
+      "profile": {
+        "elo": 800,
+        "depth": 2,
+        "timeBudgetMs": 500,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 700,
+        "mistakeProbability": 0.78,
+        "minimumMistake": 14
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "d1e2",
+          "elapsedMs": 503,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 161
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 123
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8b1",
+          "elapsedMs": 501,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": false
+        }
+      ]
+    },
+    {
+      "target": 900,
+      "profile": {
+        "elo": 900,
+        "depth": 3,
+        "timeBudgetMs": 625,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 625,
+        "mistakeProbability": 0.7225,
+        "minimumMistake": 13
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "h2h3",
+          "elapsedMs": 627,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 300
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 262
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8b1",
+          "elapsedMs": 626,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": false
+        }
+      ]
+    },
+    {
+      "target": 1000,
+      "profile": {
+        "elo": 1000,
+        "depth": 3,
+        "timeBudgetMs": 750,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 550,
+        "mistakeProbability": 0.665,
+        "minimumMistake": 11
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "h2h3",
+          "elapsedMs": 753,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 300
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 262
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8b1",
+          "elapsedMs": 751,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": false
+        }
+      ]
+    },
+    {
+      "target": 1100,
+      "profile": {
+        "elo": 1100,
+        "depth": 3,
+        "timeBudgetMs": 875,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 475,
+        "mistakeProbability": 0.6075,
+        "minimumMistake": 10
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "h2h3",
+          "elapsedMs": 878,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 300
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 262
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8b1",
+          "elapsedMs": 876,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": false
+        }
+      ]
+    },
+    {
+      "target": 1200,
+      "profile": {
+        "elo": 1200,
+        "depth": 3,
+        "timeBudgetMs": 1000,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 400,
+        "mistakeProbability": 0.55,
+        "minimumMistake": 9
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 1005,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 1000,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 1300,
+      "profile": {
+        "elo": 1300,
+        "depth": 3,
+        "timeBudgetMs": 1200,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 355,
+        "mistakeProbability": 0.5,
+        "minimumMistake": 7
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 1202,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 1200,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 1400,
+      "profile": {
+        "elo": 1400,
+        "depth": 3,
+        "timeBudgetMs": 1400,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 310,
+        "mistakeProbability": 0.45,
+        "minimumMistake": 6
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 1402,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 1400,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 1500,
+      "profile": {
+        "elo": 1500,
+        "depth": 4,
+        "timeBudgetMs": 1600,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 265,
+        "mistakeProbability": 0.4,
+        "minimumMistake": 4
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 1605,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 1600,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 1600,
+      "profile": {
+        "elo": 1600,
+        "depth": 4,
+        "timeBudgetMs": 1800,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 220,
+        "mistakeProbability": 0.35,
+        "minimumMistake": 3
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 1801,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 1800,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 1700,
+      "profile": {
+        "elo": 1700,
+        "depth": 4,
+        "timeBudgetMs": 2100,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 190,
+        "mistakeProbability": 0.3075,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 2100,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 2102,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 1800,
+      "profile": {
+        "elo": 1800,
+        "depth": 4,
+        "timeBudgetMs": 2400,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 160,
+        "mistakeProbability": 0.265,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 2406,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 2400,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 1900,
+      "profile": {
+        "elo": 1900,
+        "depth": 4,
+        "timeBudgetMs": 2700,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 130,
+        "mistakeProbability": 0.22249999999999998,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 2703,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 2702,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2000,
+      "profile": {
+        "elo": 2000,
+        "depth": 6,
+        "timeBudgetMs": 3000,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 100,
+        "mistakeProbability": 0.18,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 3004,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 3004,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2100,
+      "profile": {
+        "elo": 2100,
+        "depth": 6,
+        "timeBudgetMs": 3250,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 88,
+        "mistakeProbability": 0.155,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 3251,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 3250,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2200,
+      "profile": {
+        "elo": 2200,
+        "depth": 6,
+        "timeBudgetMs": 3500,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 75,
+        "mistakeProbability": 0.13,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 3503,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 3501,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2300,
+      "profile": {
+        "elo": 2300,
+        "depth": 6,
+        "timeBudgetMs": 3750,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 63,
+        "mistakeProbability": 0.105,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 3751,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 3750,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2400,
+      "profile": {
+        "elo": 2400,
+        "depth": 6,
+        "timeBudgetMs": 4000,
+        "sequenceExtension": 4,
+        "turnBeam": 3,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 50,
+        "mistakeProbability": 0.08,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 4005,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 4000,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "custom-turn-plan",
+            "depth": 0,
+            "nodes": 238
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2500,
+      "profile": {
+        "elo": 2500,
+        "depth": 6,
+        "timeBudgetMs": 4625,
+        "sequenceExtension": 4,
+        "turnBeam": 4,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 44,
+        "mistakeProbability": 0.0675,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 4626,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 4625,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5009
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2600,
+      "profile": {
+        "elo": 2600,
+        "depth": 6,
+        "timeBudgetMs": 5250,
+        "sequenceExtension": 4,
+        "turnBeam": 4,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 38,
+        "mistakeProbability": 0.055,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 5250,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 5250,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5009
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2700,
+      "profile": {
+        "elo": 2700,
+        "depth": 6,
+        "timeBudgetMs": 5875,
+        "sequenceExtension": 4,
+        "turnBeam": 4,
+        "lineLimit": 8,
+        "captureDepth": 3,
+        "moveTolerance": 31,
+        "mistakeProbability": 0.042499999999999996,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 5879,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 5876,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5009
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2800,
+      "profile": {
+        "elo": 2800,
+        "depth": 8,
+        "timeBudgetMs": 6500,
+        "sequenceExtension": 6,
+        "turnBeam": 4,
+        "lineLimit": 12,
+        "captureDepth": 4,
+        "moveTolerance": 25,
+        "mistakeProbability": 0.03,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 6501,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 6500,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5009
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 2900,
+      "profile": {
+        "elo": 2900,
+        "depth": 8,
+        "timeBudgetMs": 7125,
+        "sequenceExtension": 6,
+        "turnBeam": 4,
+        "lineLimit": 12,
+        "captureDepth": 4,
+        "moveTolerance": 21,
+        "mistakeProbability": 0.0245,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 7129,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 7127,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5009
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 3000,
+      "profile": {
+        "elo": 3000,
+        "depth": 8,
+        "timeBudgetMs": 7750,
+        "sequenceExtension": 6,
+        "turnBeam": 6,
+        "lineLimit": 12,
+        "captureDepth": 4,
+        "moveTolerance": 17,
+        "mistakeProbability": 0.019,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c1g5",
+          "elapsedMs": 7751,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 1,
+            "nodes": 39
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 369
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 331
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 7750,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5367
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 3100,
+      "profile": {
+        "elo": 3100,
+        "depth": 8,
+        "timeBudgetMs": 8375,
+        "sequenceExtension": 6,
+        "turnBeam": 6,
+        "lineLimit": 12,
+        "captureDepth": 4,
+        "moveTolerance": 12,
+        "mistakeProbability": 0.013499999999999998,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c4f7",
+          "elapsedMs": 8377,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 2,
+            "nodes": 1661
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 309
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 271
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 8376,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5367
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 3200,
+      "profile": {
+        "elo": 3200,
+        "depth": 8,
+        "timeBudgetMs": 9000,
+        "sequenceExtension": 6,
+        "turnBeam": 6,
+        "lineLimit": 12,
+        "captureDepth": 4,
+        "moveTolerance": 8,
+        "mistakeProbability": 0.008,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c4f7",
+          "elapsedMs": 9000,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 2,
+            "nodes": 1661
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 309
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 271
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 9000,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5367
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 3300,
+      "profile": {
+        "elo": 3300,
+        "depth": 8,
+        "timeBudgetMs": 10000,
+        "sequenceExtension": 6,
+        "turnBeam": 6,
+        "lineLimit": 12,
+        "captureDepth": 4,
+        "moveTolerance": 5,
+        "mistakeProbability": 0.005333333333333334,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c4f7",
+          "elapsedMs": 10003,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 2,
+            "nodes": 1661
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 309
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 271
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 10000,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5367
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 3400,
+      "profile": {
+        "elo": 3400,
+        "depth": 8,
+        "timeBudgetMs": 11000,
+        "sequenceExtension": 6,
+        "turnBeam": 6,
+        "lineLimit": 12,
+        "captureDepth": 4,
+        "moveTolerance": 3,
+        "mistakeProbability": 0.002666666666666667,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c4f7",
+          "elapsedMs": 11000,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 2,
+            "nodes": 1661
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 309
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 271
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 10999,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 3,
+            "nodes": 5367
+          },
+          "goalPassed": true
+        }
+      ]
+    },
+    {
+      "target": 3500,
+      "profile": {
+        "elo": 3500,
+        "depth": 8,
+        "timeBudgetMs": 12000,
+        "sequenceExtension": 6,
+        "turnBeam": 6,
+        "lineLimit": 12,
+        "captureDepth": 4,
+        "moveTolerance": 0,
+        "mistakeProbability": 0,
+        "minimumMistake": 1
+      },
+      "actualEloStatus": "unverified",
+      "cases": [
+        {
+          "id": "reference-italian-center",
+          "variant": "standard",
+          "move": "c4f7",
+          "elapsedMs": 12002,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 2,
+            "nodes": 188
+          },
+          "goalPassed": null,
+          "referenceMove": "e1g1",
+          "referenceScore": {
+            "type": "cp",
+            "value": -38
+          },
+          "afterReferenceScore": {
+            "type": "cp",
+            "value": 309
+          },
+          "referenceAgreement": false,
+          "referenceLossCp": 271
+        },
+        {
+          "id": "defend-two-move-rook-attack",
+          "variant": "custom",
+          "move": "b8g8",
+          "elapsedMs": 12001,
+          "legal": true,
+          "lastCompletedSearch": {
+            "phase": "full-search",
+            "depth": 6,
+            "nodes": 39223
+          },
+          "goalPassed": true
+        }
+      ]
+    }
+  ],
+  "reference": {
+    "name": "Stockfish 17.1 WASM",
+    "package": "stockfish@17.1.0",
+    "threads": 1,
+    "hashMb": 32
+  },
+  "referencePosition": {
+    "move": "e1g1",
+    "score": {
+      "type": "cp",
+      "value": -38
+    },
+    "info": "info depth 16 seldepth 29 multipv 1 score cp -38 nodes 150116 nps 333591 hashfull 17 time 450 pv e1g1 b4c3 b2c3 d7d5 c4d3 e8g8 d1b3 b7b6 f1e1 f8e8 h2h3 c8f5 c1f4 f5g6 b3c2 a8c8 e1e3 e4d6 e3e8 d8e8 f4d6 g6d3 c2d3 c7d6"
+  },
+  "finishedAtUTC": "2026-10-13T23:48:03.261Z"
+}

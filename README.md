@@ -71,7 +71,7 @@ rules as the player. Search maximizes or minimizes according to the actual next
 color, including repeated moves by either player. After completing a quick
 emergency fallback, custom-turn games get a bounded planning pass covering the
 engine's remaining consecutive moves and the human's complete reply block. It
-examines every root move and three candidate continuations per node initially. Expert also attempts a
+examines every root move and three candidate continuations per node initially. Maximum also attempts a
 broader six-candidate pass, with a planning limit of twelve plies (eight at
 lower strengths). This selective pass is guidance, not proof of a forced win.
 Exhaustive searches then start at the full reply-block horizon instead of
@@ -87,48 +87,58 @@ at the next depth. In king-capture mode, tactical search also considers
 checks that can be followed by a king capture on a consecutive move. Forced wins/losses use actual move distance, including custom
 moves, to prefer faster wins and delay unavoidable losses.
 
-Use the **Engine strength** slider to select 400–3500 target Elo in steps of
-100. Easy, Medium, and Hard are shortcuts for 600, 1200, and 2000; Expert targets 3500. Expert is the default setting at a 3500 target; other slider
-values display as Custom Elo. Strength changes preserve the game and restart
-active computer searches without resuming a computer paused by Undo.
+Use the **Strength level** slider to choose levels 1–32. Easy, Medium, Hard,
+and Maximum are shortcuts for levels 3, 9, 17, and 32. Maximum is the default.
+These levels describe search effort and deliberate errors; they are not Elo
+ratings. Changes preserve the game and restart active computer searches without
+resuming a computer paused by Undo.
 
-The 3500 target is not a promise of measured 3500-Elo play or the objectively
-best move in every position. These numbers are
-approximate strength labels, not ratings calibrated against
-a rated player pool, especially in custom variants. Increasing the setting
-raises the number of deepening passes (two to eight) and time budget (roughly 0.25–12
-seconds) and reduces the chance of selecting a lower-scoring legal move. At 400, the engine makes a deliberate quality mistake on about 90% of choices
-when a sufficiently worse legal candidate is available. Increasing strength
-reduces that probability and the permitted score loss; equally good alternatives
-are not counted as mistakes. At 3500, deliberate errors are disabled and it
-always picks the highest-scoring move from its completed search. A known forced win is never intentionally discarded. Iterative deepening retains the last fully
-completed result; complex or very long turn sequences can exceed the search
-horizon or time budget. Search-only caches reuse legal move generation and static evaluations across
-identical FENs; previous best moves guide ordering. Draw-dependent search scores
-are not cached across different histories. In supported browsers the engine runs in an embedded background worker, removing
-UI-thread calculation and timer-yield overhead while keeping search budgets and
-strength intact. Reset, Undo, strength changes, and mode changes terminate stale
-worker jobs immediately. Browsers unable to create workers use the cooperative
-main-thread fallback. Forced moves and immediate mating/king-capture moves return
-early instead of using the full allowance. The engine starts promptly after a
-human move; complex positions may still use the entire thinking budget.
+**Normal — stronger search** preserves the existing thinking budgets (roughly
+0.25–12 seconds). Its Elo is unmeasured. **Fast — 150 ms reference budget** uses
+the budget from the standard-chess calibration. With White/Black alternating
+and king capture forbidden, the game shows the selected profile's provisional
+Stockfish-relative estimate and its simultaneous 95% range. For example, the
+maximum profile's fast reference estimate is about 1240, with a wide range of
+430–1880; this does not establish its normal-budget strength or human Elo.
+All-loss samples show upper bounds rather than invented finite estimates;
+unfinished samples show ranges without a point estimate. Device speed and
+soft-budget overruns can change playing strength.
 
-Every 100-point slider step interpolates between the following behavioral
-anchors. Error frequency applies only when a genuinely worse legal candidate
-is available, and known forced wins are preserved. These are tuning targets,
-not measured ratings.
+Custom turns and king-capture games are unrated at both thinking times. They
+retain all 32 strength settings and sequence-aware search. Changing thinking
+time cancels old calculations, preserves the position, and respects Undo's
+pause. The measured numbers are embedded for offline use; a rules-source hash
+suppresses obsolete estimates after an engine change. Stockfish is a benchmark
+reference, not the browser game's engine.
 
-| Strength target | Deliberate error chance | Thinking budget |
+Higher levels deepen search and reduce the chance and size of deliberate errors.
+Maximum never deliberately discards its best calculated move or a known forced
+win, but finite search does not guarantee the objectively best move. Forced
+moves and immediate mating/king-capture moves return early. Embedded background
+workers keep calculation off the UI thread; browsers without workers use the
+cooperative fallback. Reset, Undo, setting changes, and mode changes cancel
+stale jobs.
+
+The original 400–3500 numbers are retained as internal profile identifiers so
+historical benchmark reports remain reproducible. They are not displayed as
+Elo claims. Normal-budget behavioral anchors are:
+
+| Level (historical profile ID) | Deliberate error chance | Thinking budget |
 | --- | --- | --- |
-| 400 | 90% | 0.25 s |
-| 800 | 78% | 0.5 s |
-| 1200 | 55% | 1 s |
-| 1600 | 35% | 1.8 s |
-| 2000 | 18% | 3 s |
-| 2400 | 8% | 4 s |
-| 2800 | 3% | 6.5 s |
-| 3200 | 0.8% | 9 s |
-| 3500 | 0% | 12 s |
+| 1 (400) | 90% | 0.25 s |
+| 5 (800) | 78% | 0.5 s |
+| 9 (1200) | 55% | 1 s |
+| 13 (1600) | 35% | 1.8 s |
+| 17 (2000) | 18% | 3 s |
+| 21 (2400) | 8% | 4 s |
+| 25 (2800) | 3% | 6.5 s |
+| 29 (3200) | 0.8% | 9 s |
+| 32 (3500) | 0% | 12 s |
+
+After a new verified calibration, run `npm run ratings:update` and
+`npm run build` to refresh the embedded estimates. The update command rejects
+unverified or mismatched source/results. Building without a new calibration
+still works, but changed rules suppress the old reference estimates.
 
 ## Development and tests
 
@@ -164,3 +174,29 @@ Browser validation uses headless Chromium. Cloud browser policy blocks direct
 calculation is tested after loading the page through the local server. Other browsers and physical touch
 devices require manual testing; automated coverage cannot prove every possible
 chess position or assess playing strength exhaustively.
+
+## Strength benchmarking
+
+Run `npm run benchmark` followed by `npm run benchmark:report` for the pinned
+Stockfish reference, tactical probes, and balanced standard/custom matchups.
+See [the benchmark protocol](benchmarks/README.md) and
+[the measured results](benchmarks/REPORT.md). Ratings remain uncalibrated targets;
+benchmark results distinguish time-limited matches from full-budget tactical
+checks and unfinished games from draws.
+
+An additional [all-settings audit](benchmarks/RATINGS_AUDIT.md) exercises all 32
+slider settings at their actual budgets. Run `npm run benchmark:all-ratings`
+and `npm run benchmark:verify-all-ratings`. Legal operation and finite-search
+move quality are recorded separately from actual Elo, which remains unverified.
+
+All 32 strength settings also have a [full-budget audit](benchmarks/RATINGS_AUDIT.md),
+a [selection-model audit](benchmarks/STRENGTH_MODEL.md), and a
+[Stockfish-relative standard-chess pilot](benchmarks/RELATIVE_RATINGS.md).
+The pilot estimates are provisional at 150 ms per move; the historical profile
+IDs are not verified Elo ratings. See [benchmark instructions](benchmarks/README.md) for protocols
+and replay verification.
+
+The [continued-game calibration](benchmarks/CALIBRATION.md) adds multiple
+Stockfish reference strengths, longer games, and estimates with uncertainty
+for every setting at the 150 ms benchmark control. These measurements do not
+establish ratings at the application's default thinking budgets.

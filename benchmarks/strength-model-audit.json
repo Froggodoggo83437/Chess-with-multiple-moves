@@ -1,0 +1,424 @@
+{
+  "status": "completed",
+  "trialsPerSetting": 10000,
+  "totalDecisions": 320000,
+  "method": "Seeded synthetic candidate pools; Wilson intervals z=3.2. Measures selection logic only, not playing strength or Elo.",
+  "rows": [
+    {
+      "target": 400,
+      "trials": 10000,
+      "expectedProbability": 0.9,
+      "observedProbability": 0.8953,
+      "interval": [
+        0.8850949663551135,
+        0.9046962874010402
+      ],
+      "maxPermittedLossCp": 1200,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 500,
+      "trials": 10000,
+      "expectedProbability": 0.87,
+      "observedProbability": 0.87,
+      "interval": [
+        0.8588586462519836,
+        0.8803843689005002
+      ],
+      "maxPermittedLossCp": 1075,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 600,
+      "trials": 10000,
+      "expectedProbability": 0.8400000000000001,
+      "observedProbability": 0.8404,
+      "interval": [
+        0.8283330984295442,
+        0.851770475510741
+      ],
+      "maxPermittedLossCp": 950,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 700,
+      "trials": 10000,
+      "expectedProbability": 0.81,
+      "observedProbability": 0.8086,
+      "interval": [
+        0.7956978970803138,
+        0.8208707366387579
+      ],
+      "maxPermittedLossCp": 825,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 800,
+      "trials": 10000,
+      "expectedProbability": 0.78,
+      "observedProbability": 0.7804,
+      "interval": [
+        0.766869614059083,
+        0.7933567141807992
+      ],
+      "maxPermittedLossCp": 700,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 900,
+      "trials": 10000,
+      "expectedProbability": 0.7225,
+      "observedProbability": 0.7182,
+      "interval": [
+        0.7035863814427072,
+        0.7323672020877574
+      ],
+      "maxPermittedLossCp": 625,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1000,
+      "trials": 10000,
+      "expectedProbability": 0.665,
+      "observedProbability": 0.6701,
+      "interval": [
+        0.6548870369113726,
+        0.6849649546492693
+      ],
+      "maxPermittedLossCp": 550,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1100,
+      "trials": 10000,
+      "expectedProbability": 0.6075,
+      "observedProbability": 0.6103,
+      "interval": [
+        0.5945889144948927,
+        0.6257854221843476
+      ],
+      "maxPermittedLossCp": 475,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1200,
+      "trials": 10000,
+      "expectedProbability": 0.55,
+      "observedProbability": 0.5519,
+      "interval": [
+        0.5359413906108477,
+        0.5677524269200007
+      ],
+      "maxPermittedLossCp": 400,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1300,
+      "trials": 10000,
+      "expectedProbability": 0.5,
+      "observedProbability": 0.4961,
+      "interval": [
+        0.480112661209383,
+        0.5120953178200909
+      ],
+      "maxPermittedLossCp": 355,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1400,
+      "trials": 10000,
+      "expectedProbability": 0.45,
+      "observedProbability": 0.4488,
+      "interval": [
+        0.4329445387742056,
+        0.46476021156145075
+      ],
+      "maxPermittedLossCp": 310,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1500,
+      "trials": 10000,
+      "expectedProbability": 0.4,
+      "observedProbability": 0.3938,
+      "interval": [
+        0.37828133395141833,
+        0.40953594115886877
+      ],
+      "maxPermittedLossCp": 265,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1600,
+      "trials": 10000,
+      "expectedProbability": 0.35,
+      "observedProbability": 0.3545,
+      "interval": [
+        0.339348378245811,
+        0.3699493009307123
+      ],
+      "maxPermittedLossCp": 220,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1700,
+      "trials": 10000,
+      "expectedProbability": 0.3075,
+      "observedProbability": 0.3035,
+      "interval": [
+        0.28899454792244683,
+        0.3184074724087341
+      ],
+      "maxPermittedLossCp": 190,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1800,
+      "trials": 10000,
+      "expectedProbability": 0.265,
+      "observedProbability": 0.263,
+      "interval": [
+        0.2491591630489298,
+        0.27732571643447923
+      ],
+      "maxPermittedLossCp": 160,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1900,
+      "trials": 10000,
+      "expectedProbability": 0.22249999999999998,
+      "observedProbability": 0.2148,
+      "interval": [
+        0.20195335703827239,
+        0.22823013506581308
+      ],
+      "maxPermittedLossCp": 130,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2000,
+      "trials": 10000,
+      "expectedProbability": 0.18,
+      "observedProbability": 0.1811,
+      "interval": [
+        0.16910497251667622,
+        0.19374746658568304
+      ],
+      "maxPermittedLossCp": 100,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2100,
+      "trials": 10000,
+      "expectedProbability": 0.155,
+      "observedProbability": 0.1528,
+      "interval": [
+        0.14164215232745248,
+        0.1646681858862168
+      ],
+      "maxPermittedLossCp": 88,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2200,
+      "trials": 10000,
+      "expectedProbability": 0.13,
+      "observedProbability": 0.126,
+      "interval": [
+        0.11576194435489219,
+        0.1370032241125972
+      ],
+      "maxPermittedLossCp": 75,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2300,
+      "trials": 10000,
+      "expectedProbability": 0.105,
+      "observedProbability": 0.1005,
+      "interval": [
+        0.09128361571804056,
+        0.11053372332677758
+      ],
+      "maxPermittedLossCp": 63,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2400,
+      "trials": 10000,
+      "expectedProbability": 0.08,
+      "observedProbability": 0.0853,
+      "interval": [
+        0.07678024194781831,
+        0.09466819485289778
+      ],
+      "maxPermittedLossCp": 50,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2500,
+      "trials": 10000,
+      "expectedProbability": 0.0675,
+      "observedProbability": 0.067,
+      "interval": [
+        0.05943406972370874,
+        0.07545180713838451
+      ],
+      "maxPermittedLossCp": 44,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2600,
+      "trials": 10000,
+      "expectedProbability": 0.055,
+      "observedProbability": 0.0544,
+      "interval": [
+        0.04758746399634172,
+        0.06212419126866691
+      ],
+      "maxPermittedLossCp": 38,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2700,
+      "trials": 10000,
+      "expectedProbability": 0.042499999999999996,
+      "observedProbability": 0.0416,
+      "interval": [
+        0.035665451233221714,
+        0.04847239161570099
+      ],
+      "maxPermittedLossCp": 31,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2800,
+      "trials": 10000,
+      "expectedProbability": 0.03,
+      "observedProbability": 0.0291,
+      "interval": [
+        0.02418414275307076,
+        0.034979273908268035
+      ],
+      "maxPermittedLossCp": 25,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2900,
+      "trials": 10000,
+      "expectedProbability": 0.0245,
+      "observedProbability": 0.0261,
+      "interval": [
+        0.021462548804504916,
+        0.03170700557181374
+      ],
+      "maxPermittedLossCp": 21,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3000,
+      "trials": 10000,
+      "expectedProbability": 0.019,
+      "observedProbability": 0.0194,
+      "interval": [
+        0.01545293960375224,
+        0.024330322336021434
+      ],
+      "maxPermittedLossCp": 17,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3100,
+      "trials": 10000,
+      "expectedProbability": 0.013499999999999998,
+      "observedProbability": 0.0125,
+      "interval": [
+        0.00941040828562156,
+        0.016586970398605797
+      ],
+      "maxPermittedLossCp": 12,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3200,
+      "trials": 10000,
+      "expectedProbability": 0.008,
+      "observedProbability": 0.0071,
+      "interval": [
+        0.004871883377223638,
+        0.010336543193967465
+      ],
+      "maxPermittedLossCp": 8,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3300,
+      "trials": 10000,
+      "expectedProbability": 0.005333333333333334,
+      "observedProbability": 0.0062,
+      "interval": [
+        0.004144246697095467,
+        0.009266021188589593
+      ],
+      "maxPermittedLossCp": 5,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3400,
+      "trials": 10000,
+      "expectedProbability": 0.002666666666666667,
+      "observedProbability": 0.0027,
+      "interval": [
+        0.0014728270013137908,
+        0.004944601551847773
+      ],
+      "maxPermittedLossCp": 3,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3500,
+      "trials": 10000,
+      "expectedProbability": 0,
+      "observedProbability": 0,
+      "interval": [
+        0,
+        0.0010229524966434375
+      ],
+      "maxPermittedLossCp": 0,
+      "status": "behavior verified",
+      "actualEloStatus": "unverified"
+    }
+  ]
+}

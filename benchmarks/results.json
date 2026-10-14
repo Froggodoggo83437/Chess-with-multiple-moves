@@ -1,0 +1,3091 @@
+{
+  "schema": 1,
+  "startedAtUTC": "2026-10-13T23:11:16.256Z",
+  "status": "completed",
+  "environment": {
+    "node": "v24.19.0",
+    "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+    "logicalCpus": 5
+  },
+  "engine": {
+    "commit": "d9bf2cfdb4c550540e8c5632994d1864f44e3ebb",
+    "rulesSha256": "f2468326f57cb8f92f390552e6d50616951c78e6c98f45c0b4afe8dae1a1f03d"
+  },
+  "protocol": {
+    "seed": 872,
+    "rapidMoveBudgetMs": 150,
+    "referenceNodes": 30000,
+    "childReferenceNodes": 10000,
+    "matchMoveBudgetMs": 150,
+    "maxMatchPlies": 60,
+    "fullBudgetTargets": [
+      "free-queen",
+      "knight-fork",
+      "defend-two-move-rook-attack",
+      "reference-italian-center"
+    ],
+    "note": "Small exploratory benchmark, not Elo calibration. Curated tactics overlap regression tests; six opening-derived positions are additional reference probes. Matches at capped time do not represent the 12-second Expert setting."
+  },
+  "tactics": [
+    {
+      "id": "white-mate",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g6g7",
+      "elapsedMs": 8,
+      "solved": true,
+      "lastCompletedSearch": null,
+      "referenceMove": "g6g7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "mate",
+        "value": 1
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "black-mate",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g3g2",
+      "elapsedMs": 7,
+      "solved": true,
+      "lastCompletedSearch": null,
+      "referenceMove": "g3g2",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "mate",
+        "value": 1
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "free-queen",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "h1h2",
+      "elapsedMs": 152,
+      "solved": false,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 15
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 517
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 578
+      },
+      "referenceLossCp": 1095
+    },
+    {
+      "id": "poisoned-pawn",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1g4",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 22
+      },
+      "referenceMove": "d1a1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 0
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 10
+      },
+      "referenceLossCp": 10
+    },
+    {
+      "id": "promotion",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "a7a8b",
+      "elapsedMs": 21,
+      "solved": false,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 2,
+        "nodes": 27
+      },
+      "referenceMove": "h1g2",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 566
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "knight-fork",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "h1g1",
+      "elapsedMs": 150,
+      "solved": false,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 11
+      },
+      "referenceMove": "d5f6",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 6
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 546
+      },
+      "referenceLossCp": 552
+    },
+    {
+      "id": "queen-for-rook",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1d5",
+      "elapsedMs": 151,
+      "solved": false,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 15
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -491
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 954
+      },
+      "referenceLossCp": 463
+    },
+    {
+      "id": "white-two-move-attack",
+      "elo": 400,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "a1a8",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "custom-turn-plan",
+        "depth": 0,
+        "nodes": 140
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "black-two-move-attack",
+      "elo": 400,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "a8a1",
+      "elapsedMs": 150,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 16
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "defend-two-move-rook-attack",
+      "elo": 400,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "b8d8",
+      "elapsedMs": 150,
+      "solved": false,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 17
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "reference-ruy-lopez",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "h7h6",
+      "elapsedMs": 153,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 30
+      },
+      "referenceMove": "b7b5",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -30
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 136
+      },
+      "referenceLossCp": 106
+    },
+    {
+      "id": "reference-queens-gambit",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "h1g1",
+      "elapsedMs": 150,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 40
+      },
+      "referenceMove": "g5f6",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 47
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 398
+      },
+      "referenceLossCp": 445
+    },
+    {
+      "id": "reference-sicilian",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d4f5",
+      "elapsedMs": 153,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 43
+      },
+      "referenceMove": "c1g5",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 36
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 31
+      },
+      "referenceLossCp": 67
+    },
+    {
+      "id": "reference-french",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "a7a6",
+      "elapsedMs": 153,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 31
+      },
+      "referenceMove": "b8c6",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -87
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 113
+      },
+      "referenceLossCp": 26
+    },
+    {
+      "id": "reference-kings-indian",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "f6h5",
+      "elapsedMs": 151,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 32
+      },
+      "referenceMove": "e5d4",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -45
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 95
+      },
+      "referenceLossCp": 50
+    },
+    {
+      "id": "reference-italian-center",
+      "elo": 400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "e1e2",
+      "elapsedMs": 168,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 39
+      },
+      "referenceMove": "e1g1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 9
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 288
+      },
+      "referenceLossCp": 297
+    },
+    {
+      "id": "white-mate",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g6g7",
+      "elapsedMs": 7,
+      "solved": true,
+      "lastCompletedSearch": null,
+      "referenceMove": "g6g7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "mate",
+        "value": 1
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "black-mate",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g3g2",
+      "elapsedMs": 5,
+      "solved": true,
+      "lastCompletedSearch": null,
+      "referenceMove": "g3g2",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "mate",
+        "value": 1
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "free-queen",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1d7",
+      "elapsedMs": 150,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 15
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 517
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -540
+      },
+      "referenceLossCp": 0
+    },
+    {
+      "id": "poisoned-pawn",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1h5",
+      "elapsedMs": 152,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 22
+      },
+      "referenceMove": "d1a1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 0
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 15
+      },
+      "referenceLossCp": 15
+    },
+    {
+      "id": "promotion",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "a7a8q",
+      "elapsedMs": 150,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 2,
+        "nodes": 27
+      },
+      "referenceMove": "h1g2",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 566
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -552
+      },
+      "referenceLossCp": 14
+    },
+    {
+      "id": "knight-fork",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d5f6",
+      "elapsedMs": 149,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 11
+      },
+      "referenceMove": "d5f6",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 6
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 27
+      },
+      "referenceLossCp": 33
+    },
+    {
+      "id": "queen-for-rook",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1d7",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 15
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": -491
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 522
+      },
+      "referenceLossCp": 31
+    },
+    {
+      "id": "white-two-move-attack",
+      "elo": 1200,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "a1a8",
+      "elapsedMs": 150,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "custom-turn-plan",
+        "depth": 0,
+        "nodes": 140
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "black-two-move-attack",
+      "elo": 1200,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "a8a1",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 16
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "defend-two-move-rook-attack",
+      "elo": 1200,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "h7h5",
+      "elapsedMs": 151,
+      "solved": false,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 17
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "reference-ruy-lopez",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "f6e4",
+      "elapsedMs": 150,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 30
+      },
+      "referenceMove": "b7b5",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -30
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 36
+      },
+      "referenceLossCp": 6
+    },
+    {
+      "id": "reference-queens-gambit",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g5f6",
+      "elapsedMs": 153,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 40
+      },
+      "referenceMove": "g5f6",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 47
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -10
+      },
+      "referenceLossCp": 37
+    },
+    {
+      "id": "reference-sicilian",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c1e3",
+      "elapsedMs": 155,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 43
+      },
+      "referenceMove": "c1g5",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 36
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -15
+      },
+      "referenceLossCp": 21
+    },
+    {
+      "id": "reference-french",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c5d4",
+      "elapsedMs": 152,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 31
+      },
+      "referenceMove": "b8c6",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -87
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 125
+      },
+      "referenceLossCp": 38
+    },
+    {
+      "id": "reference-kings-indian",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "e5d4",
+      "elapsedMs": 150,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 32
+      },
+      "referenceMove": "e5d4",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": -45
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 78
+      },
+      "referenceLossCp": 33
+    },
+    {
+      "id": "reference-italian-center",
+      "elo": 1200,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c1g5",
+      "elapsedMs": 183,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 39
+      },
+      "referenceMove": "e1g1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 9
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 356
+      },
+      "referenceLossCp": 365
+    },
+    {
+      "id": "white-mate",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g6g7",
+      "elapsedMs": 5,
+      "solved": true,
+      "lastCompletedSearch": null,
+      "referenceMove": "g6g7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "mate",
+        "value": 1
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "black-mate",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g3g2",
+      "elapsedMs": 5,
+      "solved": true,
+      "lastCompletedSearch": null,
+      "referenceMove": "g3g2",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "mate",
+        "value": 1
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "free-queen",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1d7",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 15
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 517
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -540
+      },
+      "referenceLossCp": 0
+    },
+    {
+      "id": "poisoned-pawn",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1h5",
+      "elapsedMs": 150,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 22
+      },
+      "referenceMove": "d1a1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 0
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 15
+      },
+      "referenceLossCp": 15
+    },
+    {
+      "id": "promotion",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "a7a8q",
+      "elapsedMs": 150,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 2,
+        "nodes": 27
+      },
+      "referenceMove": "h1g2",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 566
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -552
+      },
+      "referenceLossCp": 14
+    },
+    {
+      "id": "knight-fork",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d5f6",
+      "elapsedMs": 149,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 11
+      },
+      "referenceMove": "d5f6",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 6
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 27
+      },
+      "referenceLossCp": 33
+    },
+    {
+      "id": "queen-for-rook",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1d7",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 15
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": -491
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 522
+      },
+      "referenceLossCp": 31
+    },
+    {
+      "id": "white-two-move-attack",
+      "elo": 2400,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "a1a8",
+      "elapsedMs": 150,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "custom-turn-plan",
+        "depth": 0,
+        "nodes": 140
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "black-two-move-attack",
+      "elo": 2400,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "a8a1",
+      "elapsedMs": 150,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 16
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "defend-two-move-rook-attack",
+      "elo": 2400,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "h7h5",
+      "elapsedMs": 151,
+      "solved": false,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 17
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "reference-ruy-lopez",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "f6e4",
+      "elapsedMs": 150,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 30
+      },
+      "referenceMove": "b7b5",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -30
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 36
+      },
+      "referenceLossCp": 6
+    },
+    {
+      "id": "reference-queens-gambit",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g5f6",
+      "elapsedMs": 151,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 40
+      },
+      "referenceMove": "g5f6",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 47
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -10
+      },
+      "referenceLossCp": 37
+    },
+    {
+      "id": "reference-sicilian",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c1e3",
+      "elapsedMs": 151,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 43
+      },
+      "referenceMove": "c1g5",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 36
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -15
+      },
+      "referenceLossCp": 21
+    },
+    {
+      "id": "reference-french",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c5d4",
+      "elapsedMs": 152,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 31
+      },
+      "referenceMove": "b8c6",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -87
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 125
+      },
+      "referenceLossCp": 38
+    },
+    {
+      "id": "reference-kings-indian",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "e5d4",
+      "elapsedMs": 152,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 32
+      },
+      "referenceMove": "e5d4",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": -45
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 78
+      },
+      "referenceLossCp": 33
+    },
+    {
+      "id": "reference-italian-center",
+      "elo": 2400,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c1g5",
+      "elapsedMs": 205,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 39
+      },
+      "referenceMove": "e1g1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 9
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 356
+      },
+      "referenceLossCp": 365
+    },
+    {
+      "id": "white-mate",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g6g7",
+      "elapsedMs": 13,
+      "solved": true,
+      "lastCompletedSearch": null,
+      "referenceMove": "g6g7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "mate",
+        "value": 1
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "black-mate",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g3g2",
+      "elapsedMs": 8,
+      "solved": true,
+      "lastCompletedSearch": null,
+      "referenceMove": "g3g2",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "mate",
+        "value": 1
+      },
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "free-queen",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1d7",
+      "elapsedMs": 159,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 2,
+        "nodes": 45
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 517
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -540
+      },
+      "referenceLossCp": 0
+    },
+    {
+      "id": "poisoned-pawn",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1h5",
+      "elapsedMs": 153,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 22
+      },
+      "referenceMove": "d1a1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 0
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 15
+      },
+      "referenceLossCp": 15
+    },
+    {
+      "id": "promotion",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "a7a8q",
+      "elapsedMs": 152,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 2,
+        "nodes": 20
+      },
+      "referenceMove": "h1g2",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 566
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -552
+      },
+      "referenceLossCp": 14
+    },
+    {
+      "id": "knight-fork",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d5f6",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 2,
+        "nodes": 36
+      },
+      "referenceMove": "d5f6",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 6
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 27
+      },
+      "referenceLossCp": 33
+    },
+    {
+      "id": "queen-for-rook",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "d1d7",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 2,
+        "nodes": 52
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": -491
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 522
+      },
+      "referenceLossCp": 31
+    },
+    {
+      "id": "white-two-move-attack",
+      "elo": 3500,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "a1a8",
+      "elapsedMs": 149,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "custom-turn-plan",
+        "depth": 0,
+        "nodes": 140
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "black-two-move-attack",
+      "elo": 3500,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "a8a1",
+      "elapsedMs": 151,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 16
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "defend-two-move-rook-attack",
+      "elo": 3500,
+      "variant": "custom-king-capture",
+      "budgetMs": 150,
+      "move": "h7h5",
+      "elapsedMs": 151,
+      "solved": false,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 17
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "reference-ruy-lopez",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "f6e4",
+      "elapsedMs": 150,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 30
+      },
+      "referenceMove": "b7b5",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -30
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 36
+      },
+      "referenceLossCp": 6
+    },
+    {
+      "id": "reference-queens-gambit",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "g5f6",
+      "elapsedMs": 151,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 40
+      },
+      "referenceMove": "g5f6",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 47
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -10
+      },
+      "referenceLossCp": 37
+    },
+    {
+      "id": "reference-sicilian",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c1e3",
+      "elapsedMs": 154,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 43
+      },
+      "referenceMove": "c1g5",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 36
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -15
+      },
+      "referenceLossCp": 21
+    },
+    {
+      "id": "reference-french",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c5d4",
+      "elapsedMs": 151,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 31
+      },
+      "referenceMove": "b8c6",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": -87
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 125
+      },
+      "referenceLossCp": 38
+    },
+    {
+      "id": "reference-kings-indian",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "e5d4",
+      "elapsedMs": 151,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 32
+      },
+      "referenceMove": "e5d4",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": -45
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 78
+      },
+      "referenceLossCp": 33
+    },
+    {
+      "id": "reference-italian-center",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": 150,
+      "move": "c1g5",
+      "elapsedMs": 201,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 1,
+        "nodes": 39
+      },
+      "referenceMove": "e1g1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 9
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 356
+      },
+      "referenceLossCp": 365
+    }
+  ],
+  "fullBudget": [
+    {
+      "id": "free-queen",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": "profile",
+      "move": "d1d7",
+      "elapsedMs": 10675,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 8,
+        "nodes": 38358
+      },
+      "referenceMove": "d1d7",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 517
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": -540
+      },
+      "referenceLossCp": 0
+    },
+    {
+      "id": "knight-fork",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": "profile",
+      "move": "d5f6",
+      "elapsedMs": 3216,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 8,
+        "nodes": 6198
+      },
+      "referenceMove": "d5f6",
+      "referenceAgreement": true,
+      "referenceScore": {
+        "type": "cp",
+        "value": 6
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 27
+      },
+      "referenceLossCp": 33
+    },
+    {
+      "id": "defend-two-move-rook-attack",
+      "elo": 3500,
+      "variant": "custom-king-capture",
+      "budgetMs": "profile",
+      "move": "b8g8",
+      "elapsedMs": 12000,
+      "solved": true,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 6,
+        "nodes": 39223
+      },
+      "referenceMove": null,
+      "referenceAgreement": null,
+      "referenceScore": null,
+      "afterReferenceScore": null,
+      "referenceLossCp": null
+    },
+    {
+      "id": "reference-italian-center",
+      "elo": 3500,
+      "variant": "standard",
+      "budgetMs": "profile",
+      "move": "c4f7",
+      "elapsedMs": 12004,
+      "solved": null,
+      "lastCompletedSearch": {
+        "phase": "full-search",
+        "depth": 2,
+        "nodes": 188
+      },
+      "referenceMove": "e1g1",
+      "referenceAgreement": false,
+      "referenceScore": {
+        "type": "cp",
+        "value": 9
+      },
+      "afterReferenceScore": {
+        "type": "cp",
+        "value": 294
+      },
+      "referenceLossCp": 303
+    }
+  ],
+  "matches": [
+    {
+      "id": "standard-e4-e5-3500-white",
+      "order": [
+        "w",
+        "b"
+      ],
+      "white": 3500,
+      "black": "stockfish",
+      "budgetMs": 150,
+      "initialFen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "moves": [
+        {
+          "color": "w",
+          "uci": "g1f3",
+          "san": "Nf3",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "b8c6",
+          "san": "Nc6",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "f1d3",
+          "san": "Bd3",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "g8f6",
+          "san": "Nf6",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "e1g1",
+          "san": "O-O",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "f8c5",
+          "san": "Bc5",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "b1c3",
+          "san": "Nc3",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "e8g8",
+          "san": "O-O",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "c3a4",
+          "san": "Na4",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "c5b6",
+          "san": "Bb6",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "a4b6",
+          "san": "Nxb6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "a7b6",
+          "san": "axb6",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "a2a4",
+          "san": "a4",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "d7d5",
+          "san": "d5",
+          "elapsedMs": 162
+        },
+        {
+          "color": "w",
+          "uci": "e4d5",
+          "san": "exd5",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "d8d5",
+          "san": "Qxd5",
+          "elapsedMs": 162
+        },
+        {
+          "color": "w",
+          "uci": "f1e1",
+          "san": "Re1",
+          "elapsedMs": 156
+        },
+        {
+          "color": "b",
+          "uci": "e5e4",
+          "san": "e4",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "d3e4",
+          "san": "Bxe4",
+          "elapsedMs": 158
+        },
+        {
+          "color": "b",
+          "uci": "f6e4",
+          "san": "Nxe4",
+          "elapsedMs": 162
+        },
+        {
+          "color": "w",
+          "uci": "c2c4",
+          "san": "c4",
+          "elapsedMs": 158
+        },
+        {
+          "color": "b",
+          "uci": "d5f5",
+          "san": "Qf5",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "f3h4",
+          "san": "Nh4",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "f5f2",
+          "san": "Qxf2+",
+          "elapsedMs": 157
+        },
+        {
+          "color": "w",
+          "uci": "g1h1",
+          "san": "Kh1",
+          "elapsedMs": 6
+        },
+        {
+          "color": "b",
+          "uci": "f2h4",
+          "san": "Qxh4",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "g2g3",
+          "san": "g3",
+          "elapsedMs": 161
+        },
+        {
+          "color": "b",
+          "uci": "e4g3",
+          "san": "Nxg3+",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "h1g1",
+          "san": "Kg1",
+          "elapsedMs": 158
+        },
+        {
+          "color": "b",
+          "uci": "h4d4",
+          "san": "Qd4+",
+          "elapsedMs": 158
+        },
+        {
+          "color": "w",
+          "uci": "e1e3",
+          "san": "Re3",
+          "elapsedMs": 157
+        },
+        {
+          "color": "b",
+          "uci": "g3f5",
+          "san": "Nf5",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "d2d3",
+          "san": "d3",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "f5e3",
+          "san": "Nxe3",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "c1e3",
+          "san": "Bxe3",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "d4e3",
+          "san": "Qxe3+",
+          "elapsedMs": 158
+        },
+        {
+          "color": "w",
+          "uci": "g1h1",
+          "san": "Kh1",
+          "elapsedMs": 157
+        },
+        {
+          "color": "b",
+          "uci": "e3h6",
+          "san": "Qh6",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "h1g1",
+          "san": "Kg1",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "h6g6",
+          "san": "Qg6+",
+          "elapsedMs": 158
+        },
+        {
+          "color": "w",
+          "uci": "g1h1",
+          "san": "Kh1",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "c8g4",
+          "san": "Bg4",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "d1c2",
+          "san": "Qc2",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "g4f3",
+          "san": "Bf3+",
+          "elapsedMs": 25
+        },
+        {
+          "color": "w",
+          "uci": "c2g2",
+          "san": "Qg2",
+          "elapsedMs": 5
+        },
+        {
+          "color": "b",
+          "uci": "g6g2",
+          "san": "Qxg2#",
+          "elapsedMs": 17
+        }
+      ],
+      "outcome": {
+        "type": "checkmate",
+        "winner": "b"
+      },
+      "finalFen": "r4rk1/1pp2ppp/1pn5/8/P1P5/3P1b2/1P4qP/R6K w - - 0 25",
+      "winner": "stockfish"
+    },
+    {
+      "id": "standard-e4-e5-stockfish-white",
+      "order": [
+        "w",
+        "b"
+      ],
+      "white": "stockfish",
+      "black": 3500,
+      "budgetMs": 150,
+      "initialFen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "moves": [
+        {
+          "color": "w",
+          "uci": "g1f3",
+          "san": "Nf3",
+          "elapsedMs": 161
+        },
+        {
+          "color": "b",
+          "uci": "f8d6",
+          "san": "Bd6",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "c2c3",
+          "san": "c3",
+          "elapsedMs": 159
+        },
+        {
+          "color": "b",
+          "uci": "g8f6",
+          "san": "Nf6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "d2d4",
+          "san": "d4",
+          "elapsedMs": 159
+        },
+        {
+          "color": "b",
+          "uci": "f6e4",
+          "san": "Nxe4",
+          "elapsedMs": 155
+        },
+        {
+          "color": "w",
+          "uci": "f1d3",
+          "san": "Bd3",
+          "elapsedMs": 163
+        },
+        {
+          "color": "b",
+          "uci": "e4f2",
+          "san": "Nxf2",
+          "elapsedMs": 165
+        },
+        {
+          "color": "w",
+          "uci": "e1f2",
+          "san": "Kxf2",
+          "elapsedMs": 160
+        },
+        {
+          "color": "b",
+          "uci": "e8g8",
+          "san": "O-O",
+          "elapsedMs": 165
+        },
+        {
+          "color": "w",
+          "uci": "h1f1",
+          "san": "Rf1",
+          "elapsedMs": 160
+        },
+        {
+          "color": "b",
+          "uci": "b8c6",
+          "san": "Nc6",
+          "elapsedMs": 157
+        },
+        {
+          "color": "w",
+          "uci": "f2g1",
+          "san": "Kg1",
+          "elapsedMs": 160
+        },
+        {
+          "color": "b",
+          "uci": "e5d4",
+          "san": "exd4",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "c3d4",
+          "san": "cxd4",
+          "elapsedMs": 161
+        },
+        {
+          "color": "b",
+          "uci": "f8e8",
+          "san": "Re8",
+          "elapsedMs": 157
+        },
+        {
+          "color": "w",
+          "uci": "d3h7",
+          "san": "Bxh7+",
+          "elapsedMs": 158
+        },
+        {
+          "color": "b",
+          "uci": "g8h7",
+          "san": "Kxh7",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "f3g5",
+          "san": "Ng5+",
+          "elapsedMs": 158
+        },
+        {
+          "color": "b",
+          "uci": "h7g8",
+          "san": "Kg8",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "d1h5",
+          "san": "Qh5",
+          "elapsedMs": 160
+        },
+        {
+          "color": "b",
+          "uci": "g7g6",
+          "san": "g6",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "h5h7",
+          "san": "Qh7+",
+          "elapsedMs": 23
+        },
+        {
+          "color": "b",
+          "uci": "g8f8",
+          "san": "Kf8",
+          "elapsedMs": 4
+        },
+        {
+          "color": "w",
+          "uci": "f1f7",
+          "san": "Rxf7#",
+          "elapsedMs": 18
+        }
+      ],
+      "outcome": {
+        "type": "checkmate",
+        "winner": "w"
+      },
+      "finalFen": "r1bqrk2/pppp1R1Q/2nb2p1/6N1/3P4/8/PP4PP/RNB3K1 b - - 0 14",
+      "winner": "stockfish"
+    },
+    {
+      "id": "standard-d4-d5-3500-white",
+      "order": [
+        "w",
+        "b"
+      ],
+      "white": 3500,
+      "black": "stockfish",
+      "budgetMs": 150,
+      "initialFen": "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2",
+      "moves": [
+        {
+          "color": "w",
+          "uci": "c1e3",
+          "san": "Be3",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "c7c5",
+          "san": "c5",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "d4c5",
+          "san": "dxc5",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "e7e5",
+          "san": "e5",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "g1f3",
+          "san": "Nf3",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "b8c6",
+          "san": "Nc6",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "b1c3",
+          "san": "Nc3",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "d5d4",
+          "san": "d4",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "e3d4",
+          "san": "Bxd4",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "e5d4",
+          "san": "exd4",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "f3d4",
+          "san": "Nxd4",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "d8d4",
+          "san": "Qxd4",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "d1d4",
+          "san": "Qxd4",
+          "elapsedMs": 156
+        },
+        {
+          "color": "b",
+          "uci": "c6d4",
+          "san": "Nxd4",
+          "elapsedMs": 163
+        },
+        {
+          "color": "w",
+          "uci": "e1c1",
+          "san": "O-O-O",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "f8c5",
+          "san": "Bxc5",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "c3e4",
+          "san": "Ne4",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "c5b6",
+          "san": "Bb6",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "e2e3",
+          "san": "e3",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "d4c6",
+          "san": "Nc6",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "f1d3",
+          "san": "Bd3",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "g8h6",
+          "san": "Nh6",
+          "elapsedMs": 162
+        },
+        {
+          "color": "w",
+          "uci": "e4d6",
+          "san": "Nd6+",
+          "elapsedMs": 151
+        },
+        {
+          "color": "b",
+          "uci": "e8e7",
+          "san": "Ke7",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "d6c8",
+          "san": "Nxc8+",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "a8c8",
+          "san": "Raxc8",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "c1b1",
+          "san": "Kb1",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "c6e5",
+          "san": "Ne5",
+          "elapsedMs": 162
+        },
+        {
+          "color": "w",
+          "uci": "d3e4",
+          "san": "Be4",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "e5g4",
+          "san": "Neg4",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "d1d2",
+          "san": "Rd2",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "c8d8",
+          "san": "Rcd8",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "d2d8",
+          "san": "Rxd8",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "h8d8",
+          "san": "Rxd8",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "f2f3",
+          "san": "f3",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "g4f2",
+          "san": "Nf2",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "h1e1",
+          "san": "Re1",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "f2e4",
+          "san": "Nxe4",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "f3e4",
+          "san": "fxe4",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "h6g4",
+          "san": "Ng4",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "h2h3",
+          "san": "h3",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "g4e3",
+          "san": "Nxe3",
+          "elapsedMs": 160
+        },
+        {
+          "color": "w",
+          "uci": "g2g4",
+          "san": "g4",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "g7g5",
+          "san": "g5",
+          "elapsedMs": 158
+        },
+        {
+          "color": "w",
+          "uci": "e4e5",
+          "san": "e5",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "e7e6",
+          "san": "Ke6",
+          "elapsedMs": 159
+        },
+        {
+          "color": "w",
+          "uci": "e1e2",
+          "san": "Re2",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "d8d1",
+          "san": "Rd1#",
+          "elapsedMs": 17
+        }
+      ],
+      "outcome": {
+        "type": "checkmate",
+        "winner": "b"
+      },
+      "finalFen": "8/pp3p1p/1b2k3/4P1p1/6P1/4n2P/PPP1R3/1K1r4 w - - 3 26",
+      "winner": "stockfish"
+    },
+    {
+      "id": "standard-d4-d5-stockfish-white",
+      "order": [
+        "w",
+        "b"
+      ],
+      "white": "stockfish",
+      "black": 3500,
+      "budgetMs": 150,
+      "initialFen": "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2",
+      "moves": [
+        {
+          "color": "w",
+          "uci": "c2c4",
+          "san": "c4",
+          "elapsedMs": 160
+        },
+        {
+          "color": "b",
+          "uci": "d5c4",
+          "san": "dxc4",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "g1f3",
+          "san": "Nf3",
+          "elapsedMs": 160
+        },
+        {
+          "color": "b",
+          "uci": "c8e6",
+          "san": "Be6",
+          "elapsedMs": 155
+        },
+        {
+          "color": "w",
+          "uci": "e2e4",
+          "san": "e4",
+          "elapsedMs": 164
+        },
+        {
+          "color": "b",
+          "uci": "g8f6",
+          "san": "Nf6",
+          "elapsedMs": 155
+        },
+        {
+          "color": "w",
+          "uci": "b1c3",
+          "san": "Nc3",
+          "elapsedMs": 160
+        },
+        {
+          "color": "b",
+          "uci": "b8d7",
+          "san": "Nbd7",
+          "elapsedMs": 161
+        },
+        {
+          "color": "w",
+          "uci": "f3g5",
+          "san": "Ng5",
+          "elapsedMs": 200
+        },
+        {
+          "color": "b",
+          "uci": "h7h6",
+          "san": "h6",
+          "elapsedMs": 155
+        },
+        {
+          "color": "w",
+          "uci": "g5e6",
+          "san": "Nxe6",
+          "elapsedMs": 160
+        },
+        {
+          "color": "b",
+          "uci": "f7e6",
+          "san": "fxe6",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "e4e5",
+          "san": "e5",
+          "elapsedMs": 159
+        },
+        {
+          "color": "b",
+          "uci": "f6d5",
+          "san": "Nd5",
+          "elapsedMs": 156
+        },
+        {
+          "color": "w",
+          "uci": "d1h5",
+          "san": "Qh5+",
+          "elapsedMs": 22
+        },
+        {
+          "color": "b",
+          "uci": "g7g6",
+          "san": "g6",
+          "elapsedMs": 4
+        },
+        {
+          "color": "w",
+          "uci": "h5g6",
+          "san": "Qxg6#",
+          "elapsedMs": 19
+        }
+      ],
+      "outcome": {
+        "type": "checkmate",
+        "winner": "w"
+      },
+      "finalFen": "r2qkb1r/pppnp3/4p1Qp/3nP3/2pP4/2N5/PP3PPP/R1B1KB1R b KQkq - 0 10",
+      "winner": "stockfish"
+    },
+    {
+      "id": "custom-wwb-3500-white",
+      "order": [
+        "w",
+        "w",
+        "b"
+      ],
+      "white": 3500,
+      "black": 1200,
+      "budgetMs": 150,
+      "initialFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        {
+          "color": "w",
+          "uci": "b1c3",
+          "san": "Nc3",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "g1f3",
+          "san": "Nf3",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "d7d5",
+          "san": "d5",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "c3d5",
+          "san": "Nxd5",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "c2c4",
+          "san": "c4",
+          "elapsedMs": 151
+        },
+        {
+          "color": "b",
+          "uci": "c7c6",
+          "san": "c6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "d5c7",
+          "san": "Nc7+",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "c7e8",
+          "san": "Nxe8#",
+          "elapsedMs": 3
+        }
+      ],
+      "outcome": {
+        "type": "checkmate",
+        "winner": "w",
+        "reason": "king-capture"
+      },
+      "finalFen": "rnbqNbnr/pp2pppp/2p5/8/2P5/5N2/PP1PPPPP/R1BQKB1R b KQkq - 0 3",
+      "winner": 3500
+    },
+    {
+      "id": "custom-wwb-1200-white",
+      "order": [
+        "w",
+        "w",
+        "b"
+      ],
+      "white": 1200,
+      "black": 3500,
+      "budgetMs": 150,
+      "initialFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        {
+          "color": "w",
+          "uci": "b1c3",
+          "san": "Nc3",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "g1f3",
+          "san": "Nf3",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "b8c6",
+          "san": "Nc6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "c3d5",
+          "san": "Nd5",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "f3d4",
+          "san": "Nd4",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "c6d4",
+          "san": "Nxd4",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "d5c7",
+          "san": "Nxc7+",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "c7e8",
+          "san": "Nxe8#",
+          "elapsedMs": 2
+        }
+      ],
+      "outcome": {
+        "type": "checkmate",
+        "winner": "w",
+        "reason": "king-capture"
+      },
+      "finalFen": "r1bqNbnr/pp1ppppp/8/8/3n4/8/PPPPPPPP/R1BQKB1R b KQkq - 0 3",
+      "winner": 1200
+    },
+    {
+      "id": "custom-wbb-3500-white",
+      "order": [
+        "w",
+        "b",
+        "b"
+      ],
+      "white": 3500,
+      "black": 1200,
+      "budgetMs": 150,
+      "initialFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        {
+          "color": "w",
+          "uci": "b1c3",
+          "san": "Nc3",
+          "elapsedMs": 151
+        },
+        {
+          "color": "b",
+          "uci": "h7h6",
+          "san": "h6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "g8f6",
+          "san": "Nf6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "g1f3",
+          "san": "Nf3",
+          "elapsedMs": 151
+        },
+        {
+          "color": "b",
+          "uci": "c7c6",
+          "san": "c6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "b8a6",
+          "san": "Na6",
+          "elapsedMs": 151
+        },
+        {
+          "color": "w",
+          "uci": "f3d4",
+          "san": "Nd4",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "g7g5",
+          "san": "g5",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "c6c5",
+          "san": "c5",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "d4f5",
+          "san": "Nf5",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "d7d5",
+          "san": "d5",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "c8f5",
+          "san": "Bxf5",
+          "elapsedMs": 151
+        },
+        {
+          "color": "w",
+          "uci": "e2e4",
+          "san": "e4",
+          "elapsedMs": 157
+        },
+        {
+          "color": "b",
+          "uci": "f5g4",
+          "san": "Bg4",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "g4d1",
+          "san": "Bxd1",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "e1d1",
+          "san": "Kxd1",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "d8c7",
+          "san": "Qc7",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "g5g4",
+          "san": "g4",
+          "elapsedMs": 156
+        },
+        {
+          "color": "w",
+          "uci": "c3d5",
+          "san": "Nxd5",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "e7e6",
+          "san": "e6",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "e6d5",
+          "san": "exd5",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "f1d3",
+          "san": "Bd3",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "d5e4",
+          "san": "dxe4",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "e4d3",
+          "san": "exd3",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "c2d3",
+          "san": "cxd3",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "g4g3",
+          "san": "g3",
+          "elapsedMs": 157
+        },
+        {
+          "color": "b",
+          "uci": "f8g7",
+          "san": "Bg7",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "h2g3",
+          "san": "hxg3",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "e8c8",
+          "san": "O-O-O",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "f6d7",
+          "san": "Nd7",
+          "elapsedMs": 156
+        },
+        {
+          "color": "w",
+          "uci": "a2a4",
+          "san": "a4",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "g7b2",
+          "san": "Bxb2",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "b2e5",
+          "san": "Be5",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "a1b1",
+          "san": "Rb1",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "c7b6",
+          "san": "Qb6",
+          "elapsedMs": 158
+        },
+        {
+          "color": "b",
+          "uci": "b6b1",
+          "san": "Qxb1",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "d1e2",
+          "san": "Ke2",
+          "elapsedMs": 158
+        },
+        {
+          "color": "b",
+          "uci": "b1d3",
+          "san": "Qxd3+",
+          "elapsedMs": 179
+        },
+        {
+          "color": "b",
+          "uci": "d3e2",
+          "san": "Qxe2#",
+          "elapsedMs": 7
+        }
+      ],
+      "outcome": {
+        "type": "checkmate",
+        "winner": "b",
+        "reason": "king-capture"
+      },
+      "finalFen": "2kr3r/pp1n1p2/n6p/2p1b3/P7/6P1/3PqPP1/2B4R w - - 0 27",
+      "winner": 1200
+    },
+    {
+      "id": "custom-wbb-1200-white",
+      "order": [
+        "w",
+        "b",
+        "b"
+      ],
+      "white": 1200,
+      "black": 3500,
+      "budgetMs": 150,
+      "initialFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        {
+          "color": "w",
+          "uci": "b1c3",
+          "san": "Nc3",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "b8c6",
+          "san": "Nc6",
+          "elapsedMs": 151
+        },
+        {
+          "color": "b",
+          "uci": "g8f6",
+          "san": "Nf6",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "g1f3",
+          "san": "Nf3",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "a7a5",
+          "san": "a5",
+          "elapsedMs": 151
+        },
+        {
+          "color": "b",
+          "uci": "h7h5",
+          "san": "h5",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "a2a4",
+          "san": "a4",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "b7b6",
+          "san": "b6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "c8b7",
+          "san": "Bb7",
+          "elapsedMs": 153
+        },
+        {
+          "color": "w",
+          "uci": "c3d5",
+          "san": "Nd5",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "f6d5",
+          "san": "Nxd5",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "g7g6",
+          "san": "g6",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "a1a2",
+          "san": "Ra2",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "d5c3",
+          "san": "Nc3",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "c3d1",
+          "san": "Nxd1",
+          "elapsedMs": 152
+        },
+        {
+          "color": "w",
+          "uci": "b2b4",
+          "san": "b4",
+          "elapsedMs": 152
+        },
+        {
+          "color": "b",
+          "uci": "d1f2",
+          "san": "Nxf2",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "f2h1",
+          "san": "Nxh1",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "b4a5",
+          "san": "bxa5",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "c6b4",
+          "san": "Nb4",
+          "elapsedMs": 153
+        },
+        {
+          "color": "b",
+          "uci": "b4a2",
+          "san": "Nxa2",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "c1b2",
+          "san": "Bb2",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "f8g7",
+          "san": "Bg7",
+          "elapsedMs": 154
+        },
+        {
+          "color": "b",
+          "uci": "g7b2",
+          "san": "Bxb2",
+          "elapsedMs": 155
+        },
+        {
+          "color": "w",
+          "uci": "a5a6",
+          "san": "a6",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "b7f3",
+          "san": "Bxf3",
+          "elapsedMs": 171
+        },
+        {
+          "color": "b",
+          "uci": "f3e4",
+          "san": "Be4",
+          "elapsedMs": 154
+        },
+        {
+          "color": "w",
+          "uci": "d2d3",
+          "san": "d3",
+          "elapsedMs": 155
+        },
+        {
+          "color": "b",
+          "uci": "b2c3",
+          "san": "Bc3+",
+          "elapsedMs": 192
+        },
+        {
+          "color": "b",
+          "uci": "c3e1",
+          "san": "Bxe1#",
+          "elapsedMs": 5
+        }
+      ],
+      "outcome": {
+        "type": "checkmate",
+        "winner": "b",
+        "reason": "king-capture"
+      },
+      "finalFen": "r2qk2r/2pppp2/Pp4p1/7p/P3b3/3P4/n1P1P1PP/4bB1n w kq - 0 21",
+      "winner": 3500
+    }
+  ],
+  "reference": {
+    "name": "Stockfish 17.1 WASM",
+    "package": "stockfish@17.1.0",
+    "threads": 1,
+    "hashMb": 32
+  },
+  "finishedAtUTC": "2026-10-13T23:12:40.246Z"
+}

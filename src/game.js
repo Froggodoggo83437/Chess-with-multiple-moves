@@ -2,6 +2,8 @@ import { Chess } from 'chess.js';
 import { createEngineClient } from './engine-client.js';
 import { createCelebration } from './celebration.js';
 import rules from './rules.cjs';
+import ratingLabels from './rating-labels.cjs';
+const { levelForSetting, ratingNote } = ratingLabels;
 const { CustomTurnRules, strengthForElo } = rules;
 const names = { w: 'White', b: 'Black' };
 const pieceNames = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king' };
@@ -141,6 +143,7 @@ function render() {
   renderBoard();
   renderTurns();
   renderStatus();
+  updateStrength();
   $('ruleNote').textContent = state.allowKingCapture
     ? 'King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Normal checkmate also ends the game. Your own king must remain safe. Undo restores captured kings; computer replies stay paused until resumed.'
     : 'Standard rules: check requires an immediate response, even between consecutive moves. An extra response does not consume the attacker’s next tile. Checkmate ends the game immediately; kings cannot be captured. Undo pauses computer replies until resumed.';
@@ -177,7 +180,7 @@ function queueAI() {
   aiTimer = setTimeout(async () => {
     aiTimer = null;
     try {
-      const move = await engineClient.choose(state, elo);
+      const move = await engineClient.choose(state, elo, { fast: $('thinking').value === 'fast' });
       if (token !== generation) return;
       busy = false;
       if (move) apply(move);
@@ -207,11 +210,15 @@ $('flip').onclick = () => { flipped = !flipped; renderBoard(); };
 function updateStrength() {
   const profile = strengthForElo($('elo').value);
   $('elo').value = profile.elo;
-  $('eloValue').textContent = profile.elo;
-  $('elo').setAttribute('aria-valuetext', `${profile.elo} target Elo`);
+  $('eloValue').textContent = levelForSetting(profile.elo);
+  $('elo').setAttribute('aria-valuetext', `Level ${levelForSetting(profile.elo)} of 32`);
   const presets = { 600: '1', 1200: '2', 2000: '3', 3500: '4' };
   $('depth').value = presets[profile.elo] || 'custom';
+  $('ratingNote').textContent = ratingNote({ setting: profile.elo, order, allowKingCapture: $('kingCapture').value === 'allowed', fast: $('thinking').value === 'fast', rulesHash: window.CHESS_RULES_SHA256 });
 }
+$('thinking').onchange = () => {
+  updateStrength(); cancelAI(); renderStatus(); queueAI();
+};
 $('elo').oninput = () => {
   updateStrength();
   cancelAI();
