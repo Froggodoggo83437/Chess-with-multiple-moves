@@ -149,6 +149,17 @@ still works, but changed rules suppress the old reference estimates.
 
 After checkmate or a king-capture win, press **Analysis**. Browse the move cards
 or use the first/previous/next/last buttons (Left/Right/Home/End also work).
+Play either side on the reviewed board to explore unlimited legal alternative
+moves using the original game's saved turn order. Moves can be entered while
+ratings run in the background. Navigating backward and playing another move
+creates a new saved variation; use **Review line** to switch between continuations
+or **Return to original game** to restore the recorded game. There is no fixed
+move or variation cap. Checkmate and draws end that continuation; navigate to an
+earlier position to explore another. Variations remain available throughout the
+open review session. Closing review discards them and preserves the original
+game and its Undo history. Analysis quality changes keep variations and rerate
+their moves; reset, Undo, and closing cancel outstanding calculations.
+
 An evaluation bar appears beside the board; positive pawn-unit values favor
 White, negative values favor Black, and M indicates a mating advantage. The
 bar follows board flips. Captured pieces and turn highlights follow the reviewed

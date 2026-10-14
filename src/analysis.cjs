@@ -66,7 +66,7 @@ function restorePositions(Chess,payload) {
 }
 async function analyzeGame(Chess,payload,{onProgress=()=>{},isCancelled=()=>false,yieldEvery=128,timeBudgetMs=5000,positionAnalyzer=analyzePosition}={}) {
  const positions=restorePositions(Chess,payload),evaluations=[],moves=[];
- const context={...payload,standardCompatible:standardCompatible(positions),initialFen:positions[0].game.fen(),standardFen:new Chess().fen()};
+ const context={...payload,standardCompatible:standardCompatible(positions),initialFen:payload.initialFen||positions[0].game.fen(),standardFen:new Chess().fen()};
  for(let index=0;index<positions.length;index++){
   if(isCancelled())return null;
   const playedMove=positions[index+1]?.history.at(-1),end=terminalScore(positions[index]);

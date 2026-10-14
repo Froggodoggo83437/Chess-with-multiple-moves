@@ -109,3 +109,35 @@ test('Stockfish comparisons use the highest shared completed depth and the real 
  assert.equal(result.depth,13);assert.equal(result.whiteScore,-100);assert.equal(result.scores[0].score,100);assert.equal(result.scores[1].score,-40);
  assert.equal(calls[1].options.searchMove,'g7g5');assert.equal(calls[1].options.depth,14);assert.deepEqual(calls[0].moves,['e2e4']);
 });
+
+test('review variations branch without modifying the game or replacing other continuations',()=>{
+ const {ReviewLines}=require('../src/review-lines.cjs');
+ const state=new Rules(Chess,['w','w','b']);state.play(move('e2','e4'));state.play(move('d2','d4'));
+ const before=state.snapshot(),lines=new ReviewLines(restorePositions(Chess,payload(state)));
+ const a=lines.play(0,move('g1','f3'));assert.ok(a);assert.equal(a.next.side,'w');
+ const b=lines.play(1,move('b1','c3'));assert.ok(b);assert.equal(b.next.side,'b');
+ const c=lines.play(1,move('e2','e4'));assert.ok(c);assert.notEqual(c.line,a.line);assert.equal(a.line.positions[2].game.get('c3').type,'n');
+ assert.equal(c.line.positions[2].game.get('e4').type,'p');assert.equal(lines.main.positions[1].game.get('e4').type,'p');
+ assert.deepEqual(state.snapshot(),before);assert.equal(lines.main.positions.length,3);
+});
+test('variations have no line cap and illegal moves create no branches',()=>{
+ const {ReviewLines}=require('../src/review-lines.cjs');
+ const state=new Rules(Chess,['w','w','b']),lines=new ReviewLines([state.clone()]);
+ for(let i=0;i<120;i++){lines.select(0);assert.ok(lines.play(0,move('g1','f3')));}
+ assert.equal(lines.lines.length,121);lines.select(0);
+ assert.equal(lines.play(0,move('e2','e5')),null);assert.equal(lines.lines.length,121);
+});
+test('terminal variation blocks further play; earlier positions remain branchable',()=>{
+ const {ReviewLines}=require('../src/review-lines.cjs');
+ const state=new Rules(Chess,['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1',{allowKingCapture:true}),lines=new ReviewLines([state]);
+ lines.play(0,move('a1','a8'));const end=lines.play(1,move('a8','h8'));assert.equal(end.next.result.reason,'king-capture');
+ assert.equal(lines.play(2,move('h1','g1')),null);assert.ok(lines.play(1,move('a8','b8')));
+ assert.equal(state.game.get('h8').type,'k');
+});
+test('rating a two-position variation keeps the original initial FEN for Stockfish history and book recognition',async()=>{
+ const state=new Rules(Chess,['w','b']);state.play(move('e2','e4'));const before=state.snapshot();state.play(move('e7','e5'));
+ let seen;
+ const data={order:state.order,allowKingCapture:state.allowKingCapture,initialFen:new Chess().fen(),snapshots:[before,state.snapshot()]};
+ const result=await analyzeGame(Chess,data,{positionAnalyzer:async(s,options)=>{seen=options.context.initialFen;return {whiteScore:0,depth:1,scores:[],samples:[],reliable:false};}});
+ assert.equal(seen,new Chess().fen());assert.equal(result.moves[0].type,'book');
+});

@@ -322,6 +322,45 @@ let count=0;
         await fallback.screenshot({path:path.join(root,'test-results/analysis-mobile.png'),fullPage:true});
       }finally{await fallback.close();}
     });
+    await check('unlimited alternative play follows custom turns and rates every move without altering the game',async()=>{
+      await goto('capture');await move('a1','a8');await move('a8','h8');const history=await text('history');
+      await page.click('#analyzeGame');await page.click('#reviewStart');
+      for(const [from,to] of [['a1','a2'],['a2','a8'],['h8','g7'],['a8','a7'],['a7','g7']])await move(from,to);
+      assert.equal(await page.locator('#reviewLine').inputValue(),'1');assert.equal(await page.locator('#analysisMoves button').count(),5);
+      assert.equal(await square('g7').locator('img').getAttribute('alt'),'White rook');assert.equal(await text('history'),history);
+      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
+      const rated=await page.locator('#analysisMoves button').evaluateAll(cards=>cards.every(card=>card.title.includes('search depth')));assert.ok(rated);
+      await page.selectOption('#analysisQuality','maximum');assert.equal(await text('evalLabel'),'M');
+      await page.selectOption('#analysisQuality','quick');assert.equal(await text('evalLabel'),'M');
+      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
+      await move('h1','g1');assert.equal(await page.locator('#analysisMoves button').count(),5);
+      await page.click('#reviewStart');await page.click('#reviewNext');await move('a2','b2');
+      assert.equal(await page.locator('#reviewLine').inputValue(),'2');assert.equal(await page.locator('#analysisMoves button').count(),2);
+      await page.selectOption('#reviewLine','1');await page.click('#reviewEnd');assert.equal(await square('g7').locator('img').getAttribute('alt'),'White rook');
+      await page.click('#reviewOriginal');if(await page.locator('#reviewEnd').isEnabled())await page.click('#reviewEnd');assert.equal(await square('h8').locator('img').getAttribute('alt'),'White rook');
+      assert.equal(await page.locator('#analysisMoves button').count(),2);assert.equal(await text('history'),history);
+      await page.click('#closeAnalysis');assert.equal(await text('history'),history);await page.click('#undo');assert.equal(await square('h8').locator('img').getAttribute('alt'),'Black king');
+    });
+    await check('variation quality changes preserve lines and reset cancels pending ratings',async()=>{
+      await goto('capture');await move('a1','a8');await move('a8','h8');await page.click('#analyzeGame');await page.click('#reviewStart');
+      await move('a1','a2');await move('a2','b2');
+      await page.selectOption('#analysisQuality','maximum');await page.selectOption('#analysisQuality','quick');
+      assert.equal(await page.locator('#reviewLine').inputValue(),'1');assert.equal(await square('b2').locator('img').getAttribute('alt'),'White rook');
+      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
+      assert.ok(await page.locator('#analysisMoves button').evaluateAll(cards=>cards.every(card=>card.title.includes('search depth'))));
+      await page.click('#reviewPrev');await move('a2','c2');await page.click('#newGame');
+      await page.waitForTimeout(600);assert.ok(await page.locator('#analysisPanel').isHidden());assert.equal(await text('history'),'No moves yet.');
+    });
+    await check('standard variations use Stockfish with the complete branch history and preserve the original line',async()=>{
+      await goto();await page.selectOption('#mode','pvp');await page.click('#preset1');await page.selectOption('#kingCapture','standard');
+      for(const [from,to] of [['e2','e4'],['e7','e5'],['f1','c4'],['b8','c6'],['d1','h5'],['g8','f6'],['h5','f7']])await move(from,to);
+      const history=await text('history');await page.click('#analyzeGame');await page.click('#reviewStart');await page.click('#reviewNext');
+      await move('c7','c5');await move('g1','f3');assert.equal(await page.locator('#analysisMoves button').count(),3);
+      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
+      assert.ok((await text('analysisEngine')).includes('Full Stockfish 17.1'));
+      assert.equal(await page.locator('#analysisMoves button').nth(1).getAttribute('data-quality'),'book');assert.equal(await text('history'),history);
+      await page.click('#reviewOriginal');await page.click('#reviewEnd');assert.equal(await square('f7').locator('img').getAttribute('alt'),'White queen');
+    });
     await check('Black checkmate analysis and reset cancel review without stale output',async()=>{
       await goto('blackmate');await page.waitForSelector('#analyzeGame:not([hidden])');await page.click('#analyzeGame');
       await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));

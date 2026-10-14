@@ -1,6 +1,8 @@
 import { Chess } from 'chess.js';
 import { createAnalysisClient } from './analysis-client.js';
 import analysis from './analysis.cjs';
+import reviewLines from './review-lines.cjs';
+const {ReviewLines}=reviewLines;
 import {moveIcon, qualityName} from './move-icons.js';
 import { createEngineClient } from './engine-client.js';
 import { createCelebration } from './celebration.js';
@@ -20,6 +22,8 @@ const squares = new Map();
 const celebrate = createCelebration(document.querySelector('.boardWrap'), window.CHESS_PIECES);
 const engineClient = createEngineClient();
 const analysisClient = createAnalysisClient();
+const variationClient = createAnalysisClient();
+let variationGeneration=0;
 let review = null, analysisCache = null;
 const displayState = () => review ? review.positions[review.index] : state;
 const pvp = () => $('mode').value === 'pvp';
@@ -204,7 +208,14 @@ function apply(move) {
   return true;
 }
 function clickSquare(square) {
-  if (review) return;
+  if(review){
+    const view=displayState();if(view.result)return;
+    if(selected&&legal.some(move=>move.to===square)){
+      playAlternative({from:selected,to:square,promotion:$('promotion').value});return;
+    }
+    const piece=view.game.get(square);selected=piece?.color===view.side?square:null;
+    legal=selected?view.legalMoves().filter(move=>move.from===selected):[];renderBoard();return;
+  }
   if (state.result || busy || (!pvp() && state.side !== player())) return;
   if (selected && legal.some(move => move.to === square)) {
     if (apply({ from: selected, to: square, promotion: $('promotion').value })) queueAI();
@@ -289,7 +300,8 @@ $('undo').onclick = () => {
 $('resumeAI').onclick = () => { cancelAI(); pausedAI = false; queueAI(); };
 
 function closeAnalysis(clearCache=false) {
-  analysisClient.cancel();
+  analysisClient.cancel();variationClient.cancel();variationGeneration++;
+  selected=null;legal=[];
   if(clearCache || (review && !review.complete)) analysisCache=null;
   review=null;
   $('analysisPanel').hidden=true;
@@ -311,6 +323,7 @@ function renderAnalysisBar() {
 }
 function selectReview(index){
   if(!review)return;
+  selected=null;legal=[];
   review.index=Math.max(0,Math.min(review.positions.length-1,index));
   renderBoard();renderTurns();renderReview();
 }
@@ -322,7 +335,17 @@ function renderReview(){
   const view=displayState(),last=view.lastMove;
   $('reviewPosition').textContent=(review.index===0?'Starting position':`After move ${review.index}: ${names[last.color]} ${last.san}`)+(view.result?' — final position':` — ${names[view.side]} to move${view.forcedSide?' (check response)':''}`);
   $('analysisProgress').textContent=review.error|| (review.complete?'Analysis ready — evaluations and move grades are estimates.':`Analyzing position ${review.progress} of ${count+1}… You can browse while analysis runs.`);
-  $('analysisEngine').textContent=review.engineStatus||'Preparing analysis…';
+  const line=review.lines.active;
+  const picker=$('reviewLine');
+  if(picker.options.length!==review.lines.lines.length){
+    picker.replaceChildren(...review.lines.lines.map(item=>{const option=document.createElement('option');option.value=item.id;option.textContent=item.label;return option;}));
+  }
+  picker.value=String(line.id);$('reviewOriginal').disabled=line===review.lines.main;
+  if(line!==review.lines.main){
+    const pending=review.jobs.length+(review.variationRunning?1:0);
+    $('analysisProgress').textContent=line.error|| (pending?`Rating alternative moves — ${pending} queued or running. Keep playing while analysis runs.`:'Analysis ready — alternative move ratings are estimates.');
+  }
+  $('analysisEngine').textContent=(line===review.lines.main?review.engineStatus:line.engineStatus)||'Preparing analysis…';
   const chosen=review.moves[review.index-1];
   let detail='';
   if(chosen){
@@ -336,9 +359,10 @@ function renderReview(){
   }
   $('analysisDetail').textContent=detail;
   const list=$('analysisMoves');
-  if(list.children.length!==count){
+  if(list.children.length!==count||list.dataset.line!==String(line.id)){
+    list.dataset.line=String(line.id);
     list.replaceChildren();
-    state.history.forEach((move,index)=>{
+    review.positions.at(-1).history.forEach((move,index)=>{
       const card=document.createElement('button');card.type='button';card.className='review-move';card.textContent=`${index+1}. ${names[move.color]} ${move.san}`;
       card.onclick=()=>selectReview(index+1);list.append(card);
     });
@@ -357,25 +381,72 @@ async function openAnalysis(){
   const payload={quality,order:[...state.order],allowKingCapture:state.allowKingCapture,snapshots:[...state.snapshots,state.snapshot()]};
   const positions=analysis.restorePositions(Chess,payload);
   const cached=analysisCache?.sourceResult===state.result&&analysisCache.quality===quality?analysisCache:null;
-  const session=review={positions,index:positions.length-1,evaluations:cached?.evaluations||[],moves:cached?.moves||[],complete:!!cached,progress:0,error:'',engineStatus:cached?.engineStatus||''};
+  const lines=new ReviewLines(positions,{evaluations:cached?.evaluations||[],moves:cached?.moves||[]});
+  const session=review={lines,payload,index:positions.length-1,complete:!!cached,progress:0,error:'',engineStatus:cached?.engineStatus||'',jobs:[],variationRunning:false,mainEpoch:0};
+  for(const key of ['positions','moves','evaluations'])Object.defineProperty(session,key,{get:()=>lines.active[key]});
   session.evaluations[positions.length-1]={whiteScore:analysis.terminalScore(state),depth:0};
   $('analysisPanel').hidden=false;$('evaluationBar').hidden=false;$('boardSection').classList.add('reviewing');
   render();renderReview();
-  if(cached)return;
+  if(!cached)await analyzeOriginal(session);
+}
+async function analyzeOriginal(session){
+  const main=session.lines.main,epoch=++session.mainEpoch,payload=session.payload;
   try{
     const result=await analysisClient.start(payload,progress=>{
-      if(review!==session)return;
-      session.evaluations[progress.index]=progress.evaluation;
-      if(progress.move)session.moves[progress.index]=progress.move;
-      session.progress=progress.index+1;renderBoard();renderReview();
-    },status=>{if(review===session){session.engineStatus=status;renderReview();}});
-    if(review!==session||!result)return;
-    session.evaluations=result.evaluations;session.moves=result.moves;session.complete=true;
-    analysisCache={...result,quality,engineStatus:session.engineStatus,sourceResult:state.result};renderBoard();renderReview();
-  }catch(error){if(review!==session)return;session.error='Analysis could not finish. Close and reopen analysis to retry.';renderReview();}
+      if(review!==session||session.mainEpoch!==epoch)return;
+      main.evaluations[progress.index]=progress.evaluation;
+      if(progress.move)main.moves[progress.index]=progress.move;
+      session.lines.syncInherited();session.progress=progress.index+1;renderBoard();renderReview();
+    },status=>{if(review===session&&session.mainEpoch===epoch){session.engineStatus=status;renderReview();}});
+    if(review!==session||session.mainEpoch!==epoch||!result)return;
+    main.evaluations=result.evaluations;main.moves=result.moves;session.complete=true;session.lines.syncInherited();
+    analysisCache={...result,quality:payload.quality,engineStatus:session.engineStatus,sourceResult:state.result};renderBoard();renderReview();
+  }catch(error){if(review!==session||session.mainEpoch!==epoch)return;session.error='Analysis could not finish. Change analysis quality to retry.';renderReview();}
+}
+function playAlternative(request){
+  if(!review)return;
+  const job=review.lines.play(review.index,request);if(!job)return;
+  selected=null;legal=[];review.index=job.index+1;
+  job.line.error='';review.jobs.push(job);
+  if(job.next.result)job.line.evaluations[job.index+1]={whiteScore:analysis.terminalScore(job.next),source:'exact',reliable:true,depth:0};
+  renderBoard();renderTurns();renderReview();rateAlternatives(review);
+}
+async function rateAlternatives(session){
+  if(session.variationRunning||review!==session)return;
+  const epoch=variationGeneration;session.variationRunning=true;
+  try{
+    while(session.jobs.length&&review===session&&variationGeneration===epoch){
+      const job=session.jobs.shift(),payload={...session.payload,initialFen:session.lines.main.positions[0].game.fen(),snapshots:[job.before.snapshot(),job.next.snapshot()]};
+      try{
+        const result=await variationClient.start(payload,progress=>{
+          if(review!==session||variationGeneration!==epoch)return;
+          job.line.evaluations[job.index+progress.index]=progress.evaluation;
+          if(progress.move)job.line.moves[job.index]=progress.move;
+          session.lines.syncInherited();renderBoard();renderReview();
+        },status=>{if(review===session&&variationGeneration===epoch){job.line.engineStatus=status;renderReview();}});
+        if(!result||review!==session||variationGeneration!==epoch)return;
+      }catch{if(review===session&&variationGeneration===epoch)job.line.error='Could not rate an alternative. Change analysis quality to retry.';}
+    }
+  }finally{if(review===session&&variationGeneration===epoch){session.variationRunning=false;renderReview();}}
 }
 $('analyzeGame').onclick=openAnalysis;
-$('analysisQuality').onchange=()=>{if(review){closeAnalysis(true);openAnalysis();}};
+$('reviewLine').onchange=()=>{if(review){review.lines.select($('reviewLine').value);selectReview(Math.min(review.index,review.positions.length-1));}};
+$('reviewOriginal').onclick=()=>{if(review){review.lines.select(0);selectReview(Math.min(review.index,review.positions.length-1));}};
+$('analysisQuality').onchange=()=>{
+  if(!review)return;
+  const session=review;variationGeneration++;variationClient.cancel();session.variationRunning=false;session.jobs=[];
+  session.payload={...session.payload,quality:$('analysisQuality').value};session.complete=false;session.error='';analysisCache=null;
+  for(const line of session.lines.lines.slice(1)){
+    line.error='';
+    for(let index=line.forkIndex;index<line.positions.length-1;index++){
+      line.moves[index]=undefined;
+      const next=line.positions[index+1];
+      line.evaluations[index+1]=next.result?{whiteScore:analysis.terminalScore(next),source:'exact',reliable:true,depth:0}:undefined;
+      session.jobs.push({line,index,before:line.positions[index],next:line.positions[index+1]});
+    }
+  }
+  analyzeOriginal(session);rateAlternatives(session);renderBoard();renderReview();
+};
 $('closeAnalysis').onclick=()=>{closeAnalysis();render();};
 $('reviewStart').onclick=()=>selectReview(0);
 $('reviewPrev').onclick=()=>selectReview(review.index-1);
