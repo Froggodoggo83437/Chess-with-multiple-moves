@@ -239,6 +239,21 @@ let count=0;
       assert.match(await text('ratingNote'),/Unrated at normal thinking time/);
       await page.selectOption('#thinking','fast');await page.click('#resumeAI');await waitHistory(2);
     });
+    await check('captured pieces and material lead follow captures, undo, reset, and board orientation',async()=>{
+      await goto();await page.selectOption('#mode','pvp');await page.click('#preset1');
+      assert.equal(await page.locator('#playerTop .player-name').innerText(),'Black');
+      assert.equal(await page.locator('#playerBottom .player-name').innerText(),'White');
+      assert.equal(await page.locator('.captured-pieces img').count(),0);assert.equal(await page.locator('.material-lead').count(),0);
+      await move('e2','e4');await move('d7','d5');await move('e4','d5');
+      const white=page.locator('.player-strip[data-color="w"]');
+      assert.equal(await white.locator('img').getAttribute('alt'),'Black pawn');assert.equal(await white.locator('.material-lead').innerText(),'+1');
+      assert.equal(await page.locator('#playerTop').getAttribute('data-color'),'w');
+      await move('d8','d5');assert.equal(await page.locator('.material-lead').count(),0);
+      assert.equal(await page.locator('.player-strip[data-color="b"] img').getAttribute('alt'),'White pawn');
+      await page.click('#undo');assert.equal(await white.locator('.material-lead').innerText(),'+1');
+      await page.click('#flip');assert.equal(await white.locator('img').count(),1);assert.equal(await page.locator('#playerBottom').getAttribute('data-color'),'w');
+      await page.click('#newGame');assert.equal(await page.locator('.captured-pieces img').count(),0);assert.equal(await page.locator('.material-lead').count(),0);
+    });
     await check('checkmate celebration displays winner, preserves controls, and plays once',async()=>{
       await goto('mate');await move('g6','g7');
       assert.equal(await page.locator('.victory-title').innerText(),'CHECKMATE');

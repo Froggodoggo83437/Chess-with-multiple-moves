@@ -27,6 +27,7 @@ p{color:var(--muted);margin:0}
 .coord{position:absolute;bottom:3px;left:4px;font:600 10px system-ui;color:#eeeed2;pointer-events:none}
 .rank-coord{top:3px;bottom:auto}
 .square.light .coord{color:#769656}
+.player-strip{min-height:58px;padding:7px 2px;display:flex;flex-direction:column;gap:3px}.player-name{font-size:15px}.captured-pieces{display:flex;align-items:center;flex-wrap:wrap;min-height:23px;gap:1px}.captured-pieces img{width:22px;height:23px;object-fit:contain;flex:none}.captured-pieces img+img{margin-left:-5px}.material-lead{font-size:14px;font-weight:600;color:var(--muted);margin-left:7px}
 .panel{background:#141f30;border:1px solid #2b3d56;border-radius:14px;padding:19px;box-shadow:0 12px 25px #0003;margin-bottom:15px}
 h2{font-size:15px;margin:0 0 13px}
 label{display:block;color:#b3c3d6;font-size:13px;margin-bottom:7px}
@@ -61,7 +62,7 @@ button.action{cursor:pointer;padding:10px 12px;background:#263953;color:#fff;bor
 @media(prefers-reduced-motion:reduce){.victory-layer,.victory-card,.victory-ring,.victory-confetti{animation:none}.victory-ring,.victory-confetti{display:none}}
 </style></head><body>
 <header><h1>♞ Custom Turn Chess</h1><p>Change who moves next. Play two turns in a row, three, or any sequence you like.</p></header>
-<div class="layout"><section><div class="boardWrap"><div class="board" id="board" aria-label="Chess board"></div></div><div class="hint">Click a piece, then click its destination. Pawns promote to your selected piece (Queen by default).</div></section><aside>
+<div class="layout"><section><div id="playerTop" class="player-strip"></div><div class="boardWrap"><div class="board" id="board" aria-label="Chess board"></div></div><div id="playerBottom" class="player-strip"></div><div class="hint">Click a piece, then click its destination. Pawns promote to your selected piece (Queen by default). The +number shows the material lead: pawn 1, knight/bishop 3, rook 5, queen 9.</div></section><aside>
 <div class="panel"><h2>Turn order</h2><p class="hint" style="margin:0">Click a tile to swap White/Black. The orange tile is the current turn.</p><div id="turns" class="turns"></div><div class="btnrow"><button class="action" id="addWhite">+ White</button><button class="action" id="addBlack">+ Black</button><button class="action" id="remove">− Last</button></div><div class="btnrow"><button class="action" id="preset1">Normal (1:1)</button><button class="action primary" id="preset2">You 2 : AI 1</button><button class="action" id="preset3">You 3 : AI 1</button></div><div class="hint">Editing the order starts a new game to keep the move history consistent.</div></div>
 <div class="panel"><h2>Game settings</h2><label for="mode">Game mode</label><select id="mode"><option value="computer">Player vs Computer</option><option value="pvp">Player vs Player (same device)</option></select><div id="computerSettings"><label for="side" style="margin-top:14px">Your color</label><select id="side"><option value="w">White</option><option value="b">Black</option></select><label for="depth" style="margin-top:14px">Computer strength</label><select id="depth"><option value="1">Easy</option><option value="2">Medium</option><option value="3">Hard</option><option value="4" selected>Maximum</option><option value="custom">Custom strength</option></select><label for="elo" style="margin-top:14px">Strength level: <output id="eloValue" for="elo">32</output> / 32</label><input id="elo" type="range" min="400" max="3500" step="100" value="3500"><p class="hint">Lower levels make more deliberate mistakes. Maximum uses the best move it calculates; it does not guarantee perfect play.</p><label for="thinking" style="margin-top:14px">Thinking time</label><select id="thinking"><option value="normal">Normal — stronger search</option><option value="fast">Fast — 150 ms reference budget</option></select><p class="hint" id="ratingNote" aria-live="polite"></p></div><label for="kingCapture" style="margin-top:14px">King capture</label><select id="kingCapture"><option value="allowed">Allowed — capture wins</option><option value="standard">Standard — no king captures</option></select><label for="promotion" style="margin-top:14px">Pawn promotion</label><select id="promotion"><option value="q">Queen (automatic)</option><option value="r">Rook</option><option value="b">Bishop</option><option value="n">Knight</option></select><div class="btnrow"><button class="action primary" id="newGame">New game</button><button class="action" id="undo">Undo last move</button><button class="action" id="flip">Flip board</button><button class="action" id="resumeAI" hidden>Resume computer</button></div></div>
 <div class="panel"><h2>Game</h2><div id="status" class="status" role="status" aria-live="polite">Loading rules…</div><p class="hint" id="ruleNote">King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Normal checkmate also ends the game.</p><h2 style="margin-top:20px">Move history</h2><div id="history" class="moves">No moves yet.</div></div>
@@ -277,8 +278,8 @@ POSSIBILITY OF SUCH DAMAGE.
         let score = 0;
         const board = state2.game.board();
         const pieces = board.flat().filter(Boolean);
-        const material = pieces.reduce((sum, piece) => sum + (piece.type === "k" ? 0 : VALUES[piece.type]), 0);
-        const endgame = material < 2600;
+        const material2 = pieces.reduce((sum, piece) => sum + (piece.type === "k" ? 0 : VALUES[piece.type]), 0);
+        const endgame = material2 < 2600;
         const bishops = { w: 0, b: 0 };
         for (let row = 0; row < 8; row++) for (let col = 0; col < 8; col++) {
           const piece = board[row][col];
@@ -557,6 +558,22 @@ POSSIBILITY OF SUCH DAMAGE.
         return chooseMove(state2, profile.depth, color, { ...profile, ...options });
       }
       module.exports = { CustomTurnRules: CustomTurnRules2, chooseMove, chooseMoveForElo: chooseMoveForElo2, strengthForElo: strengthForElo2, pickStrengthMove };
+    }
+  });
+
+  // src/material.cjs
+  var require_material = __commonJS({
+    "src/material.cjs"(exports, module) {
+      var VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+      var ORDER = ["p", "n", "b", "r", "q", "k"];
+      function materialSummary2(state2) {
+        const captured = { w: [], b: [] }, totals = { w: 0, b: 0 };
+        for (const move of state2.history) if (move.captured) captured[move.color].push(move.captured);
+        for (const color of ["w", "b"]) captured[color].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+        for (const row of state2.game.board()) for (const piece of row) if (piece) totals[piece.color] += VALUES[piece.type];
+        return { captured, totals, lead: { w: Math.max(0, totals.w - totals.b), b: Math.max(0, totals.b - totals.w) } };
+      }
+      module.exports = { materialSummary: materialSummary2 };
     }
   });
 
@@ -4194,7 +4211,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
   // src/game.js
   var import_rules2 = __toESM(require_rules());
+  var import_material = __toESM(require_material());
   var import_rating_labels = __toESM(require_rating_labels());
+  var { materialSummary } = import_material.default;
   var { levelForSetting, ratingNote } = import_rating_labels.default;
   var { CustomTurnRules, strengthForElo } = import_rules2.default;
   var names = { w: "White", b: "Black" };
@@ -4237,6 +4256,37 @@ POSSIBILITY OF SUCH DAMAGE.
     if (!next.length) return;
     order = [...next];
     reset();
+  }
+  function renderMaterial() {
+    const summary = materialSummary(state);
+    for (const [id, color] of [["playerTop", flipped ? "w" : "b"], ["playerBottom", flipped ? "b" : "w"]]) {
+      const strip = $(id), opponent = color === "w" ? "b" : "w";
+      strip.dataset.color = color;
+      strip.replaceChildren();
+      const name = document.createElement("strong");
+      name.className = "player-name";
+      name.textContent = names[color];
+      strip.append(name);
+      const captures = document.createElement("div");
+      captures.className = "captured-pieces";
+      captures.setAttribute("aria-label", `Pieces captured by ${names[color]}`);
+      for (const type of summary.captured[color]) {
+        const image = document.createElement("img");
+        image.src = window.CHESS_PIECES[opponent + type];
+        image.alt = `${names[opponent]} ${pieceNames[type]}`;
+        image.draggable = false;
+        captures.append(image);
+      }
+      if (summary.lead[color]) {
+        const points = document.createElement("span");
+        points.className = "material-lead";
+        points.textContent = "+" + summary.lead[color];
+        points.setAttribute("aria-label", `${names[color]} is ahead by ${summary.lead[color]} material points`);
+        points.title = "Material lead: pawn 1, knight/bishop 3, rook 5, queen 9. Kings have no point value.";
+        captures.append(points);
+      }
+      strip.append(captures);
+    }
   }
   function renderBoard() {
     const ranks = flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
@@ -4300,6 +4350,7 @@ POSSIBILITY OF SUCH DAMAGE.
       if (board.children[visualIndex] !== button) board.insertBefore(button, board.children[visualIndex] || null);
       visualIndex++;
     }
+    renderMaterial();
   }
   function renderTurns() {
     $("turns").replaceChildren();

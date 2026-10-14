@@ -5,6 +5,11 @@ pieces, rules engine, and game code are all embedded; no network connection
 or build is needed to play. Alternatively, serve this directory with
 `python3 -m http.server 8000`.
 
+Captured-piece trays sit above and below the board, labeled White and Black.
+They follow board flips and show each side’s captures. A +number indicates the
+material lead (pawn 1, knight/bishop 3, rook 5, queen 9); promotions affect the
+lead, kings have no point value, and Undo/New Game update the displays.
+
 ## Rules
 
 - Every turn-order tile grants one legal chess move. Tiles may repeat a color;

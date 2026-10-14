@@ -2,6 +2,8 @@ import { Chess } from 'chess.js';
 import { createEngineClient } from './engine-client.js';
 import { createCelebration } from './celebration.js';
 import rules from './rules.cjs';
+import material from './material.cjs';
+const { materialSummary } = material;
 import ratingLabels from './rating-labels.cjs';
 const { levelForSetting, ratingNote } = ratingLabels;
 const { CustomTurnRules, strengthForElo } = rules;
@@ -39,6 +41,31 @@ function modifyOrder(next) {
   if (!next.length) return;
   order = [...next];
   reset();
+}
+function renderMaterial() {
+  const summary = materialSummary(state);
+  for (const [id, color] of [['playerTop', flipped ? 'w' : 'b'], ['playerBottom', flipped ? 'b' : 'w']]) {
+    const strip = $(id), opponent = color === 'w' ? 'b' : 'w';
+    strip.dataset.color = color;
+    strip.replaceChildren();
+    const name = document.createElement('strong');
+    name.className = 'player-name'; name.textContent = names[color]; strip.append(name);
+    const captures = document.createElement('div'); captures.className = 'captured-pieces';
+    captures.setAttribute('aria-label', `Pieces captured by ${names[color]}`);
+    for (const type of summary.captured[color]) {
+      const image = document.createElement('img');
+      image.src = window.CHESS_PIECES[opponent + type]; image.alt = `${names[opponent]} ${pieceNames[type]}`;
+      image.draggable = false; captures.append(image);
+    }
+    if (summary.lead[color]) {
+      const points = document.createElement('span'); points.className = 'material-lead';
+      points.textContent = '+' + summary.lead[color];
+      points.setAttribute('aria-label', `${names[color]} is ahead by ${summary.lead[color]} material points`);
+      points.title = 'Material lead: pawn 1, knight/bishop 3, rook 5, queen 9. Kings have no point value.';
+      captures.append(points);
+    }
+    strip.append(captures);
+  }
 }
 function renderBoard() {
   const ranks = flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
@@ -92,6 +119,7 @@ function renderBoard() {
     if (board.children[visualIndex] !== button) board.insertBefore(button, board.children[visualIndex] || null);
     visualIndex++;
   }
+  renderMaterial();
 }
 function renderTurns() {
   $('turns').replaceChildren();
