@@ -195,24 +195,49 @@ let count=0;
       } finally {await local.context().close();}
     });
     assert.ok(workers>0,'Computer moves should use an embedded worker');
-    await check('Expert 3500 target is the default strength',async()=>{
+    await check('maximum strength is the default without claiming 3500 Elo',async()=>{
       await page.goto(`http://127.0.0.1:${server.address().port}/`);
       await page.waitForFunction(()=>document.querySelectorAll('#board button').length===64);
       assert.equal(await page.locator('#elo').inputValue(),'3500');
       assert.equal(await page.locator('#depth').inputValue(),'4');
-      assert.equal(await text('eloValue'),'3500');
+      assert.equal(await text('eloValue'),'32');
       assert.equal(await page.locator('#elo').getAttribute('max'),'3500');
     });
-    await check('Elo slider and presets stay synchronized and preserve the current game',async()=>{
+    await check('strength slider and presets stay synchronized and preserve the current game',async()=>{
       await goto();await move('e2','e4');const history=await text('history');
-      await page.locator('#elo').fill('1700');assert.equal(await text('eloValue'),'1700');assert.equal(await page.locator('#depth').inputValue(),'custom');
-      assert.equal(await text('history'),history);assert.equal(await page.locator('#elo').getAttribute('aria-valuetext'),'1700 target Elo');
+      await page.locator('#elo').fill('1700');assert.equal(await text('eloValue'),'14');assert.equal(await page.locator('#depth').inputValue(),'custom');
+      assert.equal(await text('history'),history);assert.equal(await page.locator('#elo').getAttribute('aria-valuetext'),'Level 14 of 32');
       await page.selectOption('#depth','3');assert.equal(await page.locator('#elo').inputValue(),'2000');
       await page.selectOption('#depth','1');assert.equal(await page.locator('#elo').inputValue(),'600');
-      await page.selectOption('#depth','4');assert.equal(await text('eloValue'),'3500');assert.equal(await page.locator('#elo').inputValue(),'3500');assert.equal(await text('history'),history);
+      await page.selectOption('#depth','4');assert.equal(await text('eloValue'),'32');assert.equal(await page.locator('#elo').inputValue(),'3500');assert.equal(await text('history'),history);
       await page.selectOption('#depth','1');await move('d2','d4');await page.locator('#elo').fill('400');await waitHistory(3);
       assert.equal(await page.locator('#elo').inputValue(),'400');await page.click('#undo');assert.ok((await text('status')).includes('paused'));
       await page.locator('#elo').fill('1200');await page.waitForTimeout(400);assert.ok(!(await text('history')).includes('3.'));
+    });
+    await check('ratings apply only to tested standard fast mode and suppress custom-rule claims',async()=>{
+      await goto();await page.selectOption('#depth','4');
+      assert.match(await text('ratingNote'),/Unrated: custom/);
+      await page.click('#preset1');await page.selectOption('#kingCapture','standard');
+      assert.match(await text('ratingNote'),/Unrated at normal thinking time/);
+      await page.selectOption('#thinking','fast');
+      assert.match(await text('ratingNote'),/about 1240/);assert.match(await text('ratingNote'),/430 to 1880/);
+      await page.locator('#elo').fill('400');assert.match(await text('ratingNote'),/No finite rating estimate/);
+      await page.locator('#elo').fill('900');assert.match(await text('ratingNote'),/No point estimate/);
+      await page.selectOption('#kingCapture','allowed');assert.match(await text('ratingNote'),/Unrated: custom/);
+      await page.selectOption('#kingCapture','standard');await page.click('#preset2');assert.match(await text('ratingNote'),/Unrated: custom/);
+      await page.selectOption('#mode','pvp');assert.ok(await page.locator('#computerSettings').isHidden());
+    });
+    await check('thinking-time switches cancel pending search without resetting moves or undo pause',async()=>{
+      await goto();await page.click('#preset1');await page.selectOption('#kingCapture','standard');await page.selectOption('#depth','4');
+      await page.evaluate(()=>{const original=Worker.prototype.postMessage;Worker.prototype.postMessage=function(data,...args){window.lastEngineRequest={fast:data.fast,elo:data.elo};return original.call(this,data,...args);};});
+      await move('e2','e4');const history=await text('history');
+      await page.selectOption('#thinking','fast');assert.ok((await text('history')).startsWith(history));
+      await waitHistory(2);assert.deepEqual(await page.evaluate(()=>window.lastEngineRequest),{fast:true,elo:3500});
+      assert.match(await text('ratingNote'),/about 1240/);
+      await page.click('#undo');assert.ok((await text('status')).includes('paused'));const undone=await text('history');
+      await page.selectOption('#thinking','normal');await page.waitForTimeout(400);assert.equal(await text('history'),undone);
+      assert.match(await text('ratingNote'),/Unrated at normal thinking time/);
+      await page.selectOption('#thinking','fast');await page.click('#resumeAI');await waitHistory(2);
     });
     await check('checkmate celebration displays winner, preserves controls, and plays once',async()=>{
       await goto('mate');await move('g6','g7');

@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "verifiedAtUTC": "2026-10-14T01:08:07.030Z",
+  "calibrationSha256": "1cf15fc2845f33e03b56b950f6469cdc4dfe04f5e471405b6a09ba00af57a6a7",
+  "rulesSha256": "f2468326f57cb8f92f390552e6d50616951c78e6c98f45c0b4afe8dae1a1f03d",
+  "verifierSha256": "19f0cc43b5c1dfcf0e9fb2209bb1fab6476a6972dce2f71d11d422d64739bb21",
+  "games": 576,
+  "plies": 61680,
+  "continued": 129,
+  "newlyResolved": 125
+}

@@ -3,13 +3,27 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "node --test tests/rules.test.cjs",
+    "test": "node --test tests/rules.test.cjs tests/ratings.test.cjs",
     "test:browser": "node tests/browser.cjs",
-    "build": "node scripts/build.cjs"
+    "build": "node scripts/build.cjs",
+    "benchmark": "node benchmarks/run.cjs",
+    "benchmark:report": "node benchmarks/report.cjs",
+    "benchmark:verify": "node benchmarks/verify.cjs",
+    "benchmark:all-ratings": "node benchmarks/audit-ratings.cjs",
+    "benchmark:verify-all-ratings": "node benchmarks/verify-ratings.cjs",
+    "benchmark:relative-ratings": "node benchmarks/relative-ratings.cjs",
+    "benchmark:strength-model": "node benchmarks/verify-strength-model.cjs",
+    "benchmark:verify-relative-ratings": "node benchmarks/verify-relative-ratings.cjs",
+    "benchmark:calibrate": "node benchmarks/calibration-games.cjs",
+    "benchmark:verify-calibration": "node benchmarks/verify-calibration.cjs",
+    "benchmark:calibration-report": "node benchmarks/analyze-calibration.cjs",
+    "benchmark:test-statistics": "node --test benchmarks/rating-statistics.test.cjs",
+    "ratings:update": "node scripts/update-rating-data.cjs"
   },
   "devDependencies": {
     "chess.js": "1.4.0",
     "esbuild": "0.25.12",
-    "playwright-core": "1.58.2"
+    "playwright-core": "1.58.2",
+    "stockfish": "17.1.0"
   }
 }

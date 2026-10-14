@@ -1,0 +1,1614 @@
+{
+  "schema": 1,
+  "calibrationSha256": "1cf15fc2845f33e03b56b950f6469cdc4dfe04f5e471405b6a09ba00af57a6a7",
+  "rulesSha256": "f2468326f57cb8f92f390552e6d50616951c78e6c98f45c0b4afe8dae1a1f03d",
+  "verification": {
+    "status": "passed",
+    "verifiedAtUTC": "2026-10-14T01:08:07.030Z",
+    "calibrationSha256": "1cf15fc2845f33e03b56b950f6469cdc4dfe04f5e471405b6a09ba00af57a6a7",
+    "rulesSha256": "f2468326f57cb8f92f390552e6d50616951c78e6c98f45c0b4afe8dae1a1f03d",
+    "verifierSha256": "19f0cc43b5c1dfcf0e9fb2209bb1fab6476a6972dce2f71d11d422d64739bb21",
+    "games": 576,
+    "plies": 61680,
+    "continued": 129,
+    "newlyResolved": 125
+  },
+  "method": {
+    "scale": "Stockfish-17.1-preset-relative standard chess, 150 ms/move",
+    "point": "Invert the equally weighted opening-group mean expected-score Elo logistic function over the declared opponents. No finite estimate for all-win/all-loss samples. No point estimate when games remain unfinished.",
+    "censoring": "Unknown game scores range from 0 to 1; propagate both extremes to rating bounds.",
+    "confidence": "Hoeffding relative-entropy bounds on seven independent bounded opening-group scores. Report per-setting 95% and Bonferroni simultaneous 95% over 32 settings. Conditional on independent opening groups and the expected-score model/reference presets.",
+    "scope": "No verification of human Elo, custom turn orders, or default application thinking budgets. Shared Stockfish model/hardware, deterministic opening samples, and host load add systematic uncertainty outside the statistical bounds."
+  },
+  "actualMoveTimes": {
+    "requestedBudgetMs": 150,
+    "engine": {
+      "moves": 30736,
+      "meanMs": 162,
+      "medianMs": 154,
+      "p95Ms": 227,
+      "maxMs": 634,
+      "overRequestedBudget": 29439
+    },
+    "reference": {
+      "moves": 30944,
+      "meanMs": 163,
+      "medianMs": 162,
+      "p95Ms": 173,
+      "maxMs": 272,
+      "overRequestedBudget": 30634
+    }
+  },
+  "totals": {
+    "games": 576,
+    "wins": 52,
+    "draws": 101,
+    "losses": 417,
+    "unfinished": 6
+  },
+  "freshGames": {
+    "games": 256,
+    "wins": 8,
+    "draws": 38,
+    "losses": 208,
+    "unfinished": 2
+  },
+  "byReference": [
+    {
+      "referenceElo": 1320,
+      "games": 320,
+      "wins": 44,
+      "draws": 63,
+      "losses": 209,
+      "unfinished": 4
+    },
+    {
+      "referenceElo": 1500,
+      "games": 128,
+      "wins": 5,
+      "draws": 21,
+      "losses": 100,
+      "unfinished": 2
+    },
+    {
+      "referenceElo": 1800,
+      "games": 128,
+      "wins": 3,
+      "draws": 17,
+      "losses": 108,
+      "unfinished": 0
+    }
+  ],
+  "censoredSettings": [
+    900,
+    1100,
+    3100,
+    3200,
+    3400
+  ],
+  "printedTargetsOutsideFastControlSimultaneousIntervals": [
+    1800,
+    2000,
+    2100,
+    2200,
+    2300,
+    2400,
+    2500,
+    2600,
+    2700,
+    2800,
+    2900,
+    3000,
+    3100,
+    3200,
+    3300,
+    3400,
+    3500
+  ],
+  "rows": [
+    {
+      "target": 400,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 0,
+      "losses": 18,
+      "unfinished": 0,
+      "score": 0,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0,
+        0
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "all-losses",
+      "observedRatingRange": [
+        "-infinity",
+        "-infinity"
+      ],
+      "perSetting95": {
+        "score": [
+          0,
+          0.4096163972250034
+        ],
+        "elo": [
+          "-infinity",
+          1326
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0,
+          0.6401571634994241
+        ],
+        "elo": [
+          "-infinity",
+          1519
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 500,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 0,
+      "losses": 18,
+      "unfinished": 0,
+      "score": 0,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0,
+        0
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "all-losses",
+      "observedRatingRange": [
+        "-infinity",
+        "-infinity"
+      ],
+      "perSetting95": {
+        "score": [
+          0,
+          0.4096163972250034
+        ],
+        "elo": [
+          "-infinity",
+          1326
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0,
+          0.6401571634994241
+        ],
+        "elo": [
+          "-infinity",
+          1519
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 600,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 0,
+      "losses": 18,
+      "unfinished": 0,
+      "score": 0,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0,
+        0
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "all-losses",
+      "observedRatingRange": [
+        "-infinity",
+        "-infinity"
+      ],
+      "perSetting95": {
+        "score": [
+          0,
+          0.4096163972250034
+        ],
+        "elo": [
+          "-infinity",
+          1326
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0,
+          0.6401571634994241
+        ],
+        "elo": [
+          "-infinity",
+          1519
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 700,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 0,
+      "losses": 18,
+      "unfinished": 0,
+      "score": 0,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0,
+        0
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "all-losses",
+      "observedRatingRange": [
+        "-infinity",
+        "-infinity"
+      ],
+      "perSetting95": {
+        "score": [
+          0,
+          0.4096163972250034
+        ],
+        "elo": [
+          "-infinity",
+          1326
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0,
+          0.6401571634994241
+        ],
+        "elo": [
+          "-infinity",
+          1519
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 800,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 0,
+      "losses": 18,
+      "unfinished": 0,
+      "score": 0,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0,
+        0
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "all-losses",
+      "observedRatingRange": [
+        "-infinity",
+        "-infinity"
+      ],
+      "perSetting95": {
+        "score": [
+          0,
+          0.4096163972250034
+        ],
+        "elo": [
+          "-infinity",
+          1326
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0,
+          0.6401571634994241
+        ],
+        "elo": [
+          "-infinity",
+          1519
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 900,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 0,
+      "losses": 17,
+      "unfinished": 1,
+      "score": 0,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0,
+        0.07142857142857142
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "censored",
+      "observedRatingRange": [
+        "-infinity",
+        922
+      ],
+      "perSetting95": {
+        "score": [
+          0,
+          0.5500658526528586
+        ],
+        "elo": [
+          "-infinity",
+          1440
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0,
+          0.7420192004211628
+        ],
+        "elo": [
+          "-infinity",
+          1624
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1000,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 0,
+      "losses": 18,
+      "unfinished": 0,
+      "score": 0,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0,
+        0
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "all-losses",
+      "observedRatingRange": [
+        "-infinity",
+        "-infinity"
+      ],
+      "perSetting95": {
+        "score": [
+          0,
+          0.4096163972250034
+        ],
+        "elo": [
+          "-infinity",
+          1326
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0,
+          0.6401571634994241
+        ],
+        "elo": [
+          "-infinity",
+          1519
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1100,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 0,
+      "losses": 17,
+      "unfinished": 1,
+      "score": 0,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0,
+        0.07142857142857142
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "censored",
+      "observedRatingRange": [
+        "-infinity",
+        922
+      ],
+      "perSetting95": {
+        "score": [
+          0,
+          0.5500658526528586
+        ],
+        "elo": [
+          "-infinity",
+          1440
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0,
+          0.7420192004211628
+        ],
+        "elo": [
+          "-infinity",
+          1624
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1200,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 3,
+      "losses": 15,
+      "unfinished": 0,
+      "score": 1.5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.10714285714285714,
+        0.10714285714285714
+      ],
+      "pointEstimate": 1001,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1001,
+        1001
+      ],
+      "perSetting95": {
+        "score": [
+          0.000305378471036204,
+          0.5973774384495294
+        ],
+        "elo": [
+          -42,
+          1480
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.0000029983150143985453,
+          0.7758971016028591
+        ],
+        "elo": [
+          -845,
+          1665
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1300,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 1,
+      "losses": 17,
+      "unfinished": 0,
+      "score": 0.5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.017857142857142856,
+        0.017857142857142856
+      ],
+      "pointEstimate": 669,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        669,
+        669
+      ],
+      "perSetting95": {
+        "score": [
+          1.0114361672517546e-15,
+          0.4585999861040163
+        ],
+        "elo": [
+          -4634,
+          1365
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          9.19889292898034e-28,
+          0.6752627515464715
+        ],
+        "elo": [
+          -9450,
+          1553
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1400,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 1,
+      "draws": 2,
+      "losses": 15,
+      "unfinished": 0,
+      "score": 2,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.14285714285714285,
+        0.14285714285714285
+      ],
+      "pointEstimate": 1060,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1060,
+        1060
+      ],
+      "perSetting95": {
+        "score": [
+          0.001428519857933264,
+          0.6389055974655959
+        ],
+        "elo": [
+          226,
+          1518
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.00004427174261764084,
+          0.804999399221956
+        ],
+        "elo": [
+          -378,
+          1704
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1500,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 1,
+      "draws": 4,
+      "losses": 13,
+      "unfinished": 0,
+      "score": 3,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.1964285714285714,
+        0.1964285714285714
+      ],
+      "pointEstimate": 1129,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1129,
+        1129
+      ],
+      "perSetting95": {
+        "score": [
+          0.005617491639181838,
+          0.6936056411002993
+        ],
+        "elo": [
+          465,
+          1571
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.000442247407352274,
+          0.842206000850086
+        ],
+        "elo": [
+          22,
+          1761
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1600,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 6,
+      "losses": 12,
+      "unfinished": 0,
+      "score": 3,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.14285714285714282,
+        0.14285714285714282
+      ],
+      "pointEstimate": 1060,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1060,
+        1060
+      ],
+      "perSetting95": {
+        "score": [
+          0.0014285198579332622,
+          0.6389055974655959
+        ],
+        "elo": [
+          226,
+          1518
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.00004427174261764076,
+          0.804999399221956
+        ],
+        "elo": [
+          -378,
+          1704
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1700,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 2,
+      "draws": 4,
+      "losses": 12,
+      "unfinished": 0,
+      "score": 4,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.26785714285714285,
+        0.26785714285714285
+      ],
+      "pointEstimate": 1203,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1203,
+        1203
+      ],
+      "perSetting95": {
+        "score": [
+          0.01672589068295472,
+          0.7561601687192185
+        ],
+        "elo": [
+          657,
+          1641
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.0025329725523100134,
+          0.8828322970179221
+        ],
+        "elo": [
+          326,
+          1836
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1800,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 0,
+      "draws": 4,
+      "losses": 14,
+      "unfinished": 0,
+      "score": 2,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.125,
+        0.125
+      ],
+      "pointEstimate": 1032,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1032,
+        1032
+      ],
+      "perSetting95": {
+        "score": [
+          0.0007282077261597886,
+          0.6187422302382011
+        ],
+        "elo": [
+          109,
+          1499
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.000013801021493415197,
+          0.7909522123208381
+        ],
+        "elo": [
+          -580,
+          1685
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 1900,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 3,
+      "draws": 6,
+      "losses": 9,
+      "unfinished": 0,
+      "score": 6,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.3928571428571428,
+        0.3928571428571428
+      ],
+      "pointEstimate": 1312,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1312,
+        1312
+      ],
+      "perSetting95": {
+        "score": [
+          0.051556190902645155,
+          0.8446846194366999
+        ],
+        "elo": [
+          860,
+          1765
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.013763471938219658,
+          0.9356854426534056
+        ],
+        "elo": [
+          622,
+          1971
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2000,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 3,
+      "draws": 5,
+      "losses": 10,
+      "unfinished": 0,
+      "score": 5.5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.33928571428571425,
+        0.33928571428571425
+      ],
+      "pointEstimate": 1267,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1267,
+        1267
+      ],
+      "perSetting95": {
+        "score": [
+          0.03427777741420743,
+          0.8096005883099082
+        ],
+        "elo": [
+          785,
+          1711
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.007554051609633102,
+          0.91550901911739
+        ],
+        "elo": [
+          517,
+          1912
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2100,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 1,
+      "draws": 5,
+      "losses": 12,
+      "unfinished": 0,
+      "score": 3.5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.2321428571428571,
+        0.2321428571428571
+      ],
+      "pointEstimate": 1168,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1168,
+        1168
+      ],
+      "perSetting95": {
+        "score": [
+          0.010360379331751858,
+          0.7261664309664744
+        ],
+        "elo": [
+          572,
+          1606
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.0011909152413667975,
+          0.8636374581691915
+        ],
+        "elo": [
+          195,
+          1799
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2200,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 2,
+      "draws": 4,
+      "losses": 12,
+      "unfinished": 0,
+      "score": 4,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.21428571428571425,
+        0.21428571428571425
+      ],
+      "pointEstimate": 1149,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1149,
+        1149
+      ],
+      "perSetting95": {
+        "score": [
+          0.007787038480214437,
+          0.7102309451718893
+        ],
+        "elo": [
+          522,
+          1589
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.0007528172029961063,
+          0.8532215453201117
+        ],
+        "elo": [
+          115,
+          1780
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2300,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 6,
+      "draws": 5,
+      "losses": 7,
+      "unfinished": 0,
+      "score": 8.5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.4999999999999999,
+        0.4999999999999999
+      ],
+      "pointEstimate": 1398,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1398,
+        1398
+      ],
+      "perSetting95": {
+        "score": [
+          0.09643860393540635,
+          0.9035613960645936
+        ],
+        "elo": [
+          979,
+          1882
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.03349353353377302,
+          0.9665064664662268
+        ],
+        "elo": [
+          781,
+          2103
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2400,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 3,
+      "draws": 6,
+      "losses": 9,
+      "unfinished": 0,
+      "score": 6,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.3214285714285714,
+        0.3214285714285714
+      ],
+      "pointEstimate": 1252,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1252,
+        1252
+      ],
+      "perSetting95": {
+        "score": [
+          0.02929529276547803,
+          0.7969919831722121
+        ],
+        "elo": [
+          757,
+          1693
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.005971356755195004,
+          0.9079942039236464
+        ],
+        "elo": [
+          476,
+          1893
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2500,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 4,
+      "draws": 2,
+      "losses": 12,
+      "unfinished": 0,
+      "score": 5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.3571428571428571,
+        0.3571428571428571
+      ],
+      "pointEstimate": 1282,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1282,
+        1282
+      ],
+      "perSetting95": {
+        "score": [
+          0.03965075548768214,
+          0.8217419256019112
+        ],
+        "elo": [
+          812,
+          1729
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.009374034787528934,
+          0.9226190175017976
+        ],
+        "elo": [
+          555,
+          1931
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2600,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 3,
+      "draws": 4,
+      "losses": 11,
+      "unfinished": 0,
+      "score": 5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.30357142857142855,
+        0.30357142857142855
+      ],
+      "pointEstimate": 1236,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1236,
+        1236
+      ],
+      "perSetting95": {
+        "score": [
+          0.024706760022770682,
+          0.7838974667571823
+        ],
+        "elo": [
+          726,
+          1676
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.004615234086422251,
+          0.9000569444978503
+        ],
+        "elo": [
+          431,
+          1874
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2700,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 4,
+      "draws": 3,
+      "losses": 11,
+      "unfinished": 0,
+      "score": 5.5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.37499999999999994,
+        0.37499999999999994
+      ],
+      "pointEstimate": 1297,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1297,
+        1297
+      ],
+      "perSetting95": {
+        "score": [
+          0.045411108296992436,
+          0.8334320160678128
+        ],
+        "elo": [
+          837,
+          1747
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.011440927053654272,
+          0.9293398388714205
+        ],
+        "elo": [
+          590,
+          1951
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2800,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 2,
+      "draws": 2,
+      "losses": 14,
+      "unfinished": 0,
+      "score": 3,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.1964285714285714,
+        0.1964285714285714
+      ],
+      "pointEstimate": 1129,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1129,
+        1129
+      ],
+      "perSetting95": {
+        "score": [
+          0.005617491639181838,
+          0.6936056411002993
+        ],
+        "elo": [
+          465,
+          1571
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.000442247407352274,
+          0.842206000850086
+        ],
+        "elo": [
+          22,
+          1761
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 2900,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 2,
+      "draws": 10,
+      "losses": 6,
+      "unfinished": 0,
+      "score": 7,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.44642857142857134,
+        0.44642857142857134
+      ],
+      "pointEstimate": 1355,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1355,
+        1355
+      ],
+      "perSetting95": {
+        "score": [
+          0.07228239640000725,
+          0.8759268994516825
+        ],
+        "elo": [
+          924,
+          1822
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.022343390497327094,
+          0.9525904241441097
+        ],
+        "elo": [
+          708,
+          2034
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3000,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 2,
+      "draws": 2,
+      "losses": 14,
+      "unfinished": 0,
+      "score": 3,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.1607142857142857,
+        0.1607142857142857
+      ],
+      "pointEstimate": 1085,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1085,
+        1085
+      ],
+      "perSetting95": {
+        "score": [
+          0.002455942932732124,
+          0.658027677590975
+        ],
+        "elo": [
+          321,
+          1536
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.00011142509611537668,
+          0.8181634837353855
+        ],
+        "elo": [
+          -217,
+          1724
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3100,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 3,
+      "draws": 4,
+      "losses": 9,
+      "unfinished": 2,
+      "score": 5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.3214285714285714,
+        0.4285714285714285
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "censored",
+      "observedRatingRange": [
+        1252,
+        1341
+      ],
+      "perSetting95": {
+        "score": [
+          0.02929529276547803,
+          0.865922781996397
+        ],
+        "elo": [
+          757,
+          1803
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.005971356755195004,
+          0.9472999238018607
+        ],
+        "elo": [
+          476,
+          2013
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3200,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 3,
+      "draws": 5,
+      "losses": 9,
+      "unfinished": 1,
+      "score": 5.5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.33928571428571425,
+        0.37499999999999994
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "censored",
+      "observedRatingRange": [
+        1267,
+        1297
+      ],
+      "perSetting95": {
+        "score": [
+          0.03427777741420743,
+          0.8334320160678128
+        ],
+        "elo": [
+          785,
+          1747
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.007554051609633102,
+          0.9293398388714205
+        ],
+        "elo": [
+          517,
+          1951
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3300,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 2,
+      "draws": 10,
+      "losses": 6,
+      "unfinished": 0,
+      "score": 7,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.4285714285714285,
+        0.4285714285714285
+      ],
+      "pointEstimate": 1341,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1341,
+        1341
+      ],
+      "perSetting95": {
+        "score": [
+          0.06499290417866149,
+          0.865922781996397
+        ],
+        "elo": [
+          903,
+          1803
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.019207294272241264,
+          0.9472999238018607
+        ],
+        "elo": [
+          682,
+          2013
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3400,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 1,
+      "draws": 2,
+      "losses": 14,
+      "unfinished": 1,
+      "score": 2,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.125,
+        0.1964285714285714
+      ],
+      "pointEstimate": null,
+      "estimateStatus": "censored",
+      "observedRatingRange": [
+        1032,
+        1129
+      ],
+      "perSetting95": {
+        "score": [
+          0.0007282077261597886,
+          0.6936056411002993
+        ],
+        "elo": [
+          109,
+          1571
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.000013801021493415197,
+          0.842206000850086
+        ],
+        "elo": [
+          -580,
+          1761
+        ]
+      },
+      "actualEloStatus": "unverified"
+    },
+    {
+      "target": 3500,
+      "games": 18,
+      "pairs": 9,
+      "independentOpeningGroups": 7,
+      "wins": 4,
+      "draws": 2,
+      "losses": 12,
+      "unfinished": 0,
+      "score": 5,
+      "referenceElos": [
+        1320,
+        1500,
+        1800
+      ],
+      "scoreRange": [
+        0.30357142857142855,
+        0.30357142857142855
+      ],
+      "pointEstimate": 1236,
+      "estimateStatus": "provisional",
+      "observedRatingRange": [
+        1236,
+        1236
+      ],
+      "perSetting95": {
+        "score": [
+          0.024706760022770682,
+          0.7838974667571823
+        ],
+        "elo": [
+          726,
+          1676
+        ]
+      },
+      "simultaneous95": {
+        "score": [
+          0.004615234086422251,
+          0.9000569444978503
+        ],
+        "elo": [
+          431,
+          1874
+        ]
+      },
+      "actualEloStatus": "unverified"
+    }
+  ]
+}

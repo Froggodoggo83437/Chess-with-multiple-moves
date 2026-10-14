@@ -14,7 +14,7 @@ export function createEngineClient() {
       if (pending) { pending.resolve(null); pending = null; }
       dispose();
     },
-    async choose(state, elo) {
+    async choose(state, elo, { fast = false } = {}) {
       const id = ++generation;
       if (!worker && typeof Worker !== 'undefined') {
         try {
@@ -38,10 +38,10 @@ export function createEngineClient() {
         }
       }
       // Keep standalone play usable in browsers that cannot create blob workers.
-      if (!worker) return chooseMoveForElo(state.clone(), elo, state.side, { isCancelled: () => id !== generation });
+      if (!worker) return chooseMoveForElo(state.clone(), elo, state.side, { isCancelled: () => id !== generation, ...(fast ? { timeBudgetMs: 150 } : {}) });
       return new Promise((resolve, reject) => {
         pending = { id, resolve, reject };
-        worker.postMessage({ id, elo, order: state.order, allowKingCapture: state.allowKingCapture, snapshot: state.snapshot() });
+        worker.postMessage({ id, elo, fast, order: state.order, allowKingCapture: state.allowKingCapture, snapshot: state.snapshot() });
       });
     }
   };
