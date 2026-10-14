@@ -5,6 +5,11 @@ pieces, rules engine, and game code are all embedded; no network connection
 or build is needed to play. Alternatively, serve this directory with
 `python3 -m http.server 8000`.
 
+Captured-piece trays sit above and below the board, labeled White and Black.
+They follow board flips and show each side’s captures. A +number indicates the
+material lead (pawn 1, knight/bishop 3, rook 5, queen 9); promotions affect the
+lead, kings have no point value, and Undo/New Game update the displays.
+
 ## Rules
 
 - Every turn-order tile grants one legal chess move. Tiles may repeat a color;
@@ -139,6 +144,26 @@ After a new verified calibration, run `npm run ratings:update` and
 `npm run build` to refresh the embedded estimates. The update command rejects
 unverified or mismatched source/results. Building without a new calibration
 still works, but changed rules suppress the old reference estimates.
+
+## Postgame analysis
+
+After checkmate or a king-capture win, press **Analysis**. Browse the move cards
+or use the first/previous/next/last buttons (Left/Right/Home/End also work).
+An evaluation bar appears beside the board; positive pawn-unit values favor
+White, negative values favor Black, and M indicates a mating advantage. The
+bar follows board flips. Captured pieces and turn highlights follow the reviewed
+position, while the finished game and its Undo history stay intact.
+
+Colored corner badges mark recognized Book moves, Great moves, Excellent moves,
+Best moves, Inaccuracies, Mistakes/missed wins, and Blunders. Opening recognition
+uses a small explicit set of standard opening lines and is disabled for custom
+turns and king captures. Grades use estimated loss against legal alternatives
+at the same completed search horizon; they are not certified Chess.com grades.
+The custom engine follows the actual schedule and king-capture setting, with
+limited search per position. Pending or unscored moves receive a neutral badge.
+Analysis runs in an embedded offline worker with a cooperative fallback;
+closing, resetting, or undoing cancels it. Completed reviews are cached until
+the game changes. No Stockfish engine or online service is used for this review.
 
 ## Development and tests
 
