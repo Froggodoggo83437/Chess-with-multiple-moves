@@ -51,6 +51,9 @@ device)** to play both colors locally, including consecutive custom turns.
 In local PvP the board automatically faces the player whose move is due.
 Consecutive same-color moves keep the view; Undo follows the restored turn.
 Flip Board remains available for a temporary manual view until the next move.
+Against the computer, new games automatically face your selected color, with
+Black at the bottom when you choose Black. Manual flips stay in place during
+play; New Game restores the view for your color.
 Mode changes start a fresh game and cancel computer work. Computer-only settings
 are hidden in local PvP; promotion, both rules modes, turn editing, Undo, and
 victory celebrations remain available. White is Player 1 and Black is Player 2.

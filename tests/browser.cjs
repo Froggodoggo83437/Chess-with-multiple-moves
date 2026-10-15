@@ -79,6 +79,17 @@ let count=0;
       await page.locator('#turns button').last().click();assert.equal(await text('history'),'No moves yet.');
       await page.click('#preset2');
     });
+    await check('computer games face the selected player and restore orientation on reset',async()=>{
+      await goto();await page.selectOption('#thinking','fast');await page.selectOption('#side','b');
+      assert.equal(await page.locator('#board button').first().getAttribute('data-square'),'h1');
+      assert.equal(await page.locator('#playerBottom').getAttribute('data-color'),'b');
+      await waitHistory(2);await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Black to move'));
+      assert.equal(await page.locator('#board button').first().getAttribute('data-square'),'h1');
+      await page.click('#flip');assert.equal(await page.locator('#board button').first().getAttribute('data-square'),'a8');
+      await page.click('#newGame');assert.equal(await page.locator('#board button').first().getAttribute('data-square'),'h1');
+      await page.selectOption('#side','w');assert.equal(await page.locator('#board button').first().getAttribute('data-square'),'a8');
+      assert.equal(await page.locator('#playerBottom').getAttribute('data-color'),'w');
+    });
     await check('flip keeps selection and legal highlights and stable board colors',async()=>{
       await square('e2').click();assert.equal(await page.evaluate(()=>document.activeElement.dataset.square),'e2');assert.ok(await square('e4').evaluate(e=>e.classList.contains('legal')));
       assert.ok(await square('a1').evaluate(e=>e.classList.contains('dark')));
