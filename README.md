@@ -101,6 +101,8 @@ These levels describe search effort and deliberate errors; they are not Elo
 ratings. Changes preserve the game and restart active computer searches without
 resuming a computer paused by Undo.
 
+**Fast — 150 ms reference budget** is the default thinking mode.
+
 **Normal — stronger search** uses bounded thinking budgets (roughly
 0.25–8 seconds). Its Elo is unmeasured. **Fast — 150 ms reference budget** uses
 the budget from the standard-chess calibration. With White/Black alternating

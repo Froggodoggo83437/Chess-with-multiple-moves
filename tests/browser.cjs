@@ -47,7 +47,7 @@ let count=0;
   async function check(name,fn){await fn();console.log('PASS:',name);count++;}
   try {
     await check('standalone offline initialization and all twelve embedded piece images',async()=>{
-      await goto();assert.equal(await page.locator('#board img').count(),32);
+      await goto();assert.equal(await page.locator('#thinking').inputValue(),'fast');assert.equal(await page.locator('#board img').count(),32);
       assert.equal(await text('status'),'White to move (you)');
       const assets=await page.evaluate(async()=>Promise.all(Object.values(window.CHESS_PIECES).map(src=>new Promise(resolve=>{const image=new Image();image.onload=()=>resolve(image.naturalWidth>0&&image.naturalHeight>0);image.onerror=()=>resolve(false);image.src=src;}))));
       assert.equal(assets.length,12);assert.ok(assets.every(Boolean));assert.deepEqual(remote,[]);
@@ -229,7 +229,7 @@ let count=0;
     await check('ratings apply only to tested standard fast mode and suppress custom-rule claims',async()=>{
       await goto();await page.selectOption('#depth','4');
       assert.match(await text('ratingNote'),/Unrated: custom/);
-      await page.click('#preset1');await page.selectOption('#kingCapture','standard');
+      await page.click('#preset1');await page.selectOption('#kingCapture','standard');await page.selectOption('#thinking','normal');
       assert.match(await text('ratingNote'),/Unrated at normal thinking time/);
       await page.selectOption('#thinking','fast');
       assert.match(await text('ratingNote'),/No reference estimate.*this engine version/);
@@ -240,7 +240,7 @@ let count=0;
       await page.selectOption('#mode','pvp');assert.ok(await page.locator('#computerSettings').isHidden());
     });
     await check('thinking-time switches cancel pending search without resetting moves or undo pause',async()=>{
-      await goto();await page.click('#preset1');await page.selectOption('#kingCapture','standard');await page.selectOption('#depth','4');
+      await goto();await page.click('#preset1');await page.selectOption('#kingCapture','standard');await page.selectOption('#depth','4');await page.selectOption('#thinking','normal');
       await page.evaluate(()=>{const original=Worker.prototype.postMessage;Worker.prototype.postMessage=function(data,...args){window.lastEngineRequest={fast:data.fast,elo:data.elo};return original.call(this,data,...args);};});
       await move('e2','e4');const history=await text('history');
       await page.selectOption('#thinking','fast');assert.ok((await text('history')).startsWith(history));
