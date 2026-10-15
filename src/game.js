@@ -30,6 +30,7 @@ function cancelAI() {
 }
 function reset() {
   cancelAI();
+  if (!pvp()) flipped = player() === 'b';
   state = new CustomTurnRules(Chess, order, undefined, { allowKingCapture: $('kingCapture').value === 'allowed' });
   selected = null;
   legal = [];

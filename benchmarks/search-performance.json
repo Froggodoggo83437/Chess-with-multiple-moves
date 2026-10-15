@@ -1,0 +1,829 @@
+{
+  "baselineRef": "0d61a34",
+  "currentRulesSha256": "3ea2ae05a7343fd2c75079ea1a770f5312e6c12695ac4a2a5f47aa42c2490ffa",
+  "budgetMs": 600,
+  "trials": 3,
+  "note": "Local Node timing/depth probes, not Elo or a comprehensive strength benchmark.",
+  "rows": [
+    {
+      "name": "standard opening",
+      "baseline": [
+        {
+          "move": "b1c3",
+          "ms": 601,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 23
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 79,
+              "ttHits": 0,
+              "elapsedMs": 68
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 1097,
+              "ttHits": 0,
+              "elapsedMs": 571
+            }
+          ]
+        },
+        {
+          "move": "b1c3",
+          "ms": 602,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 25
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 79,
+              "ttHits": 0,
+              "elapsedMs": 106
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 1097,
+              "ttHits": 0,
+              "elapsedMs": 501
+            }
+          ]
+        },
+        {
+          "move": "b1c3",
+          "ms": 600,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 17
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 79,
+              "ttHits": 0,
+              "elapsedMs": 59
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 1097,
+              "ttHits": 0,
+              "elapsedMs": 442
+            }
+          ]
+        }
+      ],
+      "current": [
+        {
+          "move": "b1c3",
+          "ms": 600,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 20
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 79,
+              "ttHits": 0,
+              "elapsedMs": 69
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 1077,
+              "ttHits": 0,
+              "elapsedMs": 456
+            }
+          ]
+        },
+        {
+          "move": "b1c3",
+          "ms": 601,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 18
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 79,
+              "ttHits": 0,
+              "elapsedMs": 62
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 1077,
+              "ttHits": 0,
+              "elapsedMs": 397
+            }
+          ]
+        },
+        {
+          "move": "b1c3",
+          "ms": 600,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 18
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 79,
+              "ttHits": 0,
+              "elapsedMs": 61
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 1077,
+              "ttHits": 0,
+              "elapsedMs": 399
+            }
+          ]
+        }
+      ],
+      "fixedHorizon": {
+        "baseline": {
+          "move": "b1c3",
+          "ms": 59,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 17
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 79,
+              "ttHits": 0,
+              "elapsedMs": 59
+            }
+          ]
+        },
+        "current": {
+          "move": "b1c3",
+          "ms": 60,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 18
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 79,
+              "ttHits": 0,
+              "elapsedMs": 59
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "two White moves",
+      "baseline": [
+        {
+          "move": "b1a3",
+          "ms": 599,
+          "depth": 1,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 25
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 215,
+              "ttHits": 0,
+              "elapsedMs": 347
+            }
+          ]
+        },
+        {
+          "move": "b1a3",
+          "ms": 601,
+          "depth": 1,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 21
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 215,
+              "ttHits": 0,
+              "elapsedMs": 206
+            }
+          ]
+        },
+        {
+          "move": "b1a3",
+          "ms": 600,
+          "depth": 1,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 26
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 215,
+              "ttHits": 0,
+              "elapsedMs": 223
+            }
+          ]
+        }
+      ],
+      "current": [
+        {
+          "move": "b1a3",
+          "ms": 600,
+          "depth": 1,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 23
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 215,
+              "ttHits": 0,
+              "elapsedMs": 214
+            }
+          ]
+        },
+        {
+          "move": "b1a3",
+          "ms": 602,
+          "depth": 1,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 21
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 215,
+              "ttHits": 0,
+              "elapsedMs": 208
+            }
+          ]
+        },
+        {
+          "move": "b1a3",
+          "ms": 600,
+          "depth": 1,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 23
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 215,
+              "ttHits": 0,
+              "elapsedMs": 223
+            }
+          ]
+        }
+      ],
+      "fixedHorizon": {
+        "baseline": {
+          "move": "b1c3",
+          "ms": 925,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 22
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 215,
+              "ttHits": 0,
+              "elapsedMs": 220
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 1188,
+              "ttHits": 0,
+              "elapsedMs": 925
+            }
+          ]
+        },
+        "current": {
+          "move": "b1c3",
+          "ms": 793,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 20,
+              "ttHits": 0,
+              "elapsedMs": 21
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 215,
+              "ttHits": 0,
+              "elapsedMs": 220
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 1053,
+              "ttHits": 112,
+              "elapsedMs": 793
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "defend two-move rook threat",
+      "baseline": [
+        {
+          "move": "b8g8",
+          "ms": 601,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 17,
+              "ttHits": 0,
+              "elapsedMs": 33
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 238,
+              "ttHits": 0,
+              "elapsedMs": 304
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 505,
+              "ttHits": 0,
+              "elapsedMs": 464
+            }
+          ]
+        },
+        {
+          "move": "b8g8",
+          "ms": 600,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 17,
+              "ttHits": 0,
+              "elapsedMs": 29
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 238,
+              "ttHits": 0,
+              "elapsedMs": 295
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 505,
+              "ttHits": 0,
+              "elapsedMs": 456
+            }
+          ]
+        },
+        {
+          "move": "b8g8",
+          "ms": 600,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 17,
+              "ttHits": 0,
+              "elapsedMs": 27
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 238,
+              "ttHits": 0,
+              "elapsedMs": 285
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 505,
+              "ttHits": 0,
+              "elapsedMs": 443
+            }
+          ]
+        }
+      ],
+      "current": [
+        {
+          "move": "b8g8",
+          "ms": 600,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 17,
+              "ttHits": 0,
+              "elapsedMs": 28
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 300,
+              "ttHits": 0,
+              "elapsedMs": 319
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 567,
+              "ttHits": 0,
+              "elapsedMs": 487
+            }
+          ]
+        },
+        {
+          "move": "b8g8",
+          "ms": 600,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 17,
+              "ttHits": 0,
+              "elapsedMs": 27
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 300,
+              "ttHits": 0,
+              "elapsedMs": 319
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 567,
+              "ttHits": 0,
+              "elapsedMs": 482
+            }
+          ]
+        },
+        {
+          "move": "b8g8",
+          "ms": 601,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 17,
+              "ttHits": 0,
+              "elapsedMs": 30
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 300,
+              "ttHits": 0,
+              "elapsedMs": 319
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 567,
+              "ttHits": 0,
+              "elapsedMs": 480
+            }
+          ]
+        }
+      ],
+      "fixedHorizon": {
+        "baseline": {
+          "move": "b8g8",
+          "ms": 449,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 17,
+              "ttHits": 0,
+              "elapsedMs": 27
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 238,
+              "ttHits": 0,
+              "elapsedMs": 289
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 505,
+              "ttHits": 0,
+              "elapsedMs": 449
+            }
+          ]
+        },
+        "current": {
+          "move": "b8g8",
+          "ms": 481,
+          "depth": 3,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 17,
+              "ttHits": 0,
+              "elapsedMs": 27
+            },
+            {
+              "phase": "custom-turn-plan",
+              "depth": 0,
+              "nodes": 300,
+              "ttHits": 0,
+              "elapsedMs": 320
+            },
+            {
+              "phase": "full-search",
+              "depth": 3,
+              "nodes": 567,
+              "ttHits": 0,
+              "elapsedMs": 481
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "avoid poisoned pawn",
+      "baseline": [
+        {
+          "move": "d1d4",
+          "ms": 602,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 22,
+              "ttHits": 0,
+              "elapsedMs": 47
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 162,
+              "ttHits": 0,
+              "elapsedMs": 408
+            }
+          ]
+        },
+        {
+          "move": "d1d4",
+          "ms": 600,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 22,
+              "ttHits": 0,
+              "elapsedMs": 44
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 162,
+              "ttHits": 0,
+              "elapsedMs": 400
+            }
+          ]
+        },
+        {
+          "move": "d1d4",
+          "ms": 603,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 22,
+              "ttHits": 0,
+              "elapsedMs": 45
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 162,
+              "ttHits": 0,
+              "elapsedMs": 400
+            }
+          ]
+        }
+      ],
+      "current": [
+        {
+          "move": "d1d4",
+          "ms": 600,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 22,
+              "ttHits": 0,
+              "elapsedMs": 44
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 115,
+              "ttHits": 0,
+              "elapsedMs": 240
+            }
+          ]
+        },
+        {
+          "move": "d1d4",
+          "ms": 602,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 22,
+              "ttHits": 0,
+              "elapsedMs": 46
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 115,
+              "ttHits": 0,
+              "elapsedMs": 237
+            }
+          ]
+        },
+        {
+          "move": "d1d4",
+          "ms": 600,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 22,
+              "ttHits": 0,
+              "elapsedMs": 46
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 115,
+              "ttHits": 0,
+              "elapsedMs": 238
+            }
+          ]
+        }
+      ],
+      "fixedHorizon": {
+        "baseline": {
+          "move": "d1d4",
+          "ms": 401,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 22,
+              "ttHits": 0,
+              "elapsedMs": 43
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 162,
+              "ttHits": 0,
+              "elapsedMs": 400
+            }
+          ]
+        },
+        "current": {
+          "move": "d1d4",
+          "ms": 244,
+          "depth": 2,
+          "iterations": [
+            {
+              "phase": "full-search",
+              "depth": 1,
+              "nodes": 22,
+              "ttHits": 0,
+              "elapsedMs": 46
+            },
+            {
+              "phase": "full-search",
+              "depth": 2,
+              "nodes": 115,
+              "ttHits": 0,
+              "elapsedMs": 244
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
