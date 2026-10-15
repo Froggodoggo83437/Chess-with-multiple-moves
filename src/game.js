@@ -1,9 +1,4 @@
 import { Chess } from 'chess.js';
-import { createAnalysisClient } from './analysis-client.js';
-import analysis from './analysis.cjs';
-import reviewLines from './review-lines.cjs';
-const {ReviewLines}=reviewLines;
-import {moveIcon, qualityName} from './move-icons.js';
 import { createEngineClient } from './engine-client.js';
 import { createCelebration } from './celebration.js';
 import rules from './rules.cjs';
@@ -21,11 +16,6 @@ let generation = 0, aiTimer = null, pausedAI = false, aiError = '';
 const squares = new Map();
 const celebrate = createCelebration(document.querySelector('.boardWrap'), window.CHESS_PIECES);
 const engineClient = createEngineClient();
-const analysisClient = createAnalysisClient();
-const variationClient = createAnalysisClient();
-let variationGeneration=0;
-let review = null, analysisCache = null;
-const displayState = () => review ? review.positions[review.index] : state;
 const pvp = () => $('mode').value === 'pvp';
 const player = () => pvp() ? 'w' : $('side').value;
 const engine = () => player() === 'w' ? 'b' : 'w';
@@ -39,7 +29,6 @@ function cancelAI() {
   aiError = '';
 }
 function reset() {
-  closeAnalysis(true);
   cancelAI();
   state = new CustomTurnRules(Chess, order, undefined, { allowKingCapture: $('kingCapture').value === 'allowed' });
   selected = null;
@@ -54,7 +43,7 @@ function modifyOrder(next) {
   reset();
 }
 function renderMaterial() {
-  const summary = materialSummary(displayState());
+  const summary = materialSummary(state);
   for (const [id, color] of [['playerTop', flipped ? 'w' : 'b'], ['playerBottom', flipped ? 'b' : 'w']]) {
     const strip = $(id), opponent = color === 'w' ? 'b' : 'w';
     strip.dataset.color = color;
@@ -79,7 +68,7 @@ function renderMaterial() {
   }
 }
 function renderBoard() {
-  const view = displayState();
+  const view = state;
   const ranks = flipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
   const files = flipped ? 'hgfedcba' : 'abcdefgh';
   const checked = new Set(view.result ? [] : ['w', 'b'].filter(side => view.inCheck(side)));
@@ -117,10 +106,6 @@ function renderBoard() {
         button.append(image);
       }
     }
-    button.querySelector('.board-move-icon')?.remove();
-    if(review && review.index>0 && view.lastMove?.to===square){
-      const badge=moveIcon(review.moves[review.index-1]?.type||'unrated');badge.classList.add('board-move-icon');button.append(badge);
-    }
     let coordinate = button.querySelector('.file-coord');
     if (rank === ranks.at(-1)) {
       if (!coordinate) { coordinate = document.createElement('span'); coordinate.className = 'coord file-coord'; coordinate.setAttribute('aria-hidden', 'true'); button.append(coordinate); }
@@ -136,10 +121,9 @@ function renderBoard() {
     visualIndex++;
   }
   renderMaterial();
-  renderAnalysisBar();
 }
 function renderTurns() {
-  const view = displayState();
+  const view = state;
   $('turns').replaceChildren();
   $('computerSettings').hidden = pvp();
   $('preset2').textContent = pvp() ? 'White 2 : Black 1' : 'You 2 : AI 1';
@@ -180,7 +164,6 @@ function renderStatus() {
   }
   $('status').textContent = message;
   $('undo').disabled = !state.snapshots.length;
-  $('analyzeGame').hidden = state.result?.type !== 'checkmate' || !!review;
   $('resumeAI').hidden = pvp() || !pausedAI || !!result || state.side !== engine();
 }
 function render() {
@@ -208,14 +191,6 @@ function apply(move) {
   return true;
 }
 function clickSquare(square) {
-  if(review){
-    const view=displayState();if(view.result)return;
-    if(selected&&legal.some(move=>move.to===square)){
-      playAlternative({from:selected,to:square,promotion:$('promotion').value});return;
-    }
-    const piece=view.game.get(square);selected=piece?.color===view.side?square:null;
-    legal=selected?view.legalMoves().filter(move=>move.from===selected):[];renderBoard();return;
-  }
   if (state.result || busy || (!pvp() && state.side !== player())) return;
   if (selected && legal.some(move => move.to === square)) {
     if (apply({ from: selected, to: square, promotion: $('promotion').value })) queueAI();
@@ -287,7 +262,6 @@ $('depth').onchange = () => {
   cancelAI(); renderStatus(); queueAI();
 };
 $('undo').onclick = () => {
-  closeAnalysis(true);
   if (!state.snapshots.length) return;
   cancelAI();
   state.undo();
@@ -298,168 +272,6 @@ $('undo').onclick = () => {
   render();
 };
 $('resumeAI').onclick = () => { cancelAI(); pausedAI = false; queueAI(); };
-
-function closeAnalysis(clearCache=false) {
-  analysisClient.cancel();variationClient.cancel();variationGeneration++;
-  selected=null;legal=[];
-  if(clearCache || (review && !review.complete)) analysisCache=null;
-  review=null;
-  $('analysisPanel').hidden=true;
-  $('evaluationBar').hidden=true;
-  $('boardSection').classList.remove('reviewing');
-}
-function renderAnalysisBar() {
-  if(!review)return;
-  const score=review.evaluations[review.index]?.whiteScore ?? null;
-  const {whitePercent}=analysis.barValue(score,flipped);
-  $('evalDark').style.height=(100-whitePercent)+'%';
-  $('evalDark').style.top=flipped?'auto':'0';$('evalDark').style.bottom=flipped?'0':'auto';
-  let label='…',description='Evaluation pending';
-  if(score!==null){
-    if(Math.abs(score)>=analysis.MATE_THRESHOLD){label=score>0?'M':'−M';description=(score>0?'White':'Black')+' has a mating advantage';}
-    else {label=(score>0?'+':'')+(score/100).toFixed(1);description=score===0?'Estimated equal position':`${score>0?'White':'Black'} advantage: ${(Math.abs(score)/100).toFixed(1)} pawns (estimate)`;}
-  }
-  $('evalLabel').textContent=label;$('evaluationBar').setAttribute('aria-label',description);
-}
-function selectReview(index){
-  if(!review)return;
-  selected=null;legal=[];
-  review.index=Math.max(0,Math.min(review.positions.length-1,index));
-  renderBoard();renderTurns();renderReview();
-}
-function renderReview(){
-  if(!review)return;
-  const count=review.positions.length-1;
-  $('reviewStart').disabled=$('reviewPrev').disabled=review.index===0;
-  $('reviewEnd').disabled=$('reviewNext').disabled=review.index===count;
-  const view=displayState(),last=view.lastMove;
-  $('reviewPosition').textContent=(review.index===0?'Starting position':`After move ${review.index}: ${names[last.color]} ${last.san}`)+(view.result?' — final position':` — ${names[view.side]} to move${view.forcedSide?' (check response)':''}`);
-  $('analysisProgress').textContent=review.error|| (review.complete?'Analysis ready — evaluations and move grades are estimates.':`Analyzing position ${review.progress} of ${count+1}… You can browse while analysis runs.`);
-  const line=review.lines.active;
-  const picker=$('reviewLine');
-  if(picker.options.length!==review.lines.lines.length){
-    picker.replaceChildren(...review.lines.lines.map(item=>{const option=document.createElement('option');option.value=item.id;option.textContent=item.label;return option;}));
-  }
-  picker.value=String(line.id);$('reviewOriginal').disabled=line===review.lines.main;
-  if(line!==review.lines.main){
-    const pending=review.jobs.length+(review.variationRunning?1:0);
-    $('analysisProgress').textContent=line.error|| (pending?`Rating alternative moves — ${pending} queued or running. Keep playing while analysis runs.`:'Analysis ready — alternative move ratings are estimates.');
-  }
-  $('analysisEngine').textContent=(line===review.lines.main?review.engineStatus:line.engineStatus)||'Preparing analysis…';
-  const chosen=review.moves[review.index-1];
-  let detail='';
-  if(chosen){
-    const position=review.positions[review.index-1].clone(), line=[];
-    for(const key of chosen.pv||[]){
-      const move=position.play({from:key.slice(0,2),to:key.slice(2,4),...(key.length>4?{promotion:key[4]}:{})},false);
-      if(!move)break;line.push(`${names[move.color]} ${move.san}`);if(line.length>=6)break;
-    }
-    detail=`${qualityName(chosen.type)} — ${chosen.confidence||'estimate'}; depth ${chosen.depth}.`;
-    if(line.length)detail+=' Suggested line: '+line.join(' → ')+'.';
-  }
-  $('analysisDetail').textContent=detail;
-  const list=$('analysisMoves');
-  if(list.children.length!==count||list.dataset.line!==String(line.id)){
-    list.dataset.line=String(line.id);
-    list.replaceChildren();
-    review.positions.at(-1).history.forEach((move,index)=>{
-      const card=document.createElement('button');card.type='button';card.className='review-move';card.textContent=`${index+1}. ${names[move.color]} ${move.san}`;
-      card.onclick=()=>selectReview(index+1);list.append(card);
-    });
-  }
-  [...list.children].forEach((card,index)=>{
-    const result=review.moves[index],type=result?.type||'unrated';
-    if(card.dataset.quality!==type){card.querySelector('.move-icon')?.remove();card.append(moveIcon(type));card.dataset.quality=type;}
-    card.classList.toggle('active',review.index===index+1);if(review.index===index+1)card.setAttribute('aria-current','step');else card.removeAttribute('aria-current');
-    card.title=qualityName(type)+(result?.loss!==null&&result?.loss!==undefined?` — estimated loss ${(result.loss/100).toFixed(2)} pawns`:'')+(result?` (search depth ${result.depth}; estimate)`:' — pending');
-  });
-}
-async function openAnalysis(){
-  if(state.result?.type!=='checkmate')return;
-  celebrate.dismiss();selected=null;legal=[];
-  const quality=$('analysisQuality').value;
-  const payload={quality,order:[...state.order],allowKingCapture:state.allowKingCapture,snapshots:[...state.snapshots,state.snapshot()]};
-  const positions=analysis.restorePositions(Chess,payload);
-  const cached=analysisCache?.sourceResult===state.result&&analysisCache.quality===quality?analysisCache:null;
-  const lines=new ReviewLines(positions,{evaluations:cached?.evaluations||[],moves:cached?.moves||[]});
-  const session=review={lines,payload,index:positions.length-1,complete:!!cached,progress:0,error:'',engineStatus:cached?.engineStatus||'',jobs:[],variationRunning:false,mainEpoch:0};
-  for(const key of ['positions','moves','evaluations'])Object.defineProperty(session,key,{get:()=>lines.active[key]});
-  session.evaluations[positions.length-1]={whiteScore:analysis.terminalScore(state),depth:0};
-  $('analysisPanel').hidden=false;$('evaluationBar').hidden=false;$('boardSection').classList.add('reviewing');
-  render();renderReview();
-  if(!cached)await analyzeOriginal(session);
-}
-async function analyzeOriginal(session){
-  const main=session.lines.main,epoch=++session.mainEpoch,payload=session.payload;
-  try{
-    const result=await analysisClient.start(payload,progress=>{
-      if(review!==session||session.mainEpoch!==epoch)return;
-      main.evaluations[progress.index]=progress.evaluation;
-      if(progress.move)main.moves[progress.index]=progress.move;
-      session.lines.syncInherited();session.progress=progress.index+1;renderBoard();renderReview();
-    },status=>{if(review===session&&session.mainEpoch===epoch){session.engineStatus=status;renderReview();}});
-    if(review!==session||session.mainEpoch!==epoch||!result)return;
-    main.evaluations=result.evaluations;main.moves=result.moves;session.complete=true;session.lines.syncInherited();
-    analysisCache={...result,quality:payload.quality,engineStatus:session.engineStatus,sourceResult:state.result};renderBoard();renderReview();
-  }catch(error){if(review!==session||session.mainEpoch!==epoch)return;session.error='Analysis could not finish. Change analysis quality to retry.';renderReview();}
-}
-function playAlternative(request){
-  if(!review)return;
-  const job=review.lines.play(review.index,request);if(!job)return;
-  selected=null;legal=[];review.index=job.index+1;
-  job.line.error='';review.jobs.push(job);
-  if(job.next.result)job.line.evaluations[job.index+1]={whiteScore:analysis.terminalScore(job.next),source:'exact',reliable:true,depth:0};
-  renderBoard();renderTurns();renderReview();rateAlternatives(review);
-}
-async function rateAlternatives(session){
-  if(session.variationRunning||review!==session)return;
-  const epoch=variationGeneration;session.variationRunning=true;
-  try{
-    while(session.jobs.length&&review===session&&variationGeneration===epoch){
-      const job=session.jobs.shift(),payload={...session.payload,initialFen:session.lines.main.positions[0].game.fen(),snapshots:[job.before.snapshot(),job.next.snapshot()]};
-      try{
-        const result=await variationClient.start(payload,progress=>{
-          if(review!==session||variationGeneration!==epoch)return;
-          job.line.evaluations[job.index+progress.index]=progress.evaluation;
-          if(progress.move)job.line.moves[job.index]=progress.move;
-          session.lines.syncInherited();renderBoard();renderReview();
-        },status=>{if(review===session&&variationGeneration===epoch){job.line.engineStatus=status;renderReview();}});
-        if(!result||review!==session||variationGeneration!==epoch)return;
-      }catch{if(review===session&&variationGeneration===epoch)job.line.error='Could not rate an alternative. Change analysis quality to retry.';}
-    }
-  }finally{if(review===session&&variationGeneration===epoch){session.variationRunning=false;renderReview();}}
-}
-$('analyzeGame').onclick=openAnalysis;
-$('reviewLine').onchange=()=>{if(review){review.lines.select($('reviewLine').value);selectReview(Math.min(review.index,review.positions.length-1));}};
-$('reviewOriginal').onclick=()=>{if(review){review.lines.select(0);selectReview(Math.min(review.index,review.positions.length-1));}};
-$('analysisQuality').onchange=()=>{
-  if(!review)return;
-  const session=review;variationGeneration++;variationClient.cancel();session.variationRunning=false;session.jobs=[];
-  session.payload={...session.payload,quality:$('analysisQuality').value};session.complete=false;session.error='';analysisCache=null;
-  for(const line of session.lines.lines.slice(1)){
-    line.error='';
-    for(let index=line.forkIndex;index<line.positions.length-1;index++){
-      line.moves[index]=undefined;
-      const next=line.positions[index+1];
-      line.evaluations[index+1]=next.result?{whiteScore:analysis.terminalScore(next),source:'exact',reliable:true,depth:0}:undefined;
-      session.jobs.push({line,index,before:line.positions[index],next:line.positions[index+1]});
-    }
-  }
-  analyzeOriginal(session);rateAlternatives(session);renderBoard();renderReview();
-};
-$('closeAnalysis').onclick=()=>{closeAnalysis();render();};
-$('reviewStart').onclick=()=>selectReview(0);
-$('reviewPrev').onclick=()=>selectReview(review.index-1);
-$('reviewNext').onclick=()=>selectReview(review.index+1);
-$('reviewEnd').onclick=()=>selectReview(review.positions.length-1);
-for(const type of ['book','great','excellent','best','inaccuracy','mistake','blunder','unrated']){
-  const item=document.createElement('span');item.append(moveIcon(type),document.createTextNode(qualityName(type)));$('analysisLegend').append(item);
-}
-document.addEventListener('keydown',event=>{
-  if(!review||['INPUT','SELECT','TEXTAREA'].includes(event.target.tagName))return;
-  const index=event.key==='ArrowLeft'?review.index-1:event.key==='ArrowRight'?review.index+1:event.key==='Home'?0:event.key==='End'?review.positions.length-1:null;
-  if(index!==null){event.preventDefault();selectReview(index);}
-});
 
 updateStrength();
 reset();

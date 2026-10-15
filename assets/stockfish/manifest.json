@@ -1,9 +1,0 @@
-{
-  "version": "17.1.0",
-  "build": "stockfish-17.1-single-a496a04.js",
-  "wasmSha256": "14b25e2973a52e6095ee0ce7283ce3ff776a5e56bfe393333fe0066f6ccd666e",
-  "gzipSha256": "24cbc7373298258df7e8a3d05938195875d7931815016e474e7029f8db968165",
-  "integrity": "sha256-JMvHNzKYJY336KPQWTgZWHXXkxgVAW5HTnAp+NuWgWU=",
-  "bytes": 64574445,
-  "source": "https://github.com/nmrugg/stockfish.js/tree/602fd7e1a571a2be71f242942db90483731f2a1f"
-}
