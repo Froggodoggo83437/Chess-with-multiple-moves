@@ -5,7 +5,7 @@ const upperLabel = value => value === '+infinity' ? 'unbounded above' : String(M
 function ratingNote({ setting, order, allowKingCapture, fast, rulesHash }) {
   const standard = !allowKingCapture && order.length === 2 && order[0] === 'w' && order[1] === 'b';
   if (!standard) return 'Unrated: custom turn orders and king captures have no standard-chess Elo rating. Strength levels control search and deliberate mistakes.';
-  if (!fast) return 'Unrated at normal thinking time. Choose Fast to see the standard-chess reference estimate. Maximum can think for up to 12 seconds per move.';
+  if (!fast) return 'Unrated at normal thinking time. Choose Fast to see the standard-chess reference estimate. Maximum can think for up to 8 seconds per move.';
   if (rulesHash !== reference.rulesSha256) return 'No reference estimate is available for this engine version. Fast uses a 150 ms search budget.';
   const row = reference.rows.find(row => row.target === Number(setting));
   if (!row) return 'No reference estimate is available for this strength level.';

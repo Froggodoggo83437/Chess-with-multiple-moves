@@ -388,7 +388,7 @@ test('every intermediate 100-point setting reduces errors and increases thinking
   }
   const between=strengthForElo(1800);
   assert.ok(Math.abs(between.mistakeProbability-.265)<1e-9);
-  assert.equal(between.moveTolerance,160);assert.equal(between.timeBudgetMs,2400);
+  assert.equal(between.moveTolerance,160);assert.equal(between.timeBudgetMs,2000);
 });
 test('forced moves return immediately at Expert without spending the search allowance', async () => {
   const {chooseMoveForElo}=require('../src/rules.cjs');
@@ -400,4 +400,59 @@ test('an immediate king capture returns quickly even with Expert enabled', async
   const {chooseMoveForElo}=require('../src/rules.cjs');
   const state=captureMode(['w','w','b'],'R6k/7p/8/8/8/8/8/7K w - - 0 1');const start=Date.now();
   const choice=await chooseMoveForElo(state,3500,'w');assert.equal(choice.captured,'k');assert.ok(Date.now()-start<1000);
+});
+
+test('optimized search and uncached search agree at a completed fixed horizon',async()=>{
+  const {chooseMove}=require('../src/rules.cjs');
+  for(const [order,fen] of [[['w','b'],'7k/6p1/8/8/8/8/P7/1N5K w - - 0 1'],[['w','w','b'],'7k/6p1/8/8/8/8/P7/1N5K w - - 0 1']]){
+    const state=captureMode(order,fen),before=state.snapshot(),results=[];
+    for(const enabled of [false,true]){
+      let final;
+      const move=await chooseMove(state,2,'w',{timeBudgetMs:5000,useTranspositions:enabled,yieldEvery:100000,onIteration:iteration=>{if(iteration.phase==='full-search')final=iteration;}});
+      assert.ok(final);assert.ok(state.legalMoves().some(candidate=>candidate.lan===move.lan));
+      results.push({depth:final.depth,score:Math.max(...final.scores.map(candidate=>candidate.score))});
+    }
+    assert.deepEqual(results[0],results[1]);assert.deepEqual(state.snapshot(),before);
+    assert.equal(state.searchRepetitions,undefined);
+  }
+});
+test('search snapshots and optimized clones do not share mutable game history',()=>{
+  const state=captureMode(['w','w','b']);const before=state.snapshot();
+  const child=state.clone();child.play({from:'e2',to:'e4'},false);
+  assert.equal(child.snapshots.length,0);assert.equal(child.history.length,1);assert.deepEqual(state.snapshot(),before);
+  const grandchild=child.clone();grandchild.play({from:'d2',to:'d4'},false);
+  assert.equal(child.history.length,1);assert.notEqual(child.repetitions,grandchild.repetitions);
+});
+test('upgraded strength profiles reduce maximum latency while preserving every strength level',()=>{
+  const {strengthForElo}=require('../src/rules.cjs');
+  assert.equal(strengthForElo(3500).timeBudgetMs,8000);
+  assert.equal(strengthForElo(3500).mistakeProbability,0);
+  for(let setting=400;setting<=3500;setting+=100)assert.equal(strengthForElo(setting).elo,setting);
+});
+
+test('transposition reuse actually occurs and preserves the fixed-depth best score',async()=>{
+  const state=make(['w','b'],'7k/7p/8/8/8/8/PP6/7K w - - 0 1');const results=[];
+  for(const enabled of [false,true]){
+    let last;await chooseMove(state,5,'w',{useTranspositions:enabled,timeBudgetMs:5000,yieldEvery:100000,onIteration:r=>last=r});
+    assert.equal(last.depth,5);if(enabled)assert.ok(last.ttHits>0);
+    results.push(Math.max(...last.scores.map(candidate=>candidate.score)));
+  }
+  assert.equal(results[0],results[1]);
+});
+test('cached search respects the fifty-move clock instead of accepting a draw while ahead',async()=>{
+  const state=make(['w','b'],'7k/6p1/8/8/8/8/P7/1N5K w - - 99 1');
+  for(const enabled of [false,true]){
+    const choice=await chooseMove(state,3,'w',{useTranspositions:enabled,timeBudgetMs:5000,yieldEvery:100000});
+    assert.equal(choice.from,'a2');
+  }
+});
+test('cached search preserves repetition draws and can choose one when losing',async()=>{
+  const state=make(['w','b'],'7k/6p1/8/8/8/8/P7/1N5K w - - 0 1');
+  for(const [from,to]of [['b1','c3'],['h8','g8'],['c3','b1'],['g8','h8'],['b1','c3'],['h8','g8'],['c3','b1']])assert.ok(state.play({from,to}));
+  const before=state.snapshot();
+  for(const enabled of [false,true]){
+    const choice=await chooseMove(state,3,'b',{useTranspositions:enabled,timeBudgetMs:5000,yieldEvery:100000});
+    const child=state.clone();child.play(choice);assert.equal(child.result?.type,'threefold-repetition');
+  }
+  assert.deepEqual(state.snapshot(),before);
 });

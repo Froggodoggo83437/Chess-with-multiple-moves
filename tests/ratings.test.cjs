@@ -5,8 +5,8 @@ const fs = require('node:fs');
 const { levelForSetting, ratingNote } = require('../src/rating-labels.cjs');
 const reference = require('../src/calibration-data.cjs');
 const standard = { setting: 3500, order: ['w', 'b'], allowKingCapture: false, fast: true, rulesHash: reference.rulesSha256 };
-test('reference asset covers all settings and matches the tested rules version', () => {
-  assert.equal(reference.rulesSha256, crypto.createHash('sha256').update(fs.readFileSync(require.resolve('../src/rules.cjs'))).digest('hex'));
+test('historical reference asset covers all settings and is withheld for the upgraded engine', () => {
+  assert.notEqual(reference.rulesSha256, crypto.createHash('sha256').update(fs.readFileSync(require.resolve('../src/rules.cjs'))).digest('hex'));
   assert.equal(reference.games, 576); assert.equal(reference.budgetMs, 150);
   assert.deepEqual(reference.rows.map(row => row.target), Array.from({length: 32}, (_, index) => 400 + index * 100));
   assert.deepEqual(reference.rows.map(row => levelForSetting(row.target)), Array.from({length: 32}, (_, index) => index + 1));

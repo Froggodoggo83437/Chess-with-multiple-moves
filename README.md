@@ -98,16 +98,15 @@ These levels describe search effort and deliberate errors; they are not Elo
 ratings. Changes preserve the game and restart active computer searches without
 resuming a computer paused by Undo.
 
-**Normal — stronger search** preserves the existing thinking budgets (roughly
-0.25–12 seconds). Its Elo is unmeasured. **Fast — 150 ms reference budget** uses
+**Normal — stronger search** uses bounded thinking budgets (roughly
+0.25–8 seconds). Its Elo is unmeasured. **Fast — 150 ms reference budget** uses
 the budget from the standard-chess calibration. With White/Black alternating
 and king capture forbidden, the game shows the selected profile's provisional
-Stockfish-relative estimate and its simultaneous 95% range. For example, the
-maximum profile's fast reference estimate is about 1240, with a wide range of
-430–1880; this does not establish its normal-budget strength or human Elo.
-All-loss samples show upper bounds rather than invented finite estimates;
-unfinished samples show ranges without a point estimate. Device speed and
-soft-budget overruns can change playing strength.
+Stockfish-relative estimate only when its measured engine hash matches. The
+upgraded engine has not been recalibrated, so Fast currently says that no
+reference estimate is available for this version. Historical calibration results
+remain in `benchmarks/`; they are not measurements of the upgraded engine.
+Device speed and soft-budget overruns can change playing strength.
 
 Custom turns and king-capture games are unrated at both thinking times. They
 retain all 32 strength settings and sequence-aware search. Changing thinking
@@ -115,6 +114,19 @@ time cancels old calculations, preserves the position, and respects Undo's
 pause. The measured numbers are embedded for offline use; a rules-source hash
 suppresses obsolete estimates after an engine change. Stockfish is a benchmark
 reference, not the browser game's engine.
+
+The upgraded search avoids redundant snapshots, shares legal move generation
+across equivalent boards, and scores move-order priorities once. Killer/history
+ordering and selective-plan continuations guide full search; captures, checks,
+and promotions remain candidates in custom-turn planning. A bounded
+transposition table includes the actual turn cursor, remaining horizon, mate
+distance, fifty-move clock, and relevant repetition history, so scores are not
+reused across incompatible custom schedules or draw states. Pawn structure and
+passed-pawn evaluation improve positional decisions. Checked quiescence leaves
+search evasions before settling on a static score when the safety cap permits.
+Maximum's normal budget is now 8 seconds instead of 12; Fast remains 150 ms.
+See [the search performance probes](benchmarks/SEARCH_PERFORMANCE.md) for measured
+results and limits; the smaller time allowance can reduce depth in some positions.
 
 Higher levels deepen search and reduce the chance and size of deliberate errors.
 Maximum never deliberately discards its best calculated move or a known forced
