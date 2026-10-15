@@ -23,11 +23,6 @@ let count=0;
 (async()=>{
   const server=http.createServer((req,res)=>{
     const name=new URL(req.url,'http://localhost').pathname.slice(1);
-    if(name.startsWith('assets/stockfish/')){
-      const target=path.resolve(root,name);
-      if(!target.startsWith(path.join(root,'assets/stockfish')+path.sep)||!fs.existsSync(target)){res.writeHead(404);res.end();return;}
-      res.writeHead(200,{'Content-Type':'application/gzip'});fs.createReadStream(target).pipe(res);return;
-    }
     let body=html;
     if(fixtures[name]) {
       const [fen,order]=fixtures[name];
@@ -44,7 +39,7 @@ let count=0;
   let workers=0;page.on('worker',()=>workers++);
   page.on('pageerror',e=>errors.push(e.message));
   page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1')&&!r.url().startsWith('data:')&&!r.url().startsWith('blob:'))remote.push(r.url());});
-  const goto=async(name='')=>{await page.goto(`http://127.0.0.1:${server.address().port}/${name}`);await page.waitForFunction(()=>document.querySelectorAll('#board button').length===64);await page.selectOption('#depth','1');await page.evaluate(()=>document.querySelector('#analysisQuality').value='quick');};
+  const goto=async(name='')=>{await page.goto(`http://127.0.0.1:${server.address().port}/${name}`);await page.waitForFunction(()=>document.querySelectorAll('#board button').length===64);await page.selectOption('#depth','1');};
   const square=s=>page.locator(`[data-square="${s}"]`);
   const move=async(from,to)=>{await square(from).click();await square(to).click();};
   const text=id=>page.locator('#'+id).innerText();
@@ -214,9 +209,9 @@ let count=0;
       await page.locator('#elo').fill('1700');assert.equal(await text('eloValue'),'14');assert.equal(await page.locator('#depth').inputValue(),'custom');
       assert.equal(await text('history'),history);assert.equal(await page.locator('#elo').getAttribute('aria-valuetext'),'Level 14 of 32');
       await page.selectOption('#depth','3');assert.equal(await page.locator('#elo').inputValue(),'2000');
-      await page.selectOption('#depth','1');await page.evaluate(()=>document.querySelector('#analysisQuality').value='quick');assert.equal(await page.locator('#elo').inputValue(),'600');
+      await page.selectOption('#depth','1');assert.equal(await page.locator('#elo').inputValue(),'600');
       await page.selectOption('#depth','4');assert.equal(await text('eloValue'),'32');assert.equal(await page.locator('#elo').inputValue(),'3500');assert.equal(await text('history'),history);
-      await page.selectOption('#depth','1');await page.evaluate(()=>document.querySelector('#analysisQuality').value='quick');await move('d2','d4');await page.locator('#elo').fill('400');await waitHistory(3);
+      await page.selectOption('#depth','1');await move('d2','d4');await page.locator('#elo').fill('400');await waitHistory(3);
       assert.equal(await page.locator('#elo').inputValue(),'400');await page.click('#undo');assert.ok((await text('status')).includes('paused'));
       await page.locator('#elo').fill('1200');await page.waitForTimeout(400);assert.ok(!(await text('history')).includes('3.'));
     });
@@ -260,114 +255,13 @@ let count=0;
       await page.click('#flip');assert.equal(await white.locator('img').count(),1);assert.equal(await page.locator('#playerBottom').getAttribute('data-color'),'w');
       await page.click('#newGame');assert.equal(await page.locator('.captured-pieces img').count(),0);assert.equal(await page.locator('.material-lead').count(),0);
     });
-    await check('postgame analysis replays king capture with icons and evaluation without modifying the game',async()=>{
-      await goto();assert.ok(await page.locator('#analyzeGame').isHidden());
+    await check('analysis UI and engine assets are absent after a win',async()=>{
       await goto('capture');await move('a1','a8');await move('a8','h8');
-      const history=await text('history'),status=await text('status');assert.ok(await page.locator('#analyzeGame').isVisible());
-      await page.click('#analyzeGame');assert.equal(await page.locator('.victory-layer').count(),0);
-      assert.ok(await page.locator('#evaluationBar').isVisible());
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      assert.equal(await page.locator('#analysisMoves button').count(),2);assert.equal(await page.locator('#analysisMoves .move-icon').count(),2);
-      assert.equal(await text('evalLabel'),'M');assert.equal(await page.locator('#evalDark').evaluate(e=>parseFloat(e.style.height)),0);
-      assert.equal(await square('h8').locator('.board-move-icon').count(),1);
-      await page.click('#reviewStart');assert.equal(await square('a1').locator('img').getAttribute('alt'),'White rook');assert.equal(await square('h8').locator('img').getAttribute('alt'),'Black king');
-      await page.click('#reviewNext');assert.equal(await square('a8').locator('.board-move-icon').count(),1);assert.equal(await page.locator('#analysisMoves button[aria-current="step"]').count(),1);
-      const beforeFlip=await page.locator('#evalDark').evaluate(e=>e.style.top);await page.click('#flip');assert.notEqual(await page.locator('#evalDark').evaluate(e=>e.style.top),beforeFlip);
-      await page.keyboard.press('End');assert.equal(await text('evalLabel'),'M');assert.equal(await text('history'),history);
-      await page.screenshot({path:path.join(root,'test-results/analysis.png'),fullPage:true});
-      await page.click('#closeAnalysis');assert.ok(await page.locator('#evaluationBar').isHidden());assert.equal(await text('status'),status);assert.equal(await text('history'),history);assert.equal(await page.locator('.victory-layer').count(),0);
-      await page.click('#analyzeGame');await page.click('#reviewStart');await page.click('#undo');assert.ok(await page.locator('#analysisPanel').isHidden());assert.equal(await square('h8').locator('img').getAttribute('alt'),'Black king');assert.ok(await page.locator('#analyzeGame').isHidden());
-    });
-    await check('standard checkmate review uses full Stockfish and recognizes opening moves',async()=>{
-      await goto();await page.selectOption('#mode','pvp');await page.click('#preset1');await page.selectOption('#kingCapture','standard');
-      for(const [from,to] of [['e2','e4'],['e7','e5'],['f1','c4'],['b8','c6'],['d1','h5'],['g8','f6'],['h5','f7']])await move(from,to);
-      assert.ok((await text('status')).includes('White wins'));await page.click('#analyzeGame');
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      assert.ok((await text('analysisEngine')).includes('Full Stockfish 17.1'));
-      assert.equal(await page.locator('#analysisQuality').inputValue(),'quick');
-      assert.equal(await page.locator('#analysisMoves button').count(),7);assert.equal(await page.locator('#analysisMoves button').first().getAttribute('data-quality'),'book');
-      assert.equal(await text('evalLabel'),'M');await page.click('#reviewStart');assert.equal(await page.locator('#board img').count(),32);
-      await page.keyboard.press('ArrowRight');assert.ok((await text('reviewPosition')).includes('White e4'));
-      await page.click('#closeAnalysis');assert.ok((await text('status')).includes('White wins'));
-    });
-    await check('custom review names the saved order and quality changes restart without altering the game',async()=>{
-      await goto('capture');await move('a1','a8');await move('a8','h8');const history=await text('history');
-      let requests=0;const listener=r=>{if(r.url().includes('stockfish-17.1.wasm.gz'))requests++;};page.on('request',listener);
-      await page.click('#analyzeGame');assert.ok((await text('analysisEngine')).includes('White → White → Black'));
-      await page.selectOption('#analysisQuality','maximum');await page.selectOption('#analysisQuality','quick');
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      assert.equal(await text('history'),history);assert.equal(requests,0);page.off('request',listener);
-      await page.click('#reviewPrev');assert.ok((await text('analysisDetail')).includes('depth'));
-    });
-    await check('missing Stockfish asset falls back explicitly and still recognizes standard e4',async()=>{
-      await goto();await page.selectOption('#mode','pvp');await page.click('#preset1');
-      for(const [from,to] of [['e2','e4'],['e7','e5'],['f1','c4'],['b8','c6'],['d1','h5'],['g8','f6'],['h5','f7']])await move(from,to);
-      await page.route('**/assets/stockfish/**',route=>route.abort());await page.click('#analyzeGame');
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      assert.ok((await text('analysisEngine')).includes('Stockfish unavailable'));
-      assert.equal(await page.locator('#analysisMoves button').first().getAttribute('data-quality'),'book');
-      await page.unroute('**/assets/stockfish/**');await page.click('#newGame');
-    });
-    await check('custom analysis works without workers on mobile and preserves live history',async()=>{
-      const fallback=await browser.newPage({viewport:{width:390,height:844}});const problems=[];fallback.on('pageerror',e=>problems.push(e.message));
-      try{
-        await fallback.addInitScript(()=>{window.Worker=undefined;});await fallback.goto(`http://127.0.0.1:${server.address().port}/capture`);
-        await fallback.evaluate(()=>document.querySelector('#analysisQuality').value='quick');
-        for(const square of ['a1','a8','a8','h8'])await fallback.locator(`[data-square="${square}"]`).click();
-        const history=await fallback.locator('#history').innerText();await fallback.click('#analyzeGame');
-        await fallback.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-        assert.ok((await fallback.locator('#analysisEngine').innerText()).includes('Custom-turn analyzer'));
-        assert.equal(await fallback.locator('#history').innerText(),history);assert.equal(await fallback.locator('#analysisMoves button').count(),2);
-        assert.ok(await fallback.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(problems,[]);
-        await fallback.screenshot({path:path.join(root,'test-results/analysis-mobile.png'),fullPage:true});
-      }finally{await fallback.close();}
-    });
-    await check('unlimited alternative play follows custom turns and rates every move without altering the game',async()=>{
-      await goto('capture');await move('a1','a8');await move('a8','h8');const history=await text('history');
-      await page.click('#analyzeGame');await page.click('#reviewStart');
-      for(const [from,to] of [['a1','a2'],['a2','a8'],['h8','g7'],['a8','a7'],['a7','g7']])await move(from,to);
-      assert.equal(await page.locator('#reviewLine').inputValue(),'1');assert.equal(await page.locator('#analysisMoves button').count(),5);
-      assert.equal(await square('g7').locator('img').getAttribute('alt'),'White rook');assert.equal(await text('history'),history);
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      const rated=await page.locator('#analysisMoves button').evaluateAll(cards=>cards.every(card=>card.title.includes('search depth')));assert.ok(rated);
-      await page.selectOption('#analysisQuality','maximum');assert.equal(await text('evalLabel'),'M');
-      await page.selectOption('#analysisQuality','quick');assert.equal(await text('evalLabel'),'M');
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      await move('h1','g1');assert.equal(await page.locator('#analysisMoves button').count(),5);
-      await page.click('#reviewStart');await page.click('#reviewNext');await move('a2','b2');
-      assert.equal(await page.locator('#reviewLine').inputValue(),'2');assert.equal(await page.locator('#analysisMoves button').count(),2);
-      await page.selectOption('#reviewLine','1');await page.click('#reviewEnd');assert.equal(await square('g7').locator('img').getAttribute('alt'),'White rook');
-      await page.click('#reviewOriginal');if(await page.locator('#reviewEnd').isEnabled())await page.click('#reviewEnd');assert.equal(await square('h8').locator('img').getAttribute('alt'),'White rook');
-      assert.equal(await page.locator('#analysisMoves button').count(),2);assert.equal(await text('history'),history);
-      await page.click('#closeAnalysis');assert.equal(await text('history'),history);await page.click('#undo');assert.equal(await square('h8').locator('img').getAttribute('alt'),'Black king');
-    });
-    await check('variation quality changes preserve lines and reset cancels pending ratings',async()=>{
-      await goto('capture');await move('a1','a8');await move('a8','h8');await page.click('#analyzeGame');await page.click('#reviewStart');
-      await move('a1','a2');await move('a2','b2');
-      await page.selectOption('#analysisQuality','maximum');await page.selectOption('#analysisQuality','quick');
-      assert.equal(await page.locator('#reviewLine').inputValue(),'1');assert.equal(await square('b2').locator('img').getAttribute('alt'),'White rook');
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      assert.ok(await page.locator('#analysisMoves button').evaluateAll(cards=>cards.every(card=>card.title.includes('search depth'))));
-      await page.click('#reviewPrev');await move('a2','c2');await page.click('#newGame');
-      await page.waitForTimeout(600);assert.ok(await page.locator('#analysisPanel').isHidden());assert.equal(await text('history'),'No moves yet.');
-    });
-    await check('standard variations use Stockfish with the complete branch history and preserve the original line',async()=>{
-      await goto();await page.selectOption('#mode','pvp');await page.click('#preset1');await page.selectOption('#kingCapture','standard');
-      for(const [from,to] of [['e2','e4'],['e7','e5'],['f1','c4'],['b8','c6'],['d1','h5'],['g8','f6'],['h5','f7']])await move(from,to);
-      const history=await text('history');await page.click('#analyzeGame');await page.click('#reviewStart');await page.click('#reviewNext');
-      await move('c7','c5');await move('g1','f3');assert.equal(await page.locator('#analysisMoves button').count(),3);
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      assert.ok((await text('analysisEngine')).includes('Full Stockfish 17.1'));
-      assert.equal(await page.locator('#analysisMoves button').nth(1).getAttribute('data-quality'),'book');assert.equal(await text('history'),history);
-      await page.click('#reviewOriginal');await page.click('#reviewEnd');assert.equal(await square('f7').locator('img').getAttribute('alt'),'White queen');
-    });
-    await check('Black checkmate analysis and reset cancel review without stale output',async()=>{
-      await goto('blackmate');await page.waitForSelector('#analyzeGame:not([hidden])');await page.click('#analyzeGame');
-      await page.waitForFunction(()=>document.querySelector('#analysisProgress').textContent.startsWith('Analysis ready'));
-      assert.equal(await text('evalLabel'),'−M');assert.equal(await page.locator('#evalDark').evaluate(e=>parseFloat(e.style.height)),100);
-      await page.click('#newGame');assert.ok(await page.locator('#analysisPanel').isHidden());
-      await goto('capture');await move('a1','a8');await move('a8','h8');await page.click('#analyzeGame');await page.click('#newGame');
-      await page.waitForTimeout(600);assert.ok(await page.locator('#evaluationBar').isHidden());assert.equal(await text('history'),'No moves yet.');
+      assert.equal(await page.locator('#analysisPanel, #analyzeGame, #evaluationBar, #reviewLine, .move-icon').count(),0);
+      assert.equal(await page.evaluate(()=>typeof window.CHESS_ANALYSIS_WORKER_SOURCE),'undefined');
+      assert.equal(await page.evaluate(()=>typeof window.CHESS_STOCKFISH_WORKER_SOURCE),'undefined');
+      assert.ok((await text('status')).includes('White wins'));await page.click('#undo');
+      assert.equal(await square('h8').locator('img').getAttribute('alt'),'Black king');
     });
     await check('checkmate celebration displays winner, preserves controls, and plays once',async()=>{
       await goto('mate');await move('g6','g7');

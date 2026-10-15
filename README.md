@@ -145,65 +145,6 @@ After a new verified calibration, run `npm run ratings:update` and
 unverified or mismatched source/results. Building without a new calibration
 still works, but changed rules suppress the old reference estimates.
 
-## Postgame analysis
-
-After checkmate or a king-capture win, press **Analysis**. Browse the move cards
-or use the first/previous/next/last buttons (Left/Right/Home/End also work).
-Play either side on the reviewed board to explore unlimited legal alternative
-moves using the original game's saved turn order. Moves can be entered while
-ratings run in the background. Navigating backward and playing another move
-creates a new saved variation; use **Review line** to switch between continuations
-or **Return to original game** to restore the recorded game. There is no fixed
-move or variation cap. Checkmate and draws end that continuation; navigate to an
-earlier position to explore another. Variations remain available throughout the
-open review session. Closing review discards them and preserves the original
-game and its Undo history. Analysis quality changes keep variations and rerate
-their moves; reset, Undo, and closing cancel outstanding calculations.
-
-An evaluation bar appears beside the board; positive pawn-unit values favor
-White, negative values favor Black, and M indicates a mating advantage. The
-bar follows board flips. Captured pieces and turn highlights follow the reviewed
-position, while the finished game and its Undo history stay intact.
-
-Colored corner badges mark recognized Book moves, Great moves, Excellent moves,
-Best moves, Inaccuracies, Mistakes/missed wins, and Blunders. Standard opening
-recognition uses a small explicit set of known lines, including 1.e4. It is
-disabled for custom schedules; allowing king captures does not disable it when
-an alternating game remains a legal standard-chess sequence.
-
-Choose Quick (1 second), Deep (5 seconds, default), or Maximum (15 seconds) per
-position. Changing quality cancels and restarts review. The engine status,
-completed depth, confidence, and suggested legal continuation are displayed.
-Closing, resetting, or undoing cancels work; completed reviews are cached by
-quality until the game changes. Live board state and Undo history are preserved.
-
-Compatible alternating games use **full Stockfish 17.1**, with its full NNUE
-network, one thread, and a 64 MiB hash. Played moves and best alternatives are
-compared at a common completed depth, rather than mixing scores from different
-search depths. The compressed engine asset (about 65 MB) loads locally only when
-review starts; serve the repository including `assets/stockfish/`. Fetch integrity
-checks the asset. See [its license and exact corresponding source](assets/stockfish/README.md).
-Playing the game still works from the self-contained HTML without that asset.
-
-**Custom-turn games always use the variant analyzer**, which restores the order,
-sequence cursor, king-capture setting, and forced check responses saved for the
-game. It maximizes/minimizes according to the actual player at every node,
-searches consecutive move blocks, extends captures/checks, and compares the
-played move at the same completed horizon as alternatives. Standard Stockfish
-cannot analyze these variants correctly and is never used for them.
-
-Gray badges mean **uncertain**: shallow or unstable estimates are not labeled
-inaccuracies or blunders. Grades use estimated winning-chance loss with an
-uncertainty allowance; they are not certified Chess.com grades. Exact terminal
-wins and single legal choices are identified directly. Custom search remains
-weaker than Stockfish and cannot guarantee the best move, particularly for long
-turn blocks. Even Maximum is a finite search, not proof of every evaluation.
-
-If Stockfish loading, WASM, or gzip decompression fails, review clearly reports
-its custom-engine fallback. Variant review runs in an embedded worker, with a
-cooperative fallback when workers are unavailable. No online analysis service
-is contacted.
-
 ## Development and tests
 
 Requires Node.js and npm. Browser tests also need Chromium (default
