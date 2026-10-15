@@ -41,3 +41,103 @@ test('Black checkmate ends with a negative evaluation; cancellation emits no lat
  const result=await analyzeGame(Chess,payload(state),{timeBudgetMs:30});assert.equal(result.evaluations.at(-1).whiteScore,-1000000);
  let progress=0;assert.equal(await analyzeGame(Chess,payload(state),{isCancelled:()=>true,onProgress:()=>progress++}),null);assert.equal(progress,0);
 });
+
+test('first e4 is Book in a compatible standard game even with capture enabled',async()=>{
+ const state=new Rules(Chess,['w','b'],undefined,{allowKingCapture:true});state.play(move('e2','e4'));
+ const result=await analyzeGame(Chess,payload(state),{timeBudgetMs:1});
+ assert.equal(require('../src/analysis.cjs').standardCompatible(restorePositions(Chess,payload(state))),true);
+ assert.equal(result.moves[0].type,'book');
+});
+test('shallow custom opening review withholds judgments instead of calling e4 inaccurate',async()=>{
+ const state=new Rules(Chess,['w','w','b'],undefined,{allowKingCapture:true});state.play(move('e2','e4'));
+ const result=await analyzeGame(Chess,payload(state),{timeBudgetMs:1});
+ assert.equal(result.moves[0].type,'unrated');assert.equal(result.moves[0].confidence,'uncertain');
+ assert.equal(require('../src/analysis.cjs').standardCompatible(restorePositions(Chess,payload(state))),false);
+});
+test('custom analyzer sees two consecutive rook moves as a forced king capture',async()=>{
+ const {searchPosition}=require('../src/custom-review.cjs');
+ const fen='7k/7p/8/8/8/8/8/R6K b - - 0 1';
+ const normal=new Rules(Chess,['b','w'],fen,{allowKingCapture:true});
+ const custom=new Rules(Chess,['b','w','w'],fen,{allowKingCapture:true});const before=custom.snapshot();
+ const single=await searchPosition(normal,{maxDepth:2,timeBudgetMs:6000});
+ const double=await searchPosition(custom,{maxDepth:2,timeBudgetMs:6000});
+ assert.ok(single.whiteScore<500000);assert.ok(double.whiteScore>=500000);
+ assert.ok(double.scores.every(candidate=>candidate.score<=-500000));
+ assert.deepEqual(custom.snapshot(),before);
+ const replay=custom.clone();for(const key of double.pv)assert.ok(replay.play({from:key.slice(0,2),to:key.slice(2,4)},false));
+ assert.equal(replay.result.reason,'king-capture');assert.equal(replay.result.winner,'w');
+});
+test('variant search plans consecutive attacking moves and preserves the full schedule',async()=>{
+ const {searchPosition,replyHorizon}=require('../src/custom-review.cjs');
+ const state=new Rules(Chess,['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1',{allowKingCapture:true});
+ assert.equal(replyHorizon(state),3);const before=state.snapshot();
+ const result=await searchPosition(state,{maxDepth:2,timeBudgetMs:6000});
+ assert.ok(result.whiteScore>=500000);assert.equal(result.bestMove,'a1a8');
+ const replay=state.clone();for(const key of result.pv)assert.ok(replay.play({from:key.slice(0,2),to:key.slice(2,4)},false));
+ assert.equal(replay.history[0].color,'w');assert.equal(replay.history[1].color,'w');assert.equal(replay.result.winner,'w');assert.deepEqual(state.snapshot(),before);
+});
+test('unreliable and unstable comparisons withhold grades; large confirmed losses are blunders',()=>{
+ const {gradeReview}=require('../src/analysis.cjs'),a=move('a1','a2'),b=move('b1','b2');
+ const result={scores:[{move:a,score:0,bound:'exact'},{move:b,score:-600,bound:'exact'}],samples:[{bestScore:0,playedScore:-600},{bestScore:0,playedScore:-590}],reliable:false};
+ assert.equal(gradeReview(result,b,{}).type,'unrated');
+ result.reliable=true;assert.equal(gradeReview(result,b,{}).type,'blunder');
+ result.samples[1].playedScore=-200;assert.equal(gradeReview(result,b,{}).type,'unrated');
+});
+test('saved custom order and check response cursor are restored rather than reconstructed as alternation',()=>{
+ const state=new Rules(Chess,['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1',{allowKingCapture:false});
+ state.play(move('a1','a8'));assert.equal(state.forcedSide,'b');
+ const restored=restorePositions(Chess,payload(state));assert.deepEqual(restored[1].order,['w','w','b']);
+ assert.equal(restored[1].index,1);assert.equal(restored[1].side,'b');assert.equal(restored[1].forcedSide,'b');
+ assert.equal(require('../src/analysis.cjs').standardCompatible(restored),false);
+});
+test('custom search cancellation returns no result and never alters the live position',async()=>{
+ const state=new Rules(Chess,['w','w','b']),before=state.snapshot();let calls=0;
+ const result=await require('../src/custom-review.cjs').searchPosition(state,{timeBudgetMs:5000,isCancelled:()=>++calls>4,yieldEvery:1});
+ assert.equal(result,null);assert.deepEqual(state.snapshot(),before);
+});
+
+test('Stockfish comparisons use the highest shared completed depth and the real move history',async()=>{
+ const fs=require('fs'),vm=require('vm'),esbuild=require('esbuild'),exports={};
+ const module={exports};
+ const source=esbuild.transformSync(fs.readFileSync(require.resolve('../src/stockfish-analysis.js'),'utf8'),{format:'cjs'}).code;
+ vm.runInNewContext(source,{module,exports,Map,Error});
+ const state=new Rules(Chess,['w','b']);state.play(move('e2','e4'));const calls=[];
+ const best={move:'e7e5',depth:14,score:900,pv:['e7e5'],samples:new Map([[12,{score:50,pv:['e7e5']}],[13,{score:100,pv:['e7e5']}],[14,{score:900,pv:['e7e5']}]])};
+ const played={move:'g7g5',depth:13,score:-40,pv:['g7g5'],samples:new Map([[12,{score:-20,pv:['g7g5']}],[13,{score:-40,pv:['g7g5']}]])};
+ const fake={search:async(fen,moves,options)=>{calls.push({fen,moves,options});return options.searchMove?played:best;}};
+ const result=await module.exports.standardPositionAnalyzer(fake)(state,{playedMove:move('g7','g5'),context:{initialFen:new Chess().fen()},isCancelled:()=>false,timeBudgetMs:1000});
+ assert.equal(result.depth,13);assert.equal(result.whiteScore,-100);assert.equal(result.scores[0].score,100);assert.equal(result.scores[1].score,-40);
+ assert.equal(calls[1].options.searchMove,'g7g5');assert.equal(calls[1].options.depth,14);assert.deepEqual(calls[0].moves,['e2e4']);
+});
+
+test('review variations branch without modifying the game or replacing other continuations',()=>{
+ const {ReviewLines}=require('../src/review-lines.cjs');
+ const state=new Rules(Chess,['w','w','b']);state.play(move('e2','e4'));state.play(move('d2','d4'));
+ const before=state.snapshot(),lines=new ReviewLines(restorePositions(Chess,payload(state)));
+ const a=lines.play(0,move('g1','f3'));assert.ok(a);assert.equal(a.next.side,'w');
+ const b=lines.play(1,move('b1','c3'));assert.ok(b);assert.equal(b.next.side,'b');
+ const c=lines.play(1,move('e2','e4'));assert.ok(c);assert.notEqual(c.line,a.line);assert.equal(a.line.positions[2].game.get('c3').type,'n');
+ assert.equal(c.line.positions[2].game.get('e4').type,'p');assert.equal(lines.main.positions[1].game.get('e4').type,'p');
+ assert.deepEqual(state.snapshot(),before);assert.equal(lines.main.positions.length,3);
+});
+test('variations have no line cap and illegal moves create no branches',()=>{
+ const {ReviewLines}=require('../src/review-lines.cjs');
+ const state=new Rules(Chess,['w','w','b']),lines=new ReviewLines([state.clone()]);
+ for(let i=0;i<120;i++){lines.select(0);assert.ok(lines.play(0,move('g1','f3')));}
+ assert.equal(lines.lines.length,121);lines.select(0);
+ assert.equal(lines.play(0,move('e2','e5')),null);assert.equal(lines.lines.length,121);
+});
+test('terminal variation blocks further play; earlier positions remain branchable',()=>{
+ const {ReviewLines}=require('../src/review-lines.cjs');
+ const state=new Rules(Chess,['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1',{allowKingCapture:true}),lines=new ReviewLines([state]);
+ lines.play(0,move('a1','a8'));const end=lines.play(1,move('a8','h8'));assert.equal(end.next.result.reason,'king-capture');
+ assert.equal(lines.play(2,move('h1','g1')),null);assert.ok(lines.play(1,move('a8','b8')));
+ assert.equal(state.game.get('h8').type,'k');
+});
+test('rating a two-position variation keeps the original initial FEN for Stockfish history and book recognition',async()=>{
+ const state=new Rules(Chess,['w','b']);state.play(move('e2','e4'));const before=state.snapshot();state.play(move('e7','e5'));
+ let seen;
+ const data={order:state.order,allowKingCapture:state.allowKingCapture,initialFen:new Chess().fen(),snapshots:[before,state.snapshot()]};
+ const result=await analyzeGame(Chess,data,{positionAnalyzer:async(s,options)=>{seen=options.context.initialFen;return {whiteScore:0,depth:1,scores:[],samples:[],reliable:false};}});
+ assert.equal(seen,new Chess().fen());assert.equal(result.moves[0].type,'book');
+});
