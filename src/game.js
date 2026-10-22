@@ -158,8 +158,8 @@ function renderStatus() {
   } else {
     message = `${names[state.side]} ${busy ? '(computer) is thinking…' : 'to move ' + (pvp() ? '(Player ' + (state.side === 'w' ? '1' : '2') + ')' : state.side === player() ? '(you)' : '(computer)')}`;
     const checked = ['w', 'b'].filter(side => state.inCheck(side));
-    if (checked.length) message += ` — ${names[checked[0]]} is in check!`;
-    if (state.forcedSide) message += ' Immediate check response; then the sequence resumes.';
+    if (checked.length) message += ` — ${checked.map(side=>names[side]).join(' and ')} ${checked.length>1?'are':'is'} in check!`;
+    if(state.inCheck(state.side)&&state.movesRemaining()>1)message += ` King must be safe within ${state.movesRemaining()} remaining moves.`;
     if (pausedAI) message += ' Computer paused after undo. Press Resume computer.';
     if (aiError) message = aiError;
   }
@@ -176,8 +176,8 @@ function render() {
   renderStatus();
   updateStrength();
   $('ruleNote').textContent = state.allowKingCapture
-    ? 'King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Normal checkmate also ends the game. Your own king must remain safe. Undo restores captured kings; computer replies stay paused until resumed.'
-    : 'Standard rules: check requires an immediate response, even between consecutive moves. An extra response does not consume the attacker’s next tile. Checkmate ends the game immediately; kings cannot be captured. Undo pauses computer replies until resumed.';
+    ? 'King capture variant: check does not interrupt the turn sequence. Capture the opponent’s king to win immediately (counted as checkmate). Checkmate accounts for the defender’s full turn. Your king must be safe by the end of your turn. Undo restores captured kings; computer replies stay paused until resumed.'
+    : 'No king captures: check never changes the turn order. Your king may be temporarily in check only if you can make it safe by your last consecutive move. Checkmate accounts for all remaining defensive moves. Undo pauses computer replies until resumed.';
   if (pvp()) $('ruleNote').textContent = $('ruleNote').textContent.replace('computer replies stay paused until resumed.', 'each player moves when their color is due.').replace('Undo pauses computer replies until resumed.', 'Undo takes back one move for either player.');
   $('history').textContent = state.history.length ? state.history.map((move, index) =>
     `${index + 1}. ${names[move.color]} ${move.san}`).join('   ') : 'No moves yet.';

@@ -49,27 +49,27 @@ test('mate ends before another consecutive attacking move', () => {
   move(state,'g6','g7'); assert.deepEqual(state.result,{type:'checkmate',winner:'w'});
   assert.equal(state.play({from:'g7',to:'h8'}),null); kings(state);
 });
-test('check interrupts consecutive moves and resumes the unconsumed tile', () => {
-  const state = make(['w','w','b'], '7k/7p/8/8/8/8/8/R6K w - - 0 1');
-  move(state,'a1','a8'); assert.equal(state.side,'b'); assert.equal(state.forcedSide,'b'); assert.equal(state.index,1);
+test('check preserves the scheduled attacker slot and king captures remain forbidden', () => {
+  const state=make(['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1');
+  move(state,'a1','a8');assert.equal(state.side,'w');assert.equal(state.forcedSide,null);assert.equal(state.index,1);
   assert.equal(state.play({from:'a8',to:'h8'}),null);
-  assert.equal(state.play({from:'h7',to:'h6'}),null);
-  move(state,'h8','g7'); assert.equal(state.side,'w'); assert.equal(state.index,1);
-  kings(state);
-  state.undo(); assert.equal(state.side,'b'); assert.equal(state.forcedSide,'b');
+  move(state,'a8','b8');assert.equal(state.side,'b');assert.equal(state.index,2);
+  move(state,'h8','g7');assert.equal(state.side,'w');
+  state.undo();assert.equal(state.side,'b');state.undo();assert.equal(state.side,'w');assert.equal(state.index,1);kings(state);
 });
 test('a scheduled check response consumes its own tile', () => {
   const state=make(['w','b','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1');
   move(state,'a1','a8'); assert.equal(state.forcedSide,null); move(state,'h8','g7');
   assert.equal(state.side,'b'); assert.equal(state.index,2);
 });
-test('a check response is granted even when checked color has no tiles', () => {
+test('a checked side without turn tiles does not receive an extra turn',()=>{
   const state=make(['w'],'7k/7p/8/8/8/8/8/R6K w - - 0 1');
-  move(state,'a1','a8'); assert.equal(state.side,'b'); move(state,'h8','g7'); assert.equal(state.side,'w');
+  move(state,'a1','a8');assert.equal(state.side,'w');assert.equal(state.forcedSide,null);
+  assert.equal(state.play({from:'a8',to:'h8'}),null);move(state,'a8','b8');assert.equal(state.side,'w');
 });
-test('checked starting positions give priority to the defender and never king capture', () => {
+test('checked starting positions retain the configured side without king captures',()=>{
   const state=make(['w','w','b'],'R6k/7p/8/8/8/8/8/7K w - - 0 1');
-  assert.equal(state.side,'b'); assert.ok(!state.legalMoves('w').some(m=>m.to==='h8')); kings(state);
+  assert.equal(state.side,'w');assert.equal(state.forcedSide,null);assert.ok(!state.legalMoves().some(move=>move.to==='h8'));kings(state);
 });
 test('stalemate at a scheduled turn is a draw', () => {
   const state=make(['b','w'],'7k/5K2/6Q1/8/8/8/8/8 b - - 0 1');
@@ -151,7 +151,7 @@ test('AI finds immediate mate before the next custom slot', async () => {
   assert.deepEqual(state.result,{type:'checkmate',winner:'w'});
 });
 test('AI evades check using the same legal custom rules', async () => {
-  const state=make(['w','w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1');move(state,'a1','a8');
+  const state=make(['w','b'],'7k/7p/8/8/8/8/8/R6K w - - 0 1');move(state,'a1','a8');
   const chosen=await chooseMove(state,2,'b');assert.ok(chosen);move(state,chosen.from,chosen.to,chosen.promotion);
   assert.ok(!state.inCheck('b'));assert.equal(state.side,'w');kings(state);
 });
@@ -167,7 +167,9 @@ test('deterministic randomized standard and custom games preserve legality and u
     for(let ply=0;ply<100 && !state.result;ply++) {
       const before=state.snapshot();const options=state.legalMoves();assert.ok(options.length);
       const chosen=options[random()%options.length];assert.notEqual(chosen.captured,'k');
-      const mover=state.side;state.play(chosen);kings(state);assert.ok(!state.inCheck(mover));
+      const mover=state.side,remaining=state.movesRemaining();state.play(chosen);kings(state);
+      if(remaining===1||state.result)assert.ok(!state.inCheck(mover));
+      else if(state.inCheck(mover))assert.ok(state.legalMoves().length>0);
       const after=state.snapshot();assert.ok(state.undo());assert.deepEqual(state.snapshot(),before);
       assert.ok(state.play(chosen));assert.deepEqual(state.snapshot(),after);
     }
@@ -215,12 +217,11 @@ test('standard legal move sets match chess.js through a deterministic full game'
     assert.equal(state.game.fen(),reference.fen());
   }
 });
-test('a defensive countercheck is resolved before the sequence continues', () => {
-  const state=make(['w','w','b'],'7k/4b3/7K/8/8/8/8/R7 w - - 0 1');
-  move(state,'a1','a8');assert.equal(state.forcedSide,'b');
-  move(state,'e7','f8');assert.equal(state.side,'w');assert.ok(state.inCheck('w'));assert.ok(!state.inCheck('b'));
-  assert.equal(state.play({from:'a8',to:'a7'}),null);
-  move(state,'h6','g5');assert.equal(state.side,'b');assert.ok(!state.inCheck('w'));kings(state);
+test('a countercheck does not interrupt a defenders remaining scheduled move',()=>{
+  const state=make(['w','b','b'],'7k/4b3/7K/8/8/8/8/R7 w - - 0 1');
+  move(state,'a1','a8');assert.equal(state.side,'b');assert.equal(state.forcedSide,null);
+  move(state,'e7','f8');assert.equal(state.side,'b');assert.ok(state.inCheck('w'));assert.ok(!state.inCheck('b'));
+  move(state,'h8','g8');assert.equal(state.side,'w');move(state,'h6','g5');assert.equal(state.side,'b');assert.ok(!state.inCheck('w'));kings(state);
 });
 
 const captureMode = (order, fen) => new Rules(Chess, order, fen, {allowKingCapture:true});
@@ -249,9 +250,9 @@ test('AI chooses a king capture and terminal clones require no missing-king move
   const choice=await chooseMove(state,3,'w');assert.equal(choice.captured,'k');state.play(choice);assert.equal(state.result.reason,'king-capture');
   assert.equal(await chooseMove(state.clone(),3,'b'),null);
 });
-test('capture variant still ends normal checkmate and rejects moves exposing its own king', () => {
+test('capture variant keeps single-move mate but permits repairable intermediate exposure', () => {
   const mate=captureMode(['w','w','b'],'7k/8/5KQ1/8/8/8/8/8 w - - 0 1');move(mate,'g6','g7');assert.deepEqual(mate.result,{type:'checkmate',winner:'w'});
-  const pin=captureMode(['w','w','b'],'k3r3/8/8/8/8/8/4R3/4K3 w - - 0 1');assert.equal(pin.play({from:'e2',to:'d2'}),null);
+  const pin=captureMode(['w','w','b'],'k3r3/8/8/8/8/8/4R3/4K3 w - - 0 1');assert.ok(pin.play({from:'e2',to:'d2'}));assert.ok(pin.inCheck('w'));assert.equal(pin.play({from:'d2',to:'c2'}),null);move(pin,'d2','e2');assert.ok(!pin.inCheck('w'));
 });
 test('randomized capture-variant games preserve kings until a terminal capture and undo restores both', () => {
   let seed=634;const random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed;};
@@ -455,4 +456,60 @@ test('cached search preserves repetition draws and can choose one when losing',a
     const child=state.clone();child.play(choice);assert.equal(child.result?.type,'threefold-repetition');
   }
   assert.deepEqual(state.snapshot(),before);
+});
+
+test('standard single-move mate is escapable with two scheduled king moves in both capture modes',()=>{
+  for(const allowKingCapture of [false,true]){
+    const fen='7k/7Q/6K1/8/8/8/8/8 b - - 0 1';
+    const single=new Rules(Chess,['b','w'],fen,{allowKingCapture});assert.equal(single.result.type,'checkmate');
+    const double=new Rules(Chess,['b','b','w'],fen,{allowKingCapture});assert.equal(double.result,null);
+    const before=double.snapshot();move(double,'h8','g8');assert.ok(double.inCheck('b'));assert.equal(double.side,'b');assert.equal(double.movesRemaining(),1);
+    assert.equal(double.play({from:'g8',to:'h8'}),null);move(double,'g8','f8');assert.ok(!double.inCheck('b'));assert.equal(double.side,'w');
+    double.undo();assert.ok(double.inCheck('b'));double.undo();assert.deepEqual(double.snapshot(),before);
+  }
+});
+test('temporary king exposure is permitted only with a safe continuation and never on the last slot',()=>{
+  const fen='4r2k/8/8/8/8/8/8/3K4 w - - 0 1';
+  const single=make(['w','b'],fen);assert.equal(single.play({from:'d1',to:'e1'}),null);
+  const double=make(['w','w','b'],fen);move(double,'d1','e1');assert.ok(double.inCheck('w'));
+  assert.equal(double.play({from:'e1',to:'e2'}),null);move(double,'e1','f1');assert.equal(double.side,'b');assert.ok(!double.inCheck('w'));
+});
+test('a king cannot be left in check when no safe continuation exists',()=>{
+  const state=make(['b','b','w'],'7k/5QQQ/5K2/8/8/8/8/8 b - - 0 1');
+  assert.equal(state.result?.type,'checkmate');assert.deepEqual(state.legalMoves(),[]);
+});
+test('the AI can escape a single-move mate using its full two-move turn',async()=>{
+  const state=make(['b','b','w'],'7k/7Q/6K1/8/8/8/8/8 b - - 0 1');
+  const before=state.snapshot();const first=await chooseMove(state,2,'b',{timeBudgetMs:500});assert.ok(first);state.play(first);
+  assert.equal(state.result,null);const last=await chooseMove(state,2,'b',{timeBudgetMs:500});assert.ok(last);state.play(last);
+  assert.ok(!state.inCheck('b'));assert.equal(state.side,'w');state.undo();state.undo();assert.deepEqual(state.snapshot(),before);
+});
+
+test('unsafe en passant can be repaired within a block and survives clones and Undo',()=>{
+  const fen='k3r3/8/8/3pP3/8/8/8/4K3 w - d6 0 2';
+  const single=make(['w','b'],fen);assert.ok(!has(single,'e5','d6'));
+  const state=make(['w','w','b'],fen),before=state.snapshot();assert.ok(has(state.clone(),'e5','d6'));
+  move(state,'e5','d6');assert.equal(state.game.get('d5'),undefined);assert.ok(state.inCheck('w'));
+  move(state,'e1','d1');assert.ok(!state.inCheck('w'));state.undo();state.undo();assert.deepEqual(state.snapshot(),before);assert.ok(has(state,'e5','d6'));
+});
+test('a checking move is not labeled mate when the defender has a two-move escape',()=>{
+  const state=make(['w','b','b'],'7k/8/5KQ1/8/8/8/8/8 w - - 0 1');
+  const played=move(state,'g6','g7');assert.equal(state.result,null);assert.ok(played.san.endsWith('+'));assert.ok(!played.san.endsWith('#'));
+});
+test('a temporary unsafe king does not claim a fifty-move draw before escaping',()=>{
+  const state=make(['w','w','b'],'4r2k/8/8/8/8/8/8/3K4 w - - 99 1');
+  move(state,'d1','e1');assert.ok(state.inCheck('w'));assert.equal(state.result,null);
+  move(state,'e1','f1');assert.equal(state.result.type,'fifty-move');assert.ok(!state.inCheck('w'));
+});
+test('temporary king-safety lookahead respects wrapping same-color blocks',()=>{
+  const state=make(['w','b','w'],'4r2k/8/8/8/8/8/8/3K4 w - - 0 1');
+  assert.equal(state.movesRemaining(),1);assert.ok(!has(state,'d1','e1'));
+  state.index=2;state.moveCache.clear();assert.equal(state.movesRemaining(),2);assert.ok(has(state,'d1','e1'));
+});
+
+test('a king capture cannot end a game while the capturing king remains unsafe',()=>{
+  const state=new Rules(Chess,['w','w','w','b'],'4r2k/8/8/8/8/3p4/4P3/4K2Q w - - 0 1',{allowKingCapture:true});
+  move(state,'e2','d3');assert.ok(state.inCheck('w'));assert.equal(state.movesRemaining(),2);
+  assert.equal(state.play({from:'h1',to:'h8'}),null);move(state,'e1','d1');
+  move(state,'h1','h8');assert.equal(state.result.reason,'king-capture');assert.ok(!state.inCheck('w'));
 });
