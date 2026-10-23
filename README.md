@@ -17,25 +17,32 @@ lead, kings have no point value, and Undo/New Game update the displays.
 - **King capture is allowed by default.** Check does not interrupt the scheduled
   sequence, so a player with consecutive moves can capture an exposed opposing
   king. That capture ends the game immediately and is reported as checkmate.
-  Normal checkmate still ends the game immediately, and moves must keep the
-  moving player’s own king safe. Undo restores a captured king and the exact
+  Checkmate uses the defender’s full available turn, and each player must
+  finish their turn with a safe king. Undo restores a captured king and the exact
   pre-capture position. The AI follows the same rule and treats capture as a win.
-- Choose **Standard — no king captures** in the King capture setting to restore
-  standard king protection. Changing this setting starts a fresh game.
-- **In standard mode, check takes priority over the sequence.** The checked player must respond
-  immediately. If their color is already next, the response consumes that tile.
-  Otherwise they receive an extra defensive move; the pending tile is left
-  untouched and the sequence resumes afterward. Counterchecks use the same rule.
-- Checkmate ends the game immediately, even when the attacker has moves left.
-  In standard mode kings cannot be captured. Every move must leave the moving
-  player's king safe.
-- Stalemate is a draw when the player whose move is due has no legal moves and is
-  not in check. An opponent with no moves may wait while the other player still
-  has a scheduled move, unless standard mode grants them a check response.
-- Castling obeys standard occupancy, attack, king/rook movement, and castling-right
-  rules. En passant is available only on the immediately following opposing ply;
-  an intervening move of either color expires it. A check response can use en
-  passant if it legally resolves check.
+- Choose **No king captures — keep turn order** to prevent capturing either king.
+  Changing this setting starts a fresh game. **Check never grants extra turns**
+  in either setting; the configured sequence always continues.
+- **King safety is required by the end of each consecutive-move block.** Before
+  the last move, a piece or king may temporarily leave its own king attacked,
+  but only when a legal continuation can make that king safe within the moves
+  remaining. The last move must leave the king safe. This applies in both
+  capture settings. A terminal king capture must also leave the winner safe.
+- **Checkmate uses the defender's entire remaining or upcoming turn block.**
+  A position that is mate with one move is still playable if two moves let the
+  defender escape. A mating win is not declared while the attacker's own king
+  is temporarily exposed. With ordinary alternating turns, king safety and
+  checkmate behave as in standard chess (except for the optional king capture).
+- A sequence containing only one color never grants an opponent response. With
+  no handoff, temporary check requires a verified escape within one configured
+  cycle, or two moves when the cycle has only one tile.
+- Stalemate is a draw when the scheduled player has no legal continuation and
+  is not in check. An opponent may wait during the attacker's remaining slots.
+- Castling still obeys standard attack, occupancy, and castling-right rules;
+  temporary-check permission does not allow castling through or out of check.
+  En passant lasts only the immediately following opposing move; an intervening
+  same-color move expires it. Multi-move escapes preserve captures, castling
+  rights, promotion, and all other board changes.
 - Promotion defaults to Queen. Select Rook, Bishop, or Knight before moving the
   pawn to its final rank to underpromote, including when capturing.
 - Insufficient material, threefold repetition, and the 50-move rule are automatic

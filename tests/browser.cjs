@@ -15,6 +15,7 @@ const fixtures = {
   promotion: ['1r5k/P7/8/8/8/8/8/7K w - - 0 1', ['w','b']],
   castle: ['r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1', ['w','w','b']],
   ep: ['4k3/8/8/8/3pP3/8/8/4K3 b - e3 0 1', ['b','w']],
+  escape: ['7k/7Q/6K1/8/8/8/8/8 b - - 0 1', ['b','b','w']],
   standard: [null, ['w','b']],
   stalemate: ['7k/5K2/6Q1/8/8/8/8/8 b - - 0 1', ['b','w']]
 };
@@ -110,9 +111,20 @@ let count=0;
       await move('g7','h8');assert.equal(await page.locator('#board img').count(),3);assert.ok(!(await text('history')).includes('2.'));
       await page.waitForTimeout(400);assert.equal(await text('status'),'Checkmate — White wins!');await page.click('#undo');assert.ok(!(await text('status')).includes('Checkmate'));
     });
-    await check('check highlights king and grants AI defense between White slots',async()=>{
-      await goto('check');await page.selectOption('#kingCapture','standard');await move('a1','a8');assert.ok((await text('status')).includes('in check!'));assert.ok(await square('h8').evaluate(e=>e.classList.contains('in-check')));
-      await waitHistory(2);assert.equal(await text('status'),'White to move (you)');assert.equal(await page.locator('#board .in-check').count(),0);
+    await check('check highlights the king without interrupting the configured turn order',async()=>{
+      await goto('check');await page.selectOption('#kingCapture','standard');await move('a1','a8');
+      assert.ok((await text('status')).startsWith('White to move'));assert.ok(await square('h8').evaluate(e=>e.classList.contains('in-check')));
+      await square('a8').click();assert.ok(!(await square('h8').evaluate(e=>e.classList.contains('capture'))));
+      await square('b8').click();await waitHistory(3);assert.ok((await text('status')).startsWith('White to move'));
+      assert.equal(await page.locator('#board .in-check').count(),0);
+    });
+    await check('two-move king escape stays playable and requires safety on the final move',async()=>{
+      await goto('escape');await page.selectOption('#mode','pvp');await page.selectOption('#kingCapture','standard');
+      assert.ok(!(await text('status')).includes('Checkmate'));await move('h8','g8');
+      assert.ok((await text('status')).startsWith('Black to move'));assert.ok(await square('g8').evaluate(e=>e.classList.contains('in-check')));
+      await square('g8').click();assert.ok(!(await square('h8').evaluate(e=>e.classList.contains('legal'))));
+      await square('f8').click();assert.ok((await text('status')).startsWith('White to move'));assert.equal(await page.locator('#board .in-check').count(),0);
+      await page.click('#undo');assert.ok((await text('status')).startsWith('Black to move'));assert.equal(await square('g8').locator('img').getAttribute('alt'),'Black king');
     });
     await check('promotion selector supports underpromotion and updates piece sprite',async()=>{
       await goto('promotion');await page.selectOption('#promotion','n');await move('a7','b8');

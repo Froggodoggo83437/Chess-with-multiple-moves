@@ -1,5 +1,19 @@
-// Standard piece legality comes from chess.js. This layer owns variant scheduling,
-// terminal results, and repetition history, which FEN alone cannot represent.
+// Piece geometry comes from pinned chess.js. This layer owns turn-block king
+// safety, scheduling, terminal results, and repetition history.
+// chess.js 1.4.0 is pinned. Encapsulate its pseudo-legal generator here:
+// castling attack/path restrictions still apply, but ordinary moves may leave
+// the king attacked while a multi-move turn has a verified safe continuation.
+function withPseudoLegal(position,operation){
+  const original=position._moves;
+  if(typeof original!=='function')throw Error('Unsupported chess.js pseudo-legal API');
+  position._moves=function(options={}){return original.call(this,{...options,legal:false});};
+  try{return operation();}finally{position._moves=original;}
+}
+function pseudoRequests(position){
+  const square=index=>String.fromCharCode(97+(index&15))+(8-(index>>4));
+  return position._moves({legal:false}).map(move=>({from:square(move.from),to:square(move.to),...(move.promotion?{promotion:move.promotion}:{})}));
+}
+const requestKey=move=>move.from+move.to+(move.promotion||'');
 class CustomTurnRules {
   constructor(Chess, order = ['w', 'w', 'b'], fen, { allowKingCapture = false } = {}) {
     if (!order.length || order.some(side => !['w', 'b'].includes(side))) {
@@ -16,21 +30,19 @@ class CustomTurnRules {
     this.snapshots = [];
     this.repetitions = new Map();
     this.moveCache = new Map();
-    // Standard mode gives a checked player priority. Capture mode deliberately
-    // follows the scheduled sequence, allowing another attacking ply.
+    this.escapeCache = new Map();
     const checked = ['w', 'b'].filter(side => this.inCheck(side));
-    if (checked.length > 1) throw new Error('Both kings cannot be in check.');
-    if (!this.allowKingCapture && checked.length && checked[0] !== this.order[this.index]) this.forcedSide = checked[0];
+    if (checked.length > 1) throw new Error('Both kings cannot be in check in a starting position.');
     this.alignTurn();
     this.recordPosition();
     this.updateResult();
   }
 
-  get side() { return this.forcedSide || this.order[this.index]; }
+  get side() { return this.order[this.index]; }
   get lastMove() { return this.history.at(-1) || null; }
 
   positionFor(side) {
-    const fields = this.game.fen().split(' ');
+    const fields = this.game.fen({forceEnpassantSquare:true}).split(' ');
     if (fields[1] !== side) {
       fields[1] = side;
       // En passant lasts only the immediately following ply, and can only be
@@ -53,24 +65,77 @@ class CustomTurnRules {
     return this.game.isAttacked(king.square, side === 'w' ? 'b' : 'w');
   }
 
+  movesRemaining(side=this.side){
+    let start=this.index;
+    if(this.order[start]!==side){
+      let offset=1;while(offset<this.order.length&&this.order[(start+offset)%this.order.length]!==side)offset++;
+      if(offset===this.order.length)return 1; // hypothetical defense; no extra turn is granted
+      start=(start+offset)%this.order.length;
+    }
+    let count=1;
+    while(count<this.order.length&&this.order[(start+count)%this.order.length]===side)count++;
+    // With no opponent tiles there is always another move. Require a finite
+    // safe continuation within a full configured cycle (at least two plies).
+    return this.order.every(color=>color===side)?Math.max(2,this.order.length):count;
+  }
+
+  checkedPosition(position,side){
+    const king=position.board().flat().find(piece=>piece?.type==='k'&&piece.color===side);
+    return !king||position.isAttacked(king.square,side==='w'?'b':'w');
+  }
+
+  canFinishSafely(position,side,remaining){
+    if(!this.checkedPosition(position,side))return true;
+    if(remaining<=0)return false;
+    const key=position.fen({forceEnpassantSquare:true}).split(' ').slice(0,4).join(' ')+`|${side}|${remaining}|${this.allowKingCapture}`;
+    if(this.escapeCache.has(key))return this.escapeCache.get(key);
+    // Any ordinary legal move resolves check immediately. Further moves can
+    // keep the king safe, or end in a legitimate stalemate with a safe king.
+    let safe=position.moves({verbose:true}).some(move=>this.allowKingCapture||move.captured!=='k');
+    if(!safe&&remaining>1){
+      for(const request of pseudoRequests(position)){
+        const captured=position.get(request.to);
+        if(captured?.type==='k')continue; // a terminal capture cannot be an unsafe intermediate step
+        const child=new this.Chess(position.fen({forceEnpassantSquare:true}));
+        withPseudoLegal(child,()=>child.move(request));
+        const fields=child.fen({forceEnpassantSquare:true}).split(' ');fields[1]=side;fields[3]='-';child.load(fields.join(' '));
+        if(this.canFinishSafely(child,side,remaining-1)){safe=true;break;}
+      }
+    }
+    if(this.escapeCache.size<12000)this.escapeCache.set(key,safe);
+    return safe;
+  }
+
   legalMoves(side = this.side) {
     if (this.result) return [];
     if (this.moveCache.has(side)) return this.moveCache.get(side);
     const position = side === this.game.turn() ? this.game : this.positionFor(side);
-    // In capture mode, chess.js may generate king captures from positions
-    // reached by consecutive attacking plies. Other move legality stays intact.
-    const cacheKey = this.searchMoveCache ? position.fen().split(' ').slice(0,4).join(' ') : position.fen();
+    const remaining=this.movesRemaining(side);
+    const cacheKey = `${this.allowKingCapture}|${remaining}|`+(this.searchMoveCache ? position.fen({forceEnpassantSquare:true}).split(' ').slice(0,4).join(' ') : position.fen({forceEnpassantSquare:true}));
     const cached = this.searchMoveCache?.get(cacheKey);
     if (cached) { this.moveCache.set(side, cached); return cached; }
-    const moves = position.moves({ verbose: true }).filter(move =>
-      this.allowKingCapture || (move.captured !== 'k' && position.get(move.to)?.type !== 'k'));
+    const moves = position.moves({ verbose: true }).filter(move =>this.allowKingCapture||move.captured!=='k');
+    if(remaining>1){
+      const ordinary=new Set(moves.map(requestKey));
+      for(const request of pseudoRequests(position)){
+        if(ordinary.has(requestKey(request))||position.get(request.to)?.type==='k')continue;
+        const child=new this.Chess(position.fen({forceEnpassantSquare:true}));
+        const played=withPseudoLegal(child,()=>child.move(request));
+        const fields=child.fen({forceEnpassantSquare:true}).split(' ');fields[1]=side;fields[3]='-';child.load(fields.join(' '));
+        if(this.canFinishSafely(child,side,remaining-1))moves.push(played);
+      }
+    }
     if (this.searchMoveCache && this.searchMoveCache.size < 12000) this.searchMoveCache.set(cacheKey, moves);
     this.moveCache.set(side, moves);
     return moves;
   }
 
   positionKey() {
-    return `${this.game.fen().split(' ').slice(0, 4).join(' ')}|${this.index}|${this.forcedSide || '-'}`;
+    const fields=this.game.fen({forceEnpassantSquare:true}).split(' ').slice(0,4);
+    // Preserve rights in snapshots, but repetition distinguishes en passant
+    // only when it is actually available under this turn's safety rules.
+    if(fields[3]!=='-'&&!this.legalMoves().some(move=>move.flags.includes('e')))fields[3]='-';
+    return `${fields.join(' ')}|${this.index}|${this.forcedSide || '-'}`;
   }
 
   recordPosition() {
@@ -81,22 +146,24 @@ class CustomTurnRules {
   updateResult() {
     if (this.result?.reason === 'king-capture') return;
     this.result = null;
-    // Checkmate is a win immediately, even if the attacker has unused slots.
+    // Test the defender's remaining/upcoming block, not standard one-ply mate.
+    // A player with a temporarily exposed king cannot claim a mating win.
     for (const side of ['w', 'b']) {
-      if (this.inCheck(side) && !this.legalMoves(side).length) {
+      if (this.inCheck(side) && !this.inCheck(side==='w'?'b':'w') && !this.legalMoves(side).length) {
         this.result = { type: 'checkmate', winner: side === 'w' ? 'b' : 'w' };
         return;
       }
     }
-    if (!this.legalMoves().length) this.result = { type: 'stalemate' };
+    if (!this.legalMoves().length) this.result = this.inCheck(this.side)?{type:'checkmate',winner:this.side==='w'?'b':'w'}:{ type: 'stalemate' };
+    else if(this.lastMove?.color===this.side&&this.inCheck(this.side))return; // do not end an unfinished unsafe turn as a draw
     else if (this.game.isInsufficientMaterial()) this.result = { type: 'insufficient-material' };
-    else if (Number(this.game.fen().split(' ')[4]) >= 100) this.result = { type: 'fifty-move' };
+    else if (Number(this.game.fen({forceEnpassantSquare:true}).split(' ')[4]) >= 100) this.result = { type: 'fifty-move' };
     else if ((this.repetitions.get(this.positionKey()) || 0) >= 3) this.result = { type: 'threefold-repetition' };
   }
 
   snapshot() {
     return {
-      fen: this.game.fen(), index: this.index, forcedSide: this.forcedSide,
+      fen: this.game.fen({forceEnpassantSquare:true}), index: this.index, forcedSide: this.forcedSide,
       result: this.result, history: [...this.history], repetitions: new Map(this.repetitions)
     };
   }
@@ -118,9 +185,10 @@ class CustomTurnRules {
     copy.Chess = this.Chess;
     copy.allowKingCapture = this.allowKingCapture;
     copy.searchMoveCache = this.searchMoveCache;
+    copy.escapeCache = this.escapeCache;
     copy.order = [...this.order];
     copy.snapshots = [];
-    copy.restore({fen:this.game.fen(),index:this.index,forcedSide:this.forcedSide,result:this.result,history:this.history,repetitions:this.repetitions});
+    copy.restore({fen:this.game.fen({forceEnpassantSquare:true}),index:this.index,forcedSide:this.forcedSide,result:this.result,history:this.history,repetitions:this.repetitions});
     return copy;
   }
 
@@ -132,23 +200,25 @@ class CustomTurnRules {
     if (!move) return null;
     const before = saveUndo ? this.snapshot() : null;
     const side = this.side;
-    const played = this.game.move({ from: move.from, to: move.to, ...(move.promotion ? { promotion: move.promotion } : {}) });
+    const played = withPseudoLegal(this.game,()=>this.game.move({ from: move.from, to: move.to, ...(move.promotion ? { promotion: move.promotion } : {}) }));
     this.moveCache.clear();
     if (saveUndo) this.snapshots.push(before);
     this.history.push(played);
-    // An extra check response does not consume someone else's scheduled slot.
-    if (side === this.order[this.index]) this.index = (this.index + 1) % this.order.length;
+    // Check never changes or interrupts the configured sequence.
+    this.index = (this.index + 1) % this.order.length;
     this.forcedSide = null;
     if (played.captured === 'k') {
       played.san = played.san.replace(/[+#]$/, '') + '#';
       this.result = { type: 'checkmate', winner: side, reason: 'king-capture' };
       return played;
     }
-    const opponent = side === 'w' ? 'b' : 'w';
-    if (!this.allowKingCapture && this.inCheck(opponent) && this.order[this.index] !== opponent) this.forcedSide = opponent;
     this.alignTurn();
     this.recordPosition();
     this.updateResult();
+    // Standard SAN's one-ply mate suffix is not authoritative in this variant.
+    played.san=played.san.replace(/[+#]$/,'');
+    if(this.result?.type==='checkmate'&&this.result.winner===side)played.san+='#';
+    else if(this.inCheck(side==='w'?'b':'w'))played.san+='+';
     return played;
   }
 
@@ -247,6 +317,7 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
   // histories. Only move generation, static evaluation, and ordering are cached.
   state = state.clone();
   state.searchMoveCache = new Map();
+  state.escapeCache = new Map();
   const evaluationCache = new Map();
   const principalMoves = new Map(), killers=new Map(), historyScores=new Map(), transpositions=new Map();
   let ttHits=0;
@@ -257,7 +328,7 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
     const child=node.clone();child.play(move,false);
     // Pawn moves, captures and lost castling rights make all earlier boards
     // unreachable. Otherwise retain every relevant repetition count in the key.
-    const irreversible=move.piece==='p'||move.captured||node.game.fen().split(' ')[2]!==child.game.fen().split(' ')[2];
+    const irreversible=move.piece==='p'||move.captured||node.game.fen({forceEnpassantSquare:true}).split(' ')[2]!==child.game.fen({forceEnpassantSquare:true}).split(' ')[2];
     child.searchResetHistory=node.searchResetHistory||!!irreversible;
     child.searchRepetitions=irreversible?new Map():new Map(node.searchRepetitions);
     const key=child.positionKey();child.searchRepetitions.set(key,(child.searchRepetitions.get(key)||0)+1);
@@ -265,10 +336,10 @@ async function chooseMove(state, depth, color, { isCancelled = () => false, yiel
   }
   function tableKey(node,remaining,lastMover,extensionsLeft){
     const repetitions=[...node.searchRepetitions].sort((a,b)=>a[0].localeCompare(b[0]));
-    return JSON.stringify([node.game.fen(),node.index,node.forcedSide,remaining,lastMover,extensionsLeft,quiescenceEnabled,node.history.length-state.history.length,node.searchResetHistory,repetitions]);
+    return JSON.stringify([node.game.fen({forceEnpassantSquare:true}),node.index,node.forcedSide,remaining,lastMover,extensionsLeft,quiescenceEnabled,node.history.length-state.history.length,node.searchResetHistory,repetitions]);
   }
   function scorePosition(node) {
-    const key = node.game.fen();
+    const key = node.game.fen({forceEnpassantSquare:true});
     if (evaluationCache.has(key)) return evaluationCache.get(key);
     const score = evaluate(node, color);
     if (evaluationCache.size < 12000) evaluationCache.set(key, score);
